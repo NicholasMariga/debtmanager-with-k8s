@@ -215,4 +215,132 @@ data:
       cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
       cur.execute(
         'INSERT INTO customers (name, phone, email) VALUES (%s, %s, %s) RETURNING *',
-        (data['name'], data.get('phone',''), data.get('e
+        (data['name'], data.get('phone',''), data.get('email',''))
+      )
+      customer = cur.fetchone()
+      conn.commit(); cur.close(); conn.close()
+      return jsonify(dict(customer)), 201
+
+    # ── Debts ──
+    @app.route('/debts', methods=['GET'])
+    def get_debts():
+      user = require_auth()
+      if not user: return jsonify({"error": "Unauthorized"}), 401
+      conn = get_db()
+      cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+      cur.execute('''
+        SELECT d.*, c.name as customer_name, c.phone as customer_phone,
+          (d.total_amount - d.amount_paid) as balance,
+          s.name as created_by_name
+        FROM debts d
+        JOIN customers c ON d.customer_id = c.id
+        LEFT JOIN staff s ON d.created_by = s.id
+        ORDER BY d.created_at DESC
+      ''')
+      debts = cur.fetchall()
+      cur.close(); conn.close()
+      return jsonify([dict(d) for d in debts])
+
+    @app.route('/debts', methods=['POST'])
+    def add_debt():
+      user = require_auth()
+      if not user: return jsonify({"error": "Unauthorized"}), 401
+      data = request.json
+      conn = get_db()
+      cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+      cur.execute(
+        '''INSERT INTO debts (customer_id, description, total_amount, due_date, created_by)
+           VALUES (%s, %s, %s, %s, %s) RETURNING *''',
+        (data['customer_id'], data['description'],
+         data['total_amount'], data.get('due_date'), user['id'])
+      )
+      debt = cur.fetchone()
+      conn.commit(); cur.close(); conn.close()
+      return jsonify(dict(debt)), 201
+
+    # ── Payments ──
+    @app.route('/payments', methods=['POST'])
+    def make_payment():
+      user = require_auth()
+      if not user: return jsonify({"error": "Unauthorized"}), 401
+      data = request.json
+      conn = get_db()
+      cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+      cur.execute(
+        'INSERT INTO payments (debt_id, amount, note, recorded_by) VALUES (%s, %s, %s, %s) RETURNING *',
+        (data['debt_id'], data['amount'], data.get('note',''), user['id'])
+      )
+      payment = cur.fetchone()
+      cur.execute(
+        'UPDATE debts SET amount_paid = amount_paid + %s WHERE id = %s RETURNING *',
+        (data['amount'], data['debt_id'])
+      )
+      debt = cur.fetchone()
+      if float(debt['amount_paid']) >= float(debt['total_amount']):
+        cur.execute("UPDATE debts SET status = 'paid' WHERE id = %s", (data['debt_id'],))
+      conn.commit(); cur.close(); conn.close()
+      return jsonify(dict(payment)), 201
+
+    @app.route('/payments/<int:debt_id>', methods=['GET'])
+    def get_payments(debt_id):
+      user = require_auth()
+      if not user: return jsonify({"error": "Unauthorized"}), 401
+      conn = get_db()
+      cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+      cur.execute('''
+        SELECT p.*, s.name as recorded_by_name
+        FROM payments p
+        LEFT JOIN staff s ON p.recorded_by = s.id
+        WHERE p.debt_id = %s ORDER BY p.paid_at DESC
+      ''', (debt_id,))
+      payments = cur.fetchall()
+      cur.close(); conn.close()
+      return jsonify([dict(p) for p in payments])
+
+    # ── Reports ──
+    @app.route('/reports', methods=['GET'])
+    def get_reports():
+      user = require_auth(roles=['owner', 'manager'])
+      if not user: return jsonify({"error": "Unauthorized"}), 401
+      conn = get_db()
+      cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+      cur.execute('''
+        SELECT
+          COUNT(DISTINCT c.id) as total_customers,
+          COUNT(d.id) as total_debts,
+          COALESCE(SUM(d.total_amount), 0) as total_debt_amount,
+          COALESCE(SUM(d.amount_paid), 0) as total_collected,
+          COALESCE(SUM(d.total_amount - d.amount_paid), 0) as total_outstanding,
+          COUNT(CASE WHEN d.status = 'paid' THEN 1 END) as paid_debts,
+          COUNT(CASE WHEN d.status = 'unpaid' THEN 1 END) as unpaid_debts,
+          COUNT(CASE WHEN d.due_date < NOW() AND d.status != 'paid' THEN 1 END) as overdue_debts
+        FROM customers c
+        LEFT JOIN debts d ON c.id = d.customer_id
+      ''')
+      report = cur.fetchone()
+      cur.close(); conn.close()
+      return jsonify(dict(report))
+
+    # ── Reminders ──
+    @app.route('/reminders', methods=['GET'])
+    def get_reminders():
+      user = require_auth(roles=['owner', 'manager'])
+      if not user: return jsonify({"error": "Unauthorized"}), 401
+      conn = get_db()
+      cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+      cur.execute('''
+        SELECT d.*, c.name as customer_name, c.phone as customer_phone,
+          (d.total_amount - d.amount_paid) as balance
+        FROM debts d
+        JOIN customers c ON d.customer_id = c.id
+        WHERE d.status != 'paid'
+        AND d.due_date <= NOW() + INTERVAL '7 days'
+        ORDER BY d.due_date ASC
+      ''')
+      reminders = cur.fetchall()
+      cur.close(); conn.close()
+      return jsonify([dict(r) for r in reminders])
+
+    if __name__ == '__main__':
+      init_db()
+      app.run(host='0.0.0.0', port=5000, debug=True)
