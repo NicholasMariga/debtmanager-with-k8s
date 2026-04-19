@@ -15,14 +15,9 @@ spec:
     spec:
       containers:
       - name: flask-backend
-        image: python:3.11-slim
+        image: marigah/debtmanager-backend:1.0  # ← pre-built image
         ports:
         - containerPort: 5000
-        command: ["/bin/sh", "-c"]
-        args:
-          - |
-            pip install flask flask-cors psycopg2-binary --quiet &&
-            python /app/app.py
         envFrom:
         - configMapRef:
             name: postgres-config
@@ -34,10 +29,3 @@ spec:
               key: POSTGRES_PASSWORD
         - name: POSTGRES_HOST
           value: postgres-service
-        volumeMounts:
-        - name: app-volume
-          mountPath: /app
-      volumes:
-      - name: app-volume
-        configMap:
-          name: flask-app-config
