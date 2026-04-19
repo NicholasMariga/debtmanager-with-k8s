@@ -8,7 +8,7 @@ data:
     <!DOCTYPE html>
     <html>
       <head>
-        <title>Debt Manager - Mariga Shop</title>
+        <title>Happywise Ent - Debt Manager</title>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         <style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -20,61 +20,266 @@ data:
             min-height: 100vh;
           }
 
+          /* ── LOGIN PAGE ── */
+          .login-page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #1a1a2e);
+            background-size: 400% 400%;
+            animation: gradientBG 10s ease infinite;
+          }
+
+          @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+          }
+
+          .login-box {
+            background: rgba(255,255,255,0.07);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 20px;
+            padding: 40px;
+            width: 380px;
+            text-align: center;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+          }
+
+          .login-logo {
+            font-size: 3em;
+            color: #a78bfa;
+            margin-bottom: 10px;
+          }
+
+          .login-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 5px;
+          }
+
+          .login-subtitle {
+            font-size: 0.85em;
+            color: #c4b5fd;
+            margin-bottom: 30px;
+          }
+
+          .login-form .form-group {
+            margin-bottom: 15px;
+            text-align: left;
+          }
+
+          .login-form label {
+            font-size: 0.8em;
+            color: #c4b5fd;
+            display: block;
+            margin-bottom: 6px;
+          }
+
+          .login-form .input-wrap {
+            position: relative;
+          }
+
+          .login-form .input-wrap i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #a78bfa;
+            font-size: 0.9em;
+          }
+
+          .login-form input {
+            width: 100%;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 10px;
+            padding: 12px 12px 12px 38px;
+            color: white;
+            font-size: 0.9em;
+            outline: none;
+            transition: border 0.3s;
+          }
+
+          .login-form input:focus { border-color: #a78bfa; }
+
+          .login-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #a78bfa, #7c3aed);
+            color: white;
+            padding: 13px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-top: 10px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+          }
+
+          .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(167,139,250,0.5);
+          }
+
+          .login-error {
+            background: rgba(248,113,113,0.15);
+            border: 1px solid #f87171;
+            color: #f87171;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.85em;
+            margin-bottom: 15px;
+            display: none;
+          }
+
+          .role-badges {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+          }
+
+          .role-badge {
+            background: rgba(167,139,250,0.15);
+            border: 1px solid rgba(167,139,250,0.3);
+            color: #c4b5fd;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75em;
+          }
+
+          /* ── APP (post-login) ── */
+          .app-page { display: none; }
+
+          /* Top Bar */
+          .topbar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 60px;
+            background: rgba(15,12,41,0.95);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 200;
+          }
+
+          .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+          }
+
+          .topbar-logo i { color: #a78bfa; font-size: 1.4em; }
+          .topbar-title { font-size: 1em; font-weight: bold; }
+          .topbar-title span { color: #a78bfa; }
+
+          .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+          }
+
+          .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85em;
+          }
+
+          .user-info i { color: #a78bfa; }
+          .user-name { color: white; }
+          .user-role {
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.75em;
+            font-weight: bold;
+          }
+
+          .role-owner { background: rgba(167,139,250,0.3); color: #a78bfa; }
+          .role-manager { background: rgba(52,211,153,0.2); color: #34d399; }
+          .role-cashier { background: rgba(251,191,36,0.2); color: #fbbf24; }
+
+          .logout-btn {
+            background: rgba(248,113,113,0.15);
+            border: 1px solid rgba(248,113,113,0.3);
+            color: #f87171;
+            padding: 6px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.82em;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+          }
+
+          .logout-btn:hover { background: rgba(248,113,113,0.3); }
+
           /* Sidebar */
           .sidebar {
             position: fixed;
-            top: 0; left: 0;
-            width: 220px; height: 100%;
-            background: rgba(255,255,255,0.05);
-            border-right: 1px solid rgba(255,255,255,0.1);
-            padding: 20px 0;
+            top: 60px; left: 0;
+            width: 220px;
+            height: calc(100% - 60px);
+            background: rgba(255,255,255,0.03);
+            border-right: 1px solid rgba(255,255,255,0.08);
+            padding: 15px 0;
             z-index: 100;
+            overflow-y: auto;
           }
 
-          .logo {
-            text-align: center;
-            padding: 0 20px 20px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            margin-bottom: 20px;
+          .nav-section {
+            font-size: 0.7em;
+            color: rgba(255,255,255,0.3);
+            padding: 10px 20px 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
           }
-
-          .logo i { font-size: 2em; color: #a78bfa; margin-bottom: 8px; display: block; }
-          .logo h2 { font-size: 1em; color: white; }
-          .logo p { font-size: 0.75em; color: #c4b5fd; }
 
           .nav-item {
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 12px 20px;
+            padding: 11px 20px;
             cursor: pointer;
             transition: all 0.3s;
             color: #c4b5fd;
-            font-size: 0.9em;
+            font-size: 0.88em;
           }
 
           .nav-item:hover, .nav-item.active {
-            background: rgba(167,139,250,0.2);
+            background: rgba(167,139,250,0.15);
             color: white;
             border-left: 3px solid #a78bfa;
           }
 
-          .nav-item i { width: 20px; text-align: center; }
+          .nav-item i { width: 18px; text-align: center; }
+          .nav-item.hidden { display: none; }
 
-          /* Main Content */
+          /* Main */
           .main {
             margin-left: 220px;
+            margin-top: 60px;
             padding: 25px;
-            min-height: 100vh;
+            min-height: calc(100vh - 60px);
           }
 
           .page { display: none; }
           .page.active { display: block; }
 
           .page-title {
-            font-size: 1.5em;
+            font-size: 1.4em;
             margin-bottom: 20px;
-            color: white;
             display: flex;
             align-items: center;
             gap: 10px;
@@ -82,36 +287,32 @@ data:
 
           .page-title i { color: #a78bfa; }
 
-          /* Stats Cards */
+          /* Stats */
           .stats {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
             gap: 15px;
             margin-bottom: 25px;
           }
 
           .stat-card {
-            background: rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.06);
             border: 1px solid rgba(255,255,255,0.1);
             border-radius: 12px;
-            padding: 20px;
+            padding: 18px;
             text-align: center;
             transition: all 0.3s;
           }
 
-          .stat-card:hover {
-            transform: translateY(-3px);
-            border-color: #a78bfa;
-          }
+          .stat-card:hover { transform: translateY(-3px); border-color: #a78bfa; }
+          .stat-card i { font-size: 1.6em; color: #a78bfa; margin-bottom: 8px; display: block; }
+          .stat-value { font-size: 1.6em; font-weight: bold; }
+          .stat-label { font-size: 0.78em; color: #c4b5fd; margin-top: 4px; }
 
-          .stat-card i { font-size: 1.8em; color: #a78bfa; margin-bottom: 8px; display: block; }
-          .stat-value { font-size: 1.8em; font-weight: bold; color: white; }
-          .stat-label { font-size: 0.8em; color: #c4b5fd; margin-top: 4px; }
-
-          /* Forms */
+          /* Cards */
           .card {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
             border-radius: 12px;
             padding: 20px;
             margin-bottom: 20px;
@@ -120,7 +321,7 @@ data:
           .card h3 {
             color: #a78bfa;
             margin-bottom: 15px;
-            font-size: 1em;
+            font-size: 0.95em;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -128,83 +329,61 @@ data:
 
           .form-row {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
             gap: 12px;
-            margin-bottom: 12px;
+            margin-bottom: 15px;
           }
 
           .form-group { display: flex; flex-direction: column; gap: 5px; }
-
           label { font-size: 0.8em; color: #c4b5fd; }
 
-          input, select, textarea {
-            background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(255,255,255,0.2);
+          input, select {
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.15);
             border-radius: 8px;
-            padding: 10px 12px;
+            padding: 9px 12px;
             color: white;
-            font-size: 0.9em;
+            font-size: 0.88em;
             outline: none;
             transition: border 0.3s;
           }
 
-          input:focus, select:focus {
-            border-color: #a78bfa;
-          }
-
+          input:focus, select:focus { border-color: #a78bfa; }
           select option { background: #1a1a2e; }
 
           .btn {
             background: linear-gradient(135deg, #a78bfa, #7c3aed);
             color: white;
-            padding: 10px 20px;
+            padding: 9px 18px;
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 0.9em;
+            font-size: 0.88em;
             transition: all 0.3s;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 7px;
           }
 
           .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(167,139,250,0.4); }
-          .btn-sm { padding: 6px 12px; font-size: 0.8em; }
+          .btn-sm { padding: 5px 10px; font-size: 0.78em; }
           .btn-green { background: linear-gradient(135deg, #34d399, #059669); }
           .btn-red { background: linear-gradient(135deg, #f87171, #dc2626); }
-          .btn-blue { background: linear-gradient(135deg, #60a5fa, #2563eb); }
 
           /* Table */
-          table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.88em;
-          }
-
+          table { width: 100%; border-collapse: collapse; font-size: 0.85em; }
           th {
-            background: rgba(167,139,250,0.2);
+            background: rgba(167,139,250,0.15);
             padding: 10px 12px;
             text-align: left;
             color: #c4b5fd;
             font-weight: normal;
           }
-
-          td {
-            padding: 10px 12px;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            color: #e5e7eb;
-          }
-
-          tr:hover td { background: rgba(255,255,255,0.03); }
+          td { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+          tr:hover td { background: rgba(255,255,255,0.02); }
 
           /* Badges */
-          .badge {
-            padding: 3px 10px;
-            border-radius: 20px;
-            font-size: 0.78em;
-            font-weight: bold;
-          }
-
+          .badge { padding: 3px 9px; border-radius: 20px; font-size: 0.75em; font-weight: bold; }
           .badge-paid { background: rgba(52,211,153,0.2); color: #34d399; }
           .badge-unpaid { background: rgba(248,113,113,0.2); color: #f87171; }
           .badge-partial { background: rgba(251,191,36,0.2); color: #fbbf24; }
@@ -212,31 +391,29 @@ data:
 
           /* Alert */
           .alert {
-            padding: 12px 16px;
+            padding: 10px 14px;
             border-radius: 8px;
-            margin-bottom: 15px;
-            font-size: 0.88em;
+            margin-bottom: 12px;
+            font-size: 0.85em;
             display: none;
           }
-
           .alert-success { background: rgba(52,211,153,0.15); border: 1px solid #34d399; color: #34d399; }
           .alert-error { background: rgba(248,113,113,0.15); border: 1px solid #f87171; color: #f87171; }
 
           /* Reminders */
           .reminder-card {
-            background: rgba(251,191,36,0.1);
-            border: 1px solid rgba(251,191,36,0.3);
+            background: rgba(251,191,36,0.08);
+            border: 1px solid rgba(251,191,36,0.25);
             border-radius: 10px;
-            padding: 15px;
+            padding: 14px;
             margin-bottom: 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
           }
-
           .reminder-card .name { font-weight: bold; color: #fbbf24; }
-          .reminder-card .details { font-size: 0.85em; color: #c4b5fd; margin-top: 3px; }
-          .reminder-card .balance { font-size: 1.2em; font-weight: bold; color: #f87171; }
+          .reminder-card .details { font-size: 0.82em; color: #c4b5fd; margin-top: 3px; }
+          .reminder-card .balance { font-size: 1.1em; font-weight: bold; color: #f87171; }
 
           /* Modal */
           .modal {
@@ -244,301 +421,380 @@ data:
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7);
+            background: rgba(0,0,0,0.75);
             z-index: 1000;
             align-items: center;
             justify-content: center;
           }
-
           .modal.open { display: flex; }
-
           .modal-box {
             background: #1a1a2e;
-            border: 1px solid rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.15);
             border-radius: 16px;
             padding: 25px;
             width: 400px;
             max-width: 90%;
           }
-
-          .modal-box h3 { color: #a78bfa; margin-bottom: 15px; }
+          .modal-box h3 { color: #a78bfa; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
           .modal-close { float: right; cursor: pointer; color: #c4b5fd; }
         </style>
       </head>
       <body>
 
-        <!-- Sidebar -->
-        <div class="sidebar">
-          <div class="logo">
-            <i class="fa-solid fa-store"></i>
-            <h2>Mariga Shop</h2>
-            <p>Debt Manager</p>
-          </div>
-          <div class="nav-item active" onclick="showPage('dashboard')">
-            <i class="fa-solid fa-chart-pie"></i> Dashboard
-          </div>
-          <div class="nav-item" onclick="showPage('customers')">
-            <i class="fa-solid fa-users"></i> Customers
-          </div>
-          <div class="nav-item" onclick="showPage('debts')">
-            <i class="fa-solid fa-file-invoice-dollar"></i> Debts
-          </div>
-          <div class="nav-item" onclick="showPage('payments')">
-            <i class="fa-solid fa-money-bill-wave"></i> Payments
-          </div>
-          <div class="nav-item" onclick="showPage('reminders')">
-            <i class="fa-solid fa-bell"></i> Reminders
-          </div>
-          <div class="nav-item" onclick="showPage('reports')">
-            <i class="fa-solid fa-chart-bar"></i> Reports
+        <!-- ══ LOGIN PAGE ══ -->
+        <div class="login-page" id="login-page">
+          <div class="login-box">
+            <div class="login-logo">
+              <i class="fa-solid fa-store"></i>
+            </div>
+            <div class="login-title">Happywise Ent</div>
+            <div class="login-subtitle">Debt Management System</div>
+
+            <div class="login-error" id="login-error">
+              <i class="fa-solid fa-circle-xmark"></i>
+              <span id="login-error-msg">Invalid credentials</span>
+            </div>
+
+            <div class="login-form">
+              <div class="form-group">
+                <label>Username</label>
+                <div class="input-wrap">
+                  <i class="fa-solid fa-user"></i>
+                  <input type="text" id="login-username" placeholder="Enter username" onkeypress="if(event.key==='Enter') doLogin()">
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Password</label>
+                <div class="input-wrap">
+                  <i class="fa-solid fa-lock"></i>
+                  <input type="password" id="login-password" placeholder="Enter password" onkeypress="if(event.key==='Enter') doLogin()">
+                </div>
+              </div>
+              <button class="login-btn" onclick="doLogin()">
+                <i class="fa-solid fa-right-to-bracket"></i> Sign In
+              </button>
+            </div>
+
+            <div class="role-badges">
+              <span class="role-badge"><i class="fa-solid fa-crown"></i> Owner</span>
+              <span class="role-badge"><i class="fa-solid fa-user-tie"></i> Manager</span>
+              <span class="role-badge"><i class="fa-solid fa-cash-register"></i> Cashier</span>
+            </div>
           </div>
         </div>
 
-        <!-- Main Content -->
-        <div class="main">
+        <!-- ══ APP PAGE ══ -->
+        <div class="app-page" id="app-page">
 
-          <!-- DASHBOARD -->
-          <div class="page active" id="page-dashboard">
-            <div class="page-title">
+          <!-- Top Bar -->
+          <div class="topbar">
+            <div class="topbar-left">
+              <div class="topbar-logo"><i class="fa-solid fa-store"></i></div>
+              <div class="topbar-title">Happywise <span>Ent</span></div>
+            </div>
+            <div class="topbar-right">
+              <div class="user-info">
+                <i class="fa-solid fa-circle-user"></i>
+                <span class="user-name" id="topbar-name">-</span>
+                <span class="user-role" id="topbar-role">-</span>
+              </div>
+              <button class="logout-btn" onclick="doLogout()">
+                <i class="fa-solid fa-right-from-bracket"></i> Logout
+              </button>
+            </div>
+          </div>
+
+          <!-- Sidebar -->
+          <div class="sidebar">
+            <div class="nav-section">Main</div>
+            <div class="nav-item active" onclick="showPage('dashboard', event)">
               <i class="fa-solid fa-chart-pie"></i> Dashboard
             </div>
-            <div class="stats" id="dashboard-stats">
-              <div class="stat-card">
-                <i class="fa-solid fa-users"></i>
-                <div class="stat-value" id="stat-customers">-</div>
-                <div class="stat-label">Total Customers</div>
-              </div>
-              <div class="stat-card">
-                <i class="fa-solid fa-file-invoice-dollar"></i>
-                <div class="stat-value" id="stat-debts">-</div>
-                <div class="stat-label">Total Debts</div>
-              </div>
-              <div class="stat-card">
-                <i class="fa-solid fa-triangle-exclamation"></i>
-                <div class="stat-value" id="stat-outstanding">-</div>
-                <div class="stat-label">Outstanding (KES)</div>
-              </div>
-              <div class="stat-card">
-                <i class="fa-solid fa-circle-check"></i>
-                <div class="stat-value" id="stat-collected">-</div>
-                <div class="stat-label">Collected (KES)</div>
-              </div>
-              <div class="stat-card">
-                <i class="fa-solid fa-clock"></i>
-                <div class="stat-value" id="stat-overdue">-</div>
-                <div class="stat-label">Overdue Debts</div>
-              </div>
-            </div>
-            <div class="card">
-              <h3><i class="fa-solid fa-clock-rotate-left"></i> Recent Debts</h3>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Customer</th>
-                    <th>Description</th>
-                    <th>Amount (KES)</th>
-                    <th>Balance (KES)</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody id="recent-debts"></tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- CUSTOMERS -->
-          <div class="page" id="page-customers">
-            <div class="page-title">
+            <div class="nav-item" onclick="showPage('customers', event)">
               <i class="fa-solid fa-users"></i> Customers
             </div>
-            <div class="card">
-              <h3><i class="fa-solid fa-user-plus"></i> Add Customer</h3>
-              <div id="alert-customer" class="alert"></div>
-              <div class="form-row">
-                <div class="form-group">
-                  <label>Full Name *</label>
-                  <input type="text" id="cust-name" placeholder="e.g. John Kamau">
-                </div>
-                <div class="form-group">
-                  <label>Phone</label>
-                  <input type="text" id="cust-phone" placeholder="e.g. 0712345678">
-                </div>
-                <div class="form-group">
-                  <label>Email</label>
-                  <input type="email" id="cust-email" placeholder="e.g. john@email.com">
-                </div>
-              </div>
-              <button class="btn" onclick="addCustomer()">
-                <i class="fa-solid fa-plus"></i> Add Customer
-              </button>
-            </div>
-            <div class="card">
-              <h3><i class="fa-solid fa-list"></i> All Customers</h3>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Phone</th>
-                    <th>Email</th>
-                    <th>Outstanding (KES)</th>
-                    <th>Joined</th>
-                  </tr>
-                </thead>
-                <tbody id="customers-table"></tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- DEBTS -->
-          <div class="page" id="page-debts">
-            <div class="page-title">
+            <div class="nav-item" onclick="showPage('debts', event)">
               <i class="fa-solid fa-file-invoice-dollar"></i> Debts
             </div>
-            <div class="card">
-              <h3><i class="fa-solid fa-plus"></i> Record New Debt</h3>
-              <div id="alert-debt" class="alert"></div>
-              <div class="form-row">
-                <div class="form-group">
-                  <label>Customer *</label>
-                  <select id="debt-customer"></select>
-                </div>
-                <div class="form-group">
-                  <label>Description *</label>
-                  <input type="text" id="debt-desc" placeholder="e.g. Groceries, Electronics">
-                </div>
-                <div class="form-group">
-                  <label>Amount (KES) *</label>
-                  <input type="number" id="debt-amount" placeholder="e.g. 5000">
-                </div>
-                <div class="form-group">
-                  <label>Due Date</label>
-                  <input type="date" id="debt-due">
-                </div>
-              </div>
-              <button class="btn" onclick="addDebt()">
-                <i class="fa-solid fa-plus"></i> Record Debt
-              </button>
-            </div>
-            <div class="card">
-              <h3><i class="fa-solid fa-list"></i> All Debts</h3>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Customer</th>
-                    <th>Description</th>
-                    <th>Total (KES)</th>
-                    <th>Paid (KES)</th>
-                    <th>Balance (KES)</th>
-                    <th>Due Date</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody id="debts-table"></tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- PAYMENTS -->
-          <div class="page" id="page-payments">
-            <div class="page-title">
+            <div class="nav-item" onclick="showPage('payments', event)">
               <i class="fa-solid fa-money-bill-wave"></i> Payments
             </div>
-            <div class="card">
-              <h3><i class="fa-solid fa-plus"></i> Record Payment</h3>
-              <div id="alert-payment" class="alert"></div>
-              <div class="form-row">
-                <div class="form-group">
-                  <label>Select Debt *</label>
-                  <select id="pay-debt"></select>
-                </div>
-                <div class="form-group">
-                  <label>Amount (KES) *</label>
-                  <input type="number" id="pay-amount" placeholder="e.g. 1000">
-                </div>
-                <div class="form-group">
-                  <label>Note</label>
-                  <input type="text" id="pay-note" placeholder="e.g. Cash payment">
-                </div>
-              </div>
-              <button class="btn btn-green" onclick="makePayment()">
-                <i class="fa-solid fa-money-bill-wave"></i> Record Payment
-              </button>
-            </div>
-            <div class="card">
-              <h3><i class="fa-solid fa-history"></i> Payment History</h3>
-              <div class="form-row" style="margin-bottom:15px">
-                <div class="form-group">
-                  <label>Filter by Debt</label>
-                  <select id="filter-debt" onchange="loadPaymentHistory()">
-                    <option value="">All Payments</option>
-                  </select>
-                </div>
-              </div>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Debt ID</th>
-                    <th>Amount (KES)</th>
-                    <th>Note</th>
-                    <th>Date</th>
-                  </tr>
-                </thead>
-                <tbody id="payments-table"></tbody>
-              </table>
-            </div>
-          </div>
 
-          <!-- REMINDERS -->
-          <div class="page" id="page-reminders">
-            <div class="page-title">
+            <div class="nav-section">Management</div>
+            <div class="nav-item nav-reminders" onclick="showPage('reminders', event)">
               <i class="fa-solid fa-bell"></i> Reminders
             </div>
-            <div class="card">
-              <h3><i class="fa-solid fa-triangle-exclamation"></i> Debts Due Within 7 Days</h3>
-              <div id="reminders-list"></div>
-            </div>
-          </div>
-
-          <!-- REPORTS -->
-          <div class="page" id="page-reports">
-            <div class="page-title">
+            <div class="nav-item nav-reports" onclick="showPage('reports', event)">
               <i class="fa-solid fa-chart-bar"></i> Reports
             </div>
-            <div class="stats" id="report-stats">
-              <div class="stat-card">
-                <i class="fa-solid fa-money-bill-trend-up"></i>
-                <div class="stat-value" id="rep-total-amount">-</div>
-                <div class="stat-label">Total Debt Issued (KES)</div>
-              </div>
-              <div class="stat-card">
-                <i class="fa-solid fa-hand-holding-dollar"></i>
-                <div class="stat-value" id="rep-collected">-</div>
-                <div class="stat-label">Total Collected (KES)</div>
-              </div>
-              <div class="stat-card">
-                <i class="fa-solid fa-triangle-exclamation"></i>
-                <div class="stat-value" id="rep-outstanding">-</div>
-                <div class="stat-label">Outstanding (KES)</div>
-              </div>
-              <div class="stat-card">
-                <i class="fa-solid fa-circle-check"></i>
-                <div class="stat-value" id="rep-paid-debts">-</div>
-                <div class="stat-label">Fully Paid Debts</div>
-              </div>
-              <div class="stat-card">
-                <i class="fa-solid fa-circle-xmark"></i>
-                <div class="stat-value" id="rep-unpaid-debts">-</div>
-                <div class="stat-label">Unpaid Debts</div>
-              </div>
-              <div class="stat-card">
-                <i class="fa-solid fa-clock"></i>
-                <div class="stat-value" id="rep-overdue">-</div>
-                <div class="stat-label">Overdue Debts</div>
-              </div>
+            <div class="nav-item nav-staff" onclick="showPage('staff', event)">
+              <i class="fa-solid fa-user-gear"></i> Staff
             </div>
           </div>
 
+          <!-- Main -->
+          <div class="main">
+
+            <!-- DASHBOARD -->
+            <div class="page active" id="page-dashboard">
+              <div class="page-title"><i class="fa-solid fa-chart-pie"></i> Dashboard</div>
+              <div class="stats">
+                <div class="stat-card">
+                  <i class="fa-solid fa-users"></i>
+                  <div class="stat-value" id="stat-customers">-</div>
+                  <div class="stat-label">Customers</div>
+                </div>
+                <div class="stat-card">
+                  <i class="fa-solid fa-file-invoice-dollar"></i>
+                  <div class="stat-value" id="stat-debts">-</div>
+                  <div class="stat-label">Total Debts</div>
+                </div>
+                <div class="stat-card">
+                  <i class="fa-solid fa-triangle-exclamation"></i>
+                  <div class="stat-value" id="stat-outstanding">-</div>
+                  <div class="stat-label">Outstanding (KES)</div>
+                </div>
+                <div class="stat-card">
+                  <i class="fa-solid fa-circle-check"></i>
+                  <div class="stat-value" id="stat-collected">-</div>
+                  <div class="stat-label">Collected (KES)</div>
+                </div>
+                <div class="stat-card">
+                  <i class="fa-solid fa-clock"></i>
+                  <div class="stat-value" id="stat-overdue">-</div>
+                  <div class="stat-label">Overdue</div>
+                </div>
+              </div>
+              <div class="card">
+                <h3><i class="fa-solid fa-clock-rotate-left"></i> Recent Debts</h3>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Customer</th>
+                      <th>Description</th>
+                      <th>Amount (KES)</th>
+                      <th>Balance (KES)</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="recent-debts"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- CUSTOMERS -->
+            <div class="page" id="page-customers">
+              <div class="page-title"><i class="fa-solid fa-users"></i> Customers</div>
+              <div class="card">
+                <h3><i class="fa-solid fa-user-plus"></i> Add Customer</h3>
+                <div id="alert-customer" class="alert"></div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Full Name *</label>
+                    <input type="text" id="cust-name" placeholder="e.g. John Kamau">
+                  </div>
+                  <div class="form-group">
+                    <label>Phone</label>
+                    <input type="text" id="cust-phone" placeholder="e.g. 0712345678">
+                  </div>
+                  <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="cust-email" placeholder="e.g. john@email.com">
+                  </div>
+                </div>
+                <button class="btn" onclick="addCustomer()">
+                  <i class="fa-solid fa-plus"></i> Add Customer
+                </button>
+              </div>
+              <div class="card">
+                <h3><i class="fa-solid fa-list"></i> All Customers</h3>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Name</th><th>Phone</th><th>Email</th>
+                      <th>Outstanding (KES)</th><th>Joined</th>
+                    </tr>
+                  </thead>
+                  <tbody id="customers-table"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- DEBTS -->
+            <div class="page" id="page-debts">
+              <div class="page-title"><i class="fa-solid fa-file-invoice-dollar"></i> Debts</div>
+              <div class="card">
+                <h3><i class="fa-solid fa-plus"></i> Record New Debt</h3>
+                <div id="alert-debt" class="alert"></div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Customer *</label>
+                    <select id="debt-customer"></select>
+                  </div>
+                  <div class="form-group">
+                    <label>Description *</label>
+                    <input type="text" id="debt-desc" placeholder="e.g. Groceries">
+                  </div>
+                  <div class="form-group">
+                    <label>Amount (KES) *</label>
+                    <input type="number" id="debt-amount" placeholder="e.g. 5000">
+                  </div>
+                  <div class="form-group">
+                    <label>Due Date</label>
+                    <input type="date" id="debt-due">
+                  </div>
+                </div>
+                <button class="btn" onclick="addDebt()">
+                  <i class="fa-solid fa-plus"></i> Record Debt
+                </button>
+              </div>
+              <div class="card">
+                <h3><i class="fa-solid fa-list"></i> All Debts</h3>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Customer</th><th>Description</th><th>Total (KES)</th>
+                      <th>Paid (KES)</th><th>Balance (KES)</th>
+                      <th>Due Date</th><th>Status</th><th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="debts-table"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- PAYMENTS -->
+            <div class="page" id="page-payments">
+              <div class="page-title"><i class="fa-solid fa-money-bill-wave"></i> Payments</div>
+              <div class="card">
+                <h3><i class="fa-solid fa-plus"></i> Record Payment</h3>
+                <div id="alert-payment" class="alert"></div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Select Debt *</label>
+                    <select id="pay-debt"></select>
+                  </div>
+                  <div class="form-group">
+                    <label>Amount (KES) *</label>
+                    <input type="number" id="pay-amount" placeholder="e.g. 1000">
+                  </div>
+                  <div class="form-group">
+                    <label>Note</label>
+                    <input type="text" id="pay-note" placeholder="e.g. Cash, M-Pesa">
+                  </div>
+                </div>
+                <button class="btn btn-green" onclick="makePayment()">
+                  <i class="fa-solid fa-money-bill-wave"></i> Record Payment
+                </button>
+              </div>
+              <div class="card">
+                <h3><i class="fa-solid fa-history"></i> Payment History</h3>
+                <div class="form-row" style="margin-bottom:15px">
+                  <div class="form-group">
+                    <label>Filter by Debt</label>
+                    <select id="filter-debt" onchange="loadPaymentHistory()">
+                      <option value="">Select debt to view history</option>
+                    </select>
+                  </div>
+                </div>
+                <table>
+                  <thead>
+                    <tr><th>Debt</th><th>Amount (KES)</th><th>Note</th><th>Recorded By</th><th>Date</th></tr>
+                  </thead>
+                  <tbody id="payments-table"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- REMINDERS -->
+            <div class="page" id="page-reminders">
+              <div class="page-title"><i class="fa-solid fa-bell"></i> Reminders</div>
+              <div class="card">
+                <h3><i class="fa-solid fa-triangle-exclamation"></i> Debts Due Within 7 Days</h3>
+                <div id="reminders-list"></div>
+              </div>
+            </div>
+
+            <!-- REPORTS -->
+            <div class="page" id="page-reports">
+              <div class="page-title"><i class="fa-solid fa-chart-bar"></i> Reports</div>
+              <div class="stats">
+                <div class="stat-card">
+                  <i class="fa-solid fa-money-bill-trend-up"></i>
+                  <div class="stat-value" id="rep-total">-</div>
+                  <div class="stat-label">Total Issued (KES)</div>
+                </div>
+                <div class="stat-card">
+                  <i class="fa-solid fa-hand-holding-dollar"></i>
+                  <div class="stat-value" id="rep-collected">-</div>
+                  <div class="stat-label">Collected (KES)</div>
+                </div>
+                <div class="stat-card">
+                  <i class="fa-solid fa-triangle-exclamation"></i>
+                  <div class="stat-value" id="rep-outstanding">-</div>
+                  <div class="stat-label">Outstanding (KES)</div>
+                </div>
+                <div class="stat-card">
+                  <i class="fa-solid fa-circle-check"></i>
+                  <div class="stat-value" id="rep-paid">-</div>
+                  <div class="stat-label">Paid Debts</div>
+                </div>
+                <div class="stat-card">
+                  <i class="fa-solid fa-circle-xmark"></i>
+                  <div class="stat-value" id="rep-unpaid">-</div>
+                  <div class="stat-label">Unpaid Debts</div>
+                </div>
+                <div class="stat-card">
+                  <i class="fa-solid fa-clock"></i>
+                  <div class="stat-value" id="rep-overdue">-</div>
+                  <div class="stat-label">Overdue</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- STAFF -->
+            <div class="page" id="page-staff">
+              <div class="page-title"><i class="fa-solid fa-user-gear"></i> Staff Management</div>
+              <div class="card">
+                <h3><i class="fa-solid fa-user-plus"></i> Add Staff</h3>
+                <div id="alert-staff" class="alert"></div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Full Name *</label>
+                    <input type="text" id="staff-name" placeholder="e.g. Jane Wanjiku">
+                  </div>
+                  <div class="form-group">
+                    <label>Username *</label>
+                    <input type="text" id="staff-username" placeholder="e.g. jane2024">
+                  </div>
+                  <div class="form-group">
+                    <label>Password *</label>
+                    <input type="password" id="staff-password" placeholder="Set password">
+                  </div>
+                  <div class="form-group">
+                    <label>Role *</label>
+                    <select id="staff-role">
+                      <option value="cashier">Cashier</option>
+                      <option value="manager">Manager</option>
+                    </select>
+                  </div>
+                </div>
+                <button class="btn" onclick="addStaff()">
+                  <i class="fa-solid fa-plus"></i> Add Staff
+                </button>
+              </div>
+              <div class="card">
+                <h3><i class="fa-solid fa-list"></i> All Staff</h3>
+                <table>
+                  <thead>
+                    <tr><th>Name</th><th>Username</th><th>Role</th><th>Status</th><th>Joined</th><th>Action</th></tr>
+                  </thead>
+                  <tbody id="staff-table"></tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
         </div>
 
         <!-- Payment Modal -->
@@ -548,7 +804,7 @@ data:
               <i class="fa-solid fa-xmark"></i>
             </span>
             <h3><i class="fa-solid fa-money-bill-wave"></i> Quick Payment</h3>
-            <p style="color:#c4b5fd; font-size:0.85em; margin-bottom:15px" id="modal-debt-info"></p>
+            <p style="color:#c4b5fd;font-size:0.83em;margin-bottom:15px" id="modal-debt-info"></p>
             <div class="form-group" style="margin-bottom:12px">
               <label>Amount (KES)</label>
               <input type="number" id="modal-amount" placeholder="Enter amount">
@@ -565,30 +821,100 @@ data:
 
         <script>
           const API = '/api';
+          let token = localStorage.getItem('hw_token');
+          let currentUser = JSON.parse(localStorage.getItem('hw_user') || 'null');
           let selectedDebtId = null;
-          let allDebts = [];
+
+          // ── Init ──
+          if (token && currentUser) {
+            showApp();
+          }
+
+          // ── Login ──
+          async function doLogin() {
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value;
+            if (!username || !password) return showLoginError('Please enter username and password');
+            try {
+              const res = await fetch(API + '/login', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({username, password})
+              });
+              const data = await res.json();
+              if (!res.ok) return showLoginError(data.error || 'Login failed');
+              token = data.token;
+              currentUser = data.user;
+              localStorage.setItem('hw_token', token);
+              localStorage.setItem('hw_user', JSON.stringify(currentUser));
+              showApp();
+            } catch(e) {
+              showLoginError('Cannot connect to server');
+            }
+          }
+
+          function showLoginError(msg) {
+            const el = document.getElementById('login-error');
+            document.getElementById('login-error-msg').textContent = msg;
+            el.style.display = 'block';
+          }
+
+          function doLogout() {
+            localStorage.removeItem('hw_token');
+            localStorage.removeItem('hw_user');
+            token = null; currentUser = null;
+            document.getElementById('app-page').style.display = 'none';
+            document.getElementById('login-page').style.display = 'flex';
+            document.getElementById('login-password').value = '';
+            document.getElementById('login-error').style.display = 'none';
+          }
+
+          function showApp() {
+            document.getElementById('login-page').style.display = 'none';
+            document.getElementById('app-page').style.display = 'block';
+            // Set user info
+            document.getElementById('topbar-name').textContent = currentUser.name;
+            const roleEl = document.getElementById('topbar-role');
+            roleEl.textContent = currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1);
+            roleEl.className = 'user-role role-' + currentUser.role;
+            // Show/hide nav based on role
+            const isOwner = currentUser.role === 'owner';
+            const isManagerOrOwner = ['owner','manager'].includes(currentUser.role);
+            document.querySelectorAll('.nav-reminders').forEach(el =>
+              el.classList.toggle('hidden', !isManagerOrOwner));
+            document.querySelectorAll('.nav-reports').forEach(el =>
+              el.classList.toggle('hidden', !isManagerOrOwner));
+            document.querySelectorAll('.nav-staff').forEach(el =>
+              el.classList.toggle('hidden', !isOwner));
+            loadDashboard();
+          }
+
+          function headers() {
+            return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token };
+          }
 
           // ── Navigation ──
-          function showPage(page) {
+          function showPage(page, event) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             document.getElementById('page-' + page).classList.add('active');
-            event.currentTarget.classList.add('active');
+            if (event) event.currentTarget.classList.add('active');
             if (page === 'dashboard') loadDashboard();
             if (page === 'customers') loadCustomers();
             if (page === 'debts') { loadDebts(); loadCustomerDropdown(); }
-            if (page === 'payments') { loadDebtDropdowns(); loadPaymentHistory(); }
+            if (page === 'payments') { loadDebtDropdowns(); }
             if (page === 'reminders') loadReminders();
             if (page === 'reports') loadReports();
+            if (page === 'staff') loadStaff();
           }
 
-          function fmt(n) { return parseFloat(n || 0).toLocaleString('en-KE', {minimumFractionDigits: 2}); }
+          function fmt(n) { return parseFloat(n||0).toLocaleString('en-KE', {minimumFractionDigits:2}); }
           function fmtDate(d) { return d ? new Date(d).toLocaleDateString('en-KE') : '-'; }
 
-          function statusBadge(debt) {
-            if (debt.status === 'paid') return '<span class="badge badge-paid">Paid</span>';
-            if (parseFloat(debt.amount_paid) > 0) return '<span class="badge badge-partial">Partial</span>';
-            if (debt.due_date && new Date(debt.due_date) < new Date()) return '<span class="badge badge-overdue">Overdue</span>';
+          function statusBadge(d) {
+            if (d.status==='paid') return '<span class="badge badge-paid">Paid</span>';
+            if (parseFloat(d.amount_paid)>0) return '<span class="badge badge-partial">Partial</span>';
+            if (d.due_date && new Date(d.due_date)<new Date()) return '<span class="badge badge-overdue">Overdue</span>';
             return '<span class="badge badge-unpaid">Unpaid</span>';
           }
 
@@ -596,162 +922,131 @@ data:
             const el = document.getElementById(id);
             el.className = 'alert alert-' + type;
             el.style.display = 'block';
-            el.innerHTML = '<i class="fa-solid fa-' + (type === 'success' ? 'circle-check' : 'circle-xmark') + '"></i> ' + msg;
+            el.innerHTML = '<i class="fa-solid fa-' + (type==='success'?'circle-check':'circle-xmark') + '"></i> ' + msg;
             setTimeout(() => el.style.display = 'none', 3000);
           }
 
           // ── Dashboard ──
           async function loadDashboard() {
             const [rep, debts] = await Promise.all([
-              fetch(API + '/reports').then(r => r.json()),
-              fetch(API + '/debts').then(r => r.json())
+              fetch(API+'/reports', {headers:headers()}).then(r=>r.json()),
+              fetch(API+'/debts', {headers:headers()}).then(r=>r.json())
             ]);
-            document.getElementById('stat-customers').textContent = rep.total_customers;
-            document.getElementById('stat-debts').textContent = rep.total_debts;
+            document.getElementById('stat-customers').textContent = rep.total_customers || 0;
+            document.getElementById('stat-debts').textContent = rep.total_debts || 0;
             document.getElementById('stat-outstanding').textContent = fmt(rep.total_outstanding);
             document.getElementById('stat-collected').textContent = fmt(rep.total_collected);
-            document.getElementById('stat-overdue').textContent = rep.overdue_debts;
-            allDebts = debts;
-            const tbody = document.getElementById('recent-debts');
-            tbody.innerHTML = debts.slice(0,5).map(d => `
+            document.getElementById('stat-overdue').textContent = rep.overdue_debts || 0;
+            document.getElementById('recent-debts').innerHTML = debts.slice(0,5).map(d=>`
               <tr>
                 <td>${d.customer_name}</td>
                 <td>${d.description}</td>
                 <td>${fmt(d.total_amount)}</td>
                 <td>${fmt(d.balance)}</td>
                 <td>${statusBadge(d)}</td>
-              </tr>
-            `).join('');
+              </tr>`).join('');
           }
 
           // ── Customers ──
           async function loadCustomers() {
-            const customers = await fetch(API + '/customers').then(r => r.json());
-            document.getElementById('customers-table').innerHTML = customers.map(c => `
+            const customers = await fetch(API+'/customers', {headers:headers()}).then(r=>r.json());
+            document.getElementById('customers-table').innerHTML = customers.map(c=>`
               <tr>
                 <td><i class="fa-solid fa-user" style="color:#a78bfa;margin-right:6px"></i>${c.name}</td>
-                <td>${c.phone || '-'}</td>
-                <td>${c.email || '-'}</td>
-                <td style="color:${parseFloat(c.total_outstanding) > 0 ? '#f87171' : '#34d399'}">${fmt(c.total_outstanding)}</td>
+                <td>${c.phone||'-'}</td>
+                <td>${c.email||'-'}</td>
+                <td style="color:${parseFloat(c.total_outstanding)>0?'#f87171':'#34d399'}">${fmt(c.total_outstanding)}</td>
                 <td>${fmtDate(c.created_at)}</td>
-              </tr>
-            `).join('');
+              </tr>`).join('');
           }
 
           async function addCustomer() {
             const name = document.getElementById('cust-name').value.trim();
-            if (!name) return showAlert('alert-customer', 'Name is required', 'error');
-            await fetch(API + '/customers', {
-              method: 'POST',
-              headers: {'Content-Type': 'application/json'},
-              body: JSON.stringify({
-                name,
-                phone: document.getElementById('cust-phone').value,
-                email: document.getElementById('cust-email').value
-              })
+            if (!name) return showAlert('alert-customer','Name is required','error');
+            await fetch(API+'/customers', {
+              method:'POST', headers:headers(),
+              body:JSON.stringify({name, phone:document.getElementById('cust-phone').value, email:document.getElementById('cust-email').value})
             });
-            showAlert('alert-customer', 'Customer added successfully!', 'success');
-            document.getElementById('cust-name').value = '';
-            document.getElementById('cust-phone').value = '';
-            document.getElementById('cust-email').value = '';
+            showAlert('alert-customer','Customer added successfully!','success');
+            ['cust-name','cust-phone','cust-email'].forEach(id=>document.getElementById(id).value='');
             loadCustomers();
           }
 
           // ── Debts ──
           async function loadCustomerDropdown() {
-            const customers = await fetch(API + '/customers').then(r => r.json());
-            const sel = document.getElementById('debt-customer');
-            sel.innerHTML = '<option value="">Select customer</option>' +
-              customers.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            const customers = await fetch(API+'/customers', {headers:headers()}).then(r=>r.json());
+            document.getElementById('debt-customer').innerHTML =
+              '<option value="">Select customer</option>' +
+              customers.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
           }
 
           async function loadDebts() {
-            const debts = await fetch(API + '/debts').then(r => r.json());
-            allDebts = debts;
-            document.getElementById('debts-table').innerHTML = debts.map(d => `
+            const debts = await fetch(API+'/debts', {headers:headers()}).then(r=>r.json());
+            document.getElementById('debts-table').innerHTML = debts.map(d=>`
               <tr>
                 <td>${d.customer_name}</td>
                 <td>${d.description}</td>
                 <td>${fmt(d.total_amount)}</td>
                 <td style="color:#34d399">${fmt(d.amount_paid)}</td>
-                <td style="color:${parseFloat(d.balance) > 0 ? '#f87171' : '#34d399'}">${fmt(d.balance)}</td>
+                <td style="color:${parseFloat(d.balance)>0?'#f87171':'#34d399'}">${fmt(d.balance)}</td>
                 <td>${fmtDate(d.due_date)}</td>
                 <td>${statusBadge(d)}</td>
-                <td>
-                  ${d.status !== 'paid' ? `
-                    <button class="btn btn-green btn-sm" onclick="openPayModal(${d.id}, '${d.customer_name}', ${d.balance})">
-                      <i class="fa-solid fa-money-bill-wave"></i> Pay
-                    </button>` : ''}
-                </td>
-              </tr>
-            `).join('');
+                <td>${d.status!=='paid'?`<button class="btn btn-green btn-sm" onclick="openPayModal(${d.id},'${d.customer_name}',${d.balance})"><i class="fa-solid fa-money-bill-wave"></i> Pay</button>`:''}</td>
+              </tr>`).join('');
           }
 
           async function addDebt() {
             const customer_id = document.getElementById('debt-customer').value;
             const description = document.getElementById('debt-desc').value.trim();
             const total_amount = document.getElementById('debt-amount').value;
-            if (!customer_id || !description || !total_amount)
-              return showAlert('alert-debt', 'Please fill all required fields', 'error');
-            await fetch(API + '/debts', {
-              method: 'POST',
-              headers: {'Content-Type': 'application/json'},
-              body: JSON.stringify({
-                customer_id, description, total_amount,
-                due_date: document.getElementById('debt-due').value || null
-              })
+            if (!customer_id||!description||!total_amount)
+              return showAlert('alert-debt','Please fill all required fields','error');
+            await fetch(API+'/debts', {
+              method:'POST', headers:headers(),
+              body:JSON.stringify({customer_id, description, total_amount, due_date:document.getElementById('debt-due').value||null})
             });
-            showAlert('alert-debt', 'Debt recorded successfully!', 'success');
-            document.getElementById('debt-desc').value = '';
-            document.getElementById('debt-amount').value = '';
-            document.getElementById('debt-due').value = '';
+            showAlert('alert-debt','Debt recorded successfully!','success');
+            ['debt-desc','debt-amount','debt-due'].forEach(id=>document.getElementById(id).value='');
             loadDebts();
           }
 
           // ── Payments ──
           async function loadDebtDropdowns() {
-            const debts = await fetch(API + '/debts').then(r => r.json());
-            const unpaid = debts.filter(d => d.status !== 'paid');
+            const debts = await fetch(API+'/debts', {headers:headers()}).then(r=>r.json());
+            const unpaid = debts.filter(d=>d.status!=='paid');
             const opts = '<option value="">Select debt</option>' +
-              unpaid.map(d => `<option value="${d.id}">${d.customer_name} - ${d.description} (KES ${fmt(d.balance)})</option>`).join('');
+              unpaid.map(d=>`<option value="${d.id}">${d.customer_name} - ${d.description} (KES ${fmt(d.balance)})</option>`).join('');
             document.getElementById('pay-debt').innerHTML = opts;
             document.getElementById('filter-debt').innerHTML =
-              '<option value="">All Payments</option>' +
-              debts.map(d => `<option value="${d.id}">${d.customer_name} - ${d.description}</option>`).join('');
+              '<option value="">Select debt to view history</option>' +
+              debts.map(d=>`<option value="${d.id}">${d.customer_name} - ${d.description}</option>`).join('');
           }
 
           async function makePayment() {
             const debt_id = document.getElementById('pay-debt').value;
             const amount = document.getElementById('pay-amount').value;
-            if (!debt_id || !amount) return showAlert('alert-payment', 'Please fill all required fields', 'error');
-            await fetch(API + '/payments', {
-              method: 'POST',
-              headers: {'Content-Type': 'application/json'},
-              body: JSON.stringify({ debt_id, amount, note: document.getElementById('pay-note').value })
+            if (!debt_id||!amount) return showAlert('alert-payment','Please fill all required fields','error');
+            await fetch(API+'/payments', {
+              method:'POST', headers:headers(),
+              body:JSON.stringify({debt_id, amount, note:document.getElementById('pay-note').value})
             });
-            showAlert('alert-payment', 'Payment recorded successfully!', 'success');
-            document.getElementById('pay-amount').value = '';
-            document.getElementById('pay-note').value = '';
+            showAlert('alert-payment','Payment recorded!','success');
+            ['pay-amount','pay-note'].forEach(id=>document.getElementById(id).value='');
             loadDebtDropdowns();
-            loadPaymentHistory();
           }
 
           async function loadPaymentHistory() {
-            const debtId = document.getElementById('filter-debt') ? document.getElementById('filter-debt').value : '';
-            const url = debtId ? `${API}/payments/${debtId}` : `${API}/payments/all`;
-            try {
-              const payments = await fetch(debtId ? `${API}/payments/${debtId}` : `${API}/payments/0`).then(r => r.json());
-              document.getElementById('payments-table').innerHTML = payments.map(p => `
-                <tr>
-                  <td>#${p.debt_id}</td>
-                  <td style="color:#34d399">${fmt(p.amount)}</td>
-                  <td>${p.note || '-'}</td>
-                  <td>${fmtDate(p.paid_at)}</td>
-                </tr>
-              `).join('');
-            } catch(e) {
-              document.getElementById('payments-table').innerHTML = '<tr><td colspan="4" style="color:#c4b5fd;text-align:center">Select a debt to view payments</td></tr>';
-            }
+            const debtId = document.getElementById('filter-debt').value;
+            if (!debtId) return;
+            const payments = await fetch(API+'/payments/'+debtId, {headers:headers()}).then(r=>r.json());
+            document.getElementById('payments-table').innerHTML = payments.map(p=>`
+              <tr>
+                <td>#${p.debt_id}</td>
+                <td style="color:#34d399">${fmt(p.amount)}</td>
+                <td>${p.note||'-'}</td>
+                <td>${p.recorded_by_name||'-'}</td>
+                <td>${fmtDate(p.paid_at)}</td>
+              </tr>`).join('');
           }
 
           // ── Quick Pay Modal ──
@@ -770,54 +1065,79 @@ data:
           async function submitModalPayment() {
             const amount = document.getElementById('modal-amount').value;
             if (!amount) return;
-            await fetch(API + '/payments', {
-              method: 'POST',
-              headers: {'Content-Type': 'application/json'},
-              body: JSON.stringify({
-                debt_id: selectedDebtId,
-                amount,
-                note: document.getElementById('modal-note').value
-              })
+            await fetch(API+'/payments', {
+              method:'POST', headers:headers(),
+              body:JSON.stringify({debt_id:selectedDebtId, amount, note:document.getElementById('modal-note').value})
             });
             closeModal();
-            loadDebts();
-            loadDashboard();
+            loadDebts(); loadDashboard();
           }
 
           // ── Reminders ──
           async function loadReminders() {
-            const reminders = await fetch(API + '/reminders').then(r => r.json());
+            const reminders = await fetch(API+'/reminders', {headers:headers()}).then(r=>r.json());
             const el = document.getElementById('reminders-list');
             if (!reminders.length) {
               el.innerHTML = '<p style="color:#34d399"><i class="fa-solid fa-circle-check"></i> No upcoming due debts!</p>';
               return;
             }
-            el.innerHTML = reminders.map(r => `
+            el.innerHTML = reminders.map(r=>`
               <div class="reminder-card">
                 <div>
                   <div class="name"><i class="fa-solid fa-user"></i> ${r.customer_name}</div>
-                  <div class="details">
-                    ${r.description} | Due: ${fmtDate(r.due_date)} | Phone: ${r.customer_phone || 'N/A'}
-                  </div>
+                  <div class="details">${r.description} | Due: ${fmtDate(r.due_date)} | Phone: ${r.customer_phone||'N/A'}</div>
                 </div>
                 <div class="balance">KES ${fmt(r.balance)}</div>
-              </div>
-            `).join('');
+              </div>`).join('');
           }
 
           // ── Reports ──
           async function loadReports() {
-            const rep = await fetch(API + '/reports').then(r => r.json());
-            document.getElementById('rep-total-amount').textContent = fmt(rep.total_debt_amount);
+            const rep = await fetch(API+'/reports', {headers:headers()}).then(r=>r.json());
+            document.getElementById('rep-total').textContent = fmt(rep.total_debt_amount);
             document.getElementById('rep-collected').textContent = fmt(rep.total_collected);
             document.getElementById('rep-outstanding').textContent = fmt(rep.total_outstanding);
-            document.getElementById('rep-paid-debts').textContent = rep.paid_debts;
-            document.getElementById('rep-unpaid-debts').textContent = rep.unpaid_debts;
+            document.getElementById('rep-paid').textContent = rep.paid_debts;
+            document.getElementById('rep-unpaid').textContent = rep.unpaid_debts;
             document.getElementById('rep-overdue').textContent = rep.overdue_debts;
           }
 
-          // ── Init ──
-          loadDashboard();
+          // ── Staff ──
+          async function loadStaff() {
+            const staff = await fetch(API+'/staff', {headers:headers()}).then(r=>r.json());
+            document.getElementById('staff-table').innerHTML = staff.map(s=>`
+              <tr>
+                <td>${s.name}</td>
+                <td>${s.username}</td>
+                <td><span class="badge role-${s.role}" style="background:rgba(167,139,250,0.2);color:#a78bfa">${s.role}</span></td>
+                <td><span style="color:${s.active?'#34d399':'#f87171'}">${s.active?'Active':'Inactive'}</span></td>
+                <td>${fmtDate(s.created_at)}</td>
+                <td>${s.username!=='owner'?`<button class="btn btn-red btn-sm" onclick="deleteStaff(${s.id})"><i class="fa-solid fa-trash"></i></button>`:'-'}</td>
+              </tr>`).join('');
+          }
+
+          async function addStaff() {
+            const name = document.getElementById('staff-name').value.trim();
+            const username = document.getElementById('staff-username').value.trim();
+            const password = document.getElementById('staff-password').value;
+            const role = document.getElementById('staff-role').value;
+            if (!name||!username||!password) return showAlert('alert-staff','Please fill all fields','error');
+            const res = await fetch(API+'/staff', {
+              method:'POST', headers:headers(),
+              body:JSON.stringify({name, username, password, role})
+            });
+            const data = await res.json();
+            if (!res.ok) return showAlert('alert-staff', data.error||'Error adding staff','error');
+            showAlert('alert-staff','Staff added successfully!','success');
+            ['staff-name','staff-username','staff-password'].forEach(id=>document.getElementById(id).value='');
+            loadStaff();
+          }
+
+          async function deleteStaff(id) {
+            if (!confirm('Deactivate this staff member?')) return;
+            await fetch(API+'/staff/'+id, {method:'DELETE', headers:headers()});
+            loadStaff();
+          }
         </script>
       </body>
     </html>
