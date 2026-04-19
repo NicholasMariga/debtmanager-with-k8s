@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: myapp-debtmanager
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/NicholasMariga/debtmanager-with-k8s.git
+    targetRevision: HEAD
+    path: debtmanager
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: debtmanager
+  syncPolicy:
+    syncOptions:
+    - CreateNamespace=true
+    automated:
+      selfHeal: true
+      prune: true
