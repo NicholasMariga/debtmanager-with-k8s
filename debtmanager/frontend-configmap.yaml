@@ -20,7 +20,6 @@ data:
             min-height: 100vh;
           }
 
-          /* ── LOGIN PAGE ── */
           .login-page {
             min-height: 100vh;
             display: flex;
@@ -51,25 +50,19 @@ data:
           .login-logo { font-size: 3em; color: #a78bfa; margin-bottom: 10px; }
           .login-title { font-size: 1.5em; font-weight: bold; color: white; margin-bottom: 5px; }
           .login-subtitle { font-size: 0.85em; color: #c4b5fd; margin-bottom: 30px; }
-
           .login-form .form-group { margin-bottom: 15px; text-align: left; }
           .login-form label { font-size: 0.8em; color: #c4b5fd; display: block; margin-bottom: 6px; }
           .login-form .input-wrap { position: relative; }
           .login-form .input-wrap i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #a78bfa; font-size: 0.9em; }
           .login-form input { width: 100%; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; padding: 12px 12px 12px 38px; color: white; font-size: 0.9em; outline: none; transition: border 0.3s; }
           .login-form input:focus { border-color: #a78bfa; }
-
           .login-btn { width: 100%; background: linear-gradient(135deg, #a78bfa, #7c3aed); color: white; padding: 13px; border: none; border-radius: 10px; cursor: pointer; font-size: 1em; margin-top: 10px; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; }
           .login-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(167,139,250,0.5); }
-
           .login-error { background: rgba(248,113,113,0.15); border: 1px solid #f87171; color: #f87171; padding: 10px; border-radius: 8px; font-size: 0.85em; margin-bottom: 15px; display: none; }
-
           .role-badges { display: flex; gap: 8px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
           .role-badge { background: rgba(167,139,250,0.15); border: 1px solid rgba(167,139,250,0.3); color: #c4b5fd; padding: 4px 12px; border-radius: 20px; font-size: 0.75em; }
 
-          /* ── APP ── */
           .app-page { display: none; }
-
           .topbar { position: fixed; top: 0; left: 0; right: 0; height: 60px; background: rgba(15,12,41,0.95); border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 200; }
           .topbar-left { display: flex; align-items: center; gap: 12px; }
           .topbar-logo i { color: #a78bfa; font-size: 1.4em; }
@@ -138,7 +131,6 @@ data:
           .alert-success { background: rgba(52,211,153,0.15); border: 1px solid #34d399; color: #34d399; }
           .alert-error { background: rgba(248,113,113,0.15); border: 1px solid #f87171; color: #f87171; }
 
-          /* Reminder Cards */
           .reminder-card { background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.25); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
           .reminder-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
           .reminder-name { font-weight: bold; color: #fbbf24; font-size: 1em; margin-bottom: 4px; }
@@ -146,17 +138,12 @@ data:
           .reminder-balance { font-size: 1.2em; font-weight: bold; color: #f87171; white-space: nowrap; }
           .reminder-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
-          /* Modal */
           .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); z-index: 1000; align-items: center; justify-content: center; }
           .modal.open { display: flex; }
-          .modal-box { background: #1a1a2e; border: 1px solid rgba(255,255,255,0.15); border-radius: 16px; padding: 25px; width: 400px; max-width: 90%; }
+          .modal-box { background: #1a1a2e; border: 1px solid rgba(255,255,255,0.15); border-radius: 16px; padding: 25px; width: 450px; max-width: 90%; max-height: 90vh; overflow-y: auto; }
           .modal-box h3 { color: #a78bfa; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
           .modal-close { float: right; cursor: pointer; color: #c4b5fd; }
 
-          /* Message Preview */
-          .msg-preview { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 12px; margin: 12px 0; font-size: 0.85em; color: #e5e7eb; white-space: pre-line; line-height: 1.6; }
-
-          /* History log */
           .log-entry { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.83em; }
           .log-entry:last-child { border-bottom: none; }
           .log-icon { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85em; flex-shrink: 0; }
@@ -166,11 +153,14 @@ data:
           .log-name { color: white; font-weight: bold; }
           .log-desc { color: #c4b5fd; font-size: 0.9em; }
           .log-time { color: rgba(255,255,255,0.3); font-size: 0.8em; white-space: nowrap; }
+
+          .loading-msg { color: #c4b5fd; font-size: 0.85em; text-align: center; padding: 20px; }
+          .loading-msg i { margin-right: 8px; }
         </style>
       </head>
       <body>
 
-        <!-- ══ LOGIN PAGE ══ -->
+        <!-- LOGIN PAGE -->
         <div class="login-page" id="login-page">
           <div class="login-box">
             <div class="login-logo"><i class="fa-solid fa-store"></i></div>
@@ -207,7 +197,7 @@ data:
           </div>
         </div>
 
-        <!-- ══ APP PAGE ══ -->
+        <!-- APP PAGE -->
         <div class="app-page" id="app-page">
 
           <!-- Top Bar -->
@@ -255,7 +245,7 @@ data:
             </div>
           </div>
 
-          <!-- Main -->
+          <!-- Main Content -->
           <div class="main">
 
             <!-- DASHBOARD -->
@@ -314,7 +304,7 @@ data:
                     <input type="text" id="cust-name" placeholder="e.g. John Kamau">
                   </div>
                   <div class="form-group">
-                    <label>Phone (with 07...) *</label>
+                    <label>Phone (07...) *</label>
                     <input type="text" id="cust-phone" placeholder="e.g. 0712345678">
                   </div>
                   <div class="form-group">
@@ -332,7 +322,7 @@ data:
                   <thead>
                     <tr>
                       <th>Name</th><th>Phone</th><th>Email</th>
-                      <th>Outstanding (KES)</th><th>Actions</th>
+                      <th>Outstanding (KES)</th><th>Contact</th>
                     </tr>
                   </thead>
                   <tbody id="customers-table"></tbody>
@@ -373,8 +363,8 @@ data:
                 <table>
                   <thead>
                     <tr>
-                      <th>Customer</th><th>Description</th><th>Total (KES)</th>
-                      <th>Paid (KES)</th><th>Balance (KES)</th>
+                      <th>Customer</th><th>Description</th><th>Date Taken</th>
+                      <th>Total (KES)</th><th>Paid (KES)</th><th>Balance (KES)</th>
                       <th>Due Date</th><th>Status</th><th>Actions</th>
                     </tr>
                   </thead>
@@ -399,8 +389,13 @@ data:
                     <input type="number" id="pay-amount" placeholder="e.g. 1000">
                   </div>
                   <div class="form-group">
-                    <label>Note</label>
-                    <input type="text" id="pay-note" placeholder="e.g. Cash, M-Pesa">
+                    <label>Payment Method *</label>
+                    <select id="pay-note">
+                      <option value="Cash">Cash</option>
+                      <option value="M-Pesa">M-Pesa</option>
+                      <option value="Bank Transfer">Bank Transfer</option>
+                      <option value="Cheque">Cheque</option>
+                    </select>
                   </div>
                 </div>
                 <button class="btn btn-green" onclick="makePayment()">
@@ -420,7 +415,7 @@ data:
                 <table>
                   <thead>
                     <tr>
-                      <th>Amount (KES)</th><th>Note</th>
+                      <th>Amount (KES)</th><th>Method</th>
                       <th>Recorded By</th><th>Date</th>
                     </tr>
                   </thead>
@@ -432,17 +427,16 @@ data:
             <!-- REMINDERS -->
             <div class="page" id="page-reminders">
               <div class="page-title"><i class="fa-solid fa-bell"></i> Reminders</div>
-
               <div class="card">
                 <h3><i class="fa-solid fa-triangle-exclamation"></i> Overdue Debts</h3>
                 <p style="color:#c4b5fd;font-size:0.85em;margin-bottom:15px">
                   <i class="fa-solid fa-circle-info"></i>
-                  Click WhatsApp or SMS to send a reminder directly from your phone.
-                  The message is pre-filled — you just press Send.
+                  Click WhatsApp or SMS to send a reminder. The message includes
+                  ALL debts for that customer, date taken, and payment history.
+                  You just press Send.
                 </p>
                 <div id="reminders-list"></div>
               </div>
-
               <div class="card">
                 <h3><i class="fa-solid fa-clock-rotate-left"></i> Message History</h3>
                 <div id="message-history">
@@ -551,8 +545,13 @@ data:
               <input type="number" id="modal-amount" placeholder="Enter amount">
             </div>
             <div class="form-group" style="margin-bottom:15px">
-              <label>Note</label>
-              <input type="text" id="modal-note" placeholder="e.g. Cash, M-Pesa">
+              <label>Payment Method</label>
+              <select id="modal-note">
+                <option value="Cash">Cash</option>
+                <option value="M-Pesa">M-Pesa</option>
+                <option value="Bank Transfer">Bank Transfer</option>
+                <option value="Cheque">Cheque</option>
+              </select>
             </div>
             <button class="btn btn-green" onclick="submitModalPayment()">
               <i class="fa-solid fa-check"></i> Confirm Payment
@@ -567,30 +566,29 @@ data:
               <i class="fa-solid fa-xmark"></i>
             </span>
             <h3 id="msg-modal-title">
-              <i class="fa-brands fa-whatsapp"></i> Send Reminder
+              <i class="fa-solid fa-paper-plane"></i> Send Reminder
             </h3>
             <p style="color:#c4b5fd;font-size:0.82em;margin-bottom:5px">
               Message preview — edit if needed before sending:
             </p>
             <textarea id="msg-preview-text"
-              style="width:100%;height:150px;background:rgba(255,255,255,0.05);
+              style="width:100%;height:200px;background:rgba(255,255,255,0.05);
               border:1px solid rgba(255,255,255,0.15);border-radius:8px;
-              padding:10px;color:white;font-size:0.85em;resize:vertical;
-              outline:none;line-height:1.6"></textarea>
+              padding:10px;color:white;font-size:0.82em;resize:vertical;
+              outline:none;line-height:1.6;font-family:monospace"></textarea>
             <div style="display:flex;gap:10px;margin-top:15px;flex-wrap:wrap">
               <a id="whatsapp-link" href="#" target="_blank"
                 class="btn btn-whatsapp" onclick="logMessage('whatsapp')">
                 <i class="fa-brands fa-whatsapp"></i> Open in WhatsApp
               </a>
-              <a id="sms-link" href="#" target="_blank"
+              <a id="sms-link" href="#"
                 class="btn btn-sms" onclick="logMessage('sms')">
                 <i class="fa-solid fa-message"></i> Open in SMS
               </a>
             </div>
             <p style="color:rgba(255,255,255,0.3);font-size:0.75em;margin-top:10px">
               <i class="fa-solid fa-circle-info"></i>
-              WhatsApp/SMS will open with message pre-filled.
-              You press Send from your phone.
+              WhatsApp/SMS opens with message pre-filled. You press Send.
             </p>
           </div>
         </div>
@@ -684,7 +682,6 @@ data:
           function fmt(n) { return parseFloat(n||0).toLocaleString('en-KE', {minimumFractionDigits:2}); }
           function fmtDate(d) { return d ? new Date(d).toLocaleDateString('en-KE') : '-'; }
           function fmtPhone(phone) {
-            // Convert 07XXXXXXXX to 2547XXXXXXXX for WhatsApp
             if (!phone) return '';
             if (phone.startsWith('0')) return '254' + phone.slice(1);
             if (phone.startsWith('+')) return phone.slice(1);
@@ -710,24 +707,75 @@ data:
             document.getElementById(id).classList.remove('open');
           }
 
-          // ── WhatsApp & SMS Deep Links ──
-          function buildMessage(debt) {
-            return `Happywise Ent - Debt Reminder\n\nDear ${debt.customer_name},\n\nThis is a friendly reminder that you have an outstanding debt with us:\n\nDescription: ${debt.description}\nTotal Amount: KES ${fmt(debt.total_amount)}\nAmount Paid: KES ${fmt(debt.amount_paid)}\nBalance Due: KES ${fmt(debt.balance)}\nDue Date: ${fmtDate(debt.due_date)}\n\nKindly make your payment at your earliest convenience.\n\nThank you for your business!\nHappywise Ent`;
+          // ── Build Full Message (ALL debts for customer) ──
+          async function buildMessage(debt) {
+            // Show loading while fetching
+            document.getElementById('msg-preview-text').value = 'Loading all debts for ' + debt.customer_name + '...';
+
+            // Fetch ALL debts
+            const allDebts = await fetch(API + '/debts', {headers: headers()}).then(r => r.json());
+
+            // Filter unpaid debts for this customer only
+            const customerDebts = allDebts.filter(d =>
+              d.customer_id === debt.customer_id && d.status !== 'paid'
+            );
+
+            let debtLines = '';
+            let grandTotal = 0;
+            let grandPaid = 0;
+
+            for (let i = 0; i < customerDebts.length; i++) {
+              const d = customerDebts[i];
+              grandTotal += parseFloat(d.total_amount);
+              grandPaid += parseFloat(d.amount_paid);
+
+              debtLines += `${i + 1}. ${d.description}\n`;
+              debtLines += `   Date Taken : ${fmtDate(d.created_at)}\n`;
+              debtLines += `   Total      : KES ${fmt(d.total_amount)}\n`;
+              debtLines += `   Due Date   : ${fmtDate(d.due_date)}\n`;
+
+              // If partially paid — fetch and show payment history
+              if (parseFloat(d.amount_paid) > 0) {
+                try {
+                  const payments = await fetch(API + '/payments/' + d.id, {headers: headers()}).then(r => r.json());
+                  payments.forEach(p => {
+                    debtLines += `   Paid       : KES ${fmt(p.amount)} via ${p.note || 'N/A'} on ${fmtDate(p.paid_at)}\n`;
+                  });
+                } catch(e) {
+                  debtLines += `   Paid       : KES ${fmt(d.amount_paid)}\n`;
+                }
+                debtLines += `   Balance    : KES ${fmt(d.balance)}\n`;
+              } else {
+                debtLines += `   Balance    : KES ${fmt(d.total_amount)} (not yet paid)\n`;
+              }
+
+              debtLines += '\n';
+            }
+
+            const grandBalance = grandTotal - grandPaid;
+
+            return `Happywise Ent - Debt Reminder\n\nDear ${debt.customer_name},\n\nThis is a friendly reminder about your outstanding debt(s) with us:\n\n${debtLines}─────────────────────\nTOTAL BALANCE DUE: KES ${fmt(grandBalance)}\n─────────────────────\n\nKindly make your payment at your earliest convenience.\nYou can reach us for any queries.\n\nThank you for your business!\nHappywise Ent`;
           }
 
-          function openReminderModal(debt) {
+          // ── Open Reminder Modal ──
+          async function openReminderModal(debt) {
             currentReminderPhone = debt.customer_phone;
             currentReminderName = debt.customer_name;
 
-            const message = buildMessage(debt);
+            // Open modal immediately with loading state
+            document.getElementById('msg-modal-title').innerHTML =
+              `<i class="fa-solid fa-paper-plane"></i> Send Reminder to ${debt.customer_name}`;
+            document.getElementById('msg-preview-text').value = 'Loading all debts...';
+            document.getElementById('whatsapp-link').href = '#';
+            document.getElementById('sms-link').href = '#';
+            document.getElementById('message-modal').classList.add('open');
+
+            // Build full message with all debts
+            const message = await buildMessage(debt);
             const encodedMsg = encodeURIComponent(message);
             const phone = fmtPhone(debt.customer_phone);
 
-            // Set modal title
-            document.getElementById('msg-modal-title').innerHTML =
-              `<i class="fa-solid fa-paper-plane"></i> Send Reminder to ${debt.customer_name}`;
-
-            // Set editable message preview
+            // Update textarea with full message
             document.getElementById('msg-preview-text').value = message;
 
             // Set WhatsApp deep link
@@ -738,22 +786,37 @@ data:
             document.getElementById('sms-link').href =
               `sms:${debt.customer_phone}?body=${encodedMsg}`;
 
-            // Store debt info for logging
+            // Store for logging
             document.getElementById('whatsapp-link').dataset.debtId = debt.id;
             document.getElementById('whatsapp-link').dataset.customerName = debt.customer_name;
             document.getElementById('sms-link').dataset.debtId = debt.id;
             document.getElementById('sms-link').dataset.customerName = debt.customer_name;
-
-            document.getElementById('message-modal').classList.add('open');
           }
 
-          function logMessage(type) {
-            // Get latest message from textarea (user may have edited it)
-            const msg = document.getElementById('msg-preview-text').value;
-            const debtId = document.getElementById('whatsapp-link').dataset.debtId;
-            const customerName = document.getElementById('whatsapp-link').dataset.customerName;
+          // ── Open SMS Only ──
+          async function openSmsOnly(debt) {
+            const message = await buildMessage(debt);
+            const encodedMsg = encodeURIComponent(message);
+            const entry = {
+              type: 'sms',
+              customerName: debt.customer_name,
+              debtId: debt.id,
+              phone: debt.customer_phone,
+              message,
+              time: new Date().toISOString()
+            };
+            messageLog.unshift(entry);
+            if (messageLog.length > 50) messageLog = messageLog.slice(0, 50);
+            localStorage.setItem('hw_msg_log', JSON.stringify(messageLog));
+            renderMessageHistory();
+            window.open(`sms:${debt.customer_phone}?body=${encodedMsg}`);
+          }
 
-            // Log to localStorage
+          // ── Log Message ──
+          function logMessage(type) {
+            const msg = document.getElementById('msg-preview-text').value;
+            const customerName = document.getElementById('whatsapp-link').dataset.customerName;
+            const debtId = document.getElementById('whatsapp-link').dataset.debtId;
             const entry = {
               type,
               customerName,
@@ -762,18 +825,14 @@ data:
               message: msg,
               time: new Date().toISOString()
             };
-
             messageLog.unshift(entry);
             if (messageLog.length > 50) messageLog = messageLog.slice(0, 50);
             localStorage.setItem('hw_msg_log', JSON.stringify(messageLog));
-
-            // Close modal after short delay
             setTimeout(() => closeModal('message-modal'), 500);
-
-            // Refresh history if on reminders page
             renderMessageHistory();
           }
 
+          // ── Render Message History ──
           function renderMessageHistory() {
             const el = document.getElementById('message-history');
             if (!el) return;
@@ -788,13 +847,10 @@ data:
                 </div>
                 <div class="log-info">
                   <div class="log-name">${m.customerName}</div>
-                  <div class="log-desc">
-                    ${m.type === 'whatsapp' ? 'WhatsApp' : 'SMS'} sent to ${m.phone}
-                  </div>
+                  <div class="log-desc">${m.type === 'whatsapp' ? 'WhatsApp' : 'SMS'} sent to ${m.phone}</div>
                 </div>
                 <div class="log-time">${fmtDate(m.time)}</div>
-              </div>
-            `).join('');
+              </div>`).join('');
           }
 
           // ── Dashboard ──
@@ -817,9 +873,7 @@ data:
                   <td>${fmt(d.balance)}</td>
                   <td>${statusBadge(d)}</td>
                 </tr>`).join('');
-            } catch(e) {
-              console.error('Dashboard error:', e);
-            }
+            } catch(e) { console.error('Dashboard error:', e); }
           }
 
           // ── Customers ──
@@ -833,8 +887,7 @@ data:
                 <td style="color:${parseFloat(c.total_outstanding)>0?'#f87171':'#34d399'}">${fmt(c.total_outstanding)}</td>
                 <td style="display:flex;gap:6px;flex-wrap:wrap">
                   ${c.phone ? `
-                    <a href="https://wa.me/${fmtPhone(c.phone)}" target="_blank"
-                      class="btn btn-whatsapp btn-sm">
+                    <a href="https://wa.me/${fmtPhone(c.phone)}" target="_blank" class="btn btn-whatsapp btn-sm">
                       <i class="fa-brands fa-whatsapp"></i>
                     </a>
                     <a href="sms:${c.phone}" class="btn btn-sms btn-sm">
@@ -875,6 +928,7 @@ data:
               <tr>
                 <td>${d.customer_name}</td>
                 <td>${d.description}</td>
+                <td>${fmtDate(d.created_at)}</td>
                 <td>${fmt(d.total_amount)}</td>
                 <td style="color:#34d399">${fmt(d.amount_paid)}</td>
                 <td style="color:${parseFloat(d.balance)>0?'#f87171':'#34d399'}">${fmt(d.balance)}</td>
@@ -886,7 +940,7 @@ data:
                       <i class="fa-solid fa-money-bill-wave"></i> Pay
                     </button>` : ''}
                   ${d.customer_phone && d.status!=='paid' ? `
-                    <button class="btn btn-whatsapp btn-sm" onclick="openReminderModal(${JSON.stringify(d).replace(/"/g, '&quot;')})">
+                    <button class="btn btn-whatsapp btn-sm" onclick='openReminderModal(${JSON.stringify(d).replace(/"/g,"&quot;")})'>
                       <i class="fa-brands fa-whatsapp"></i>
                     </button>` : ''}
                 </td>
@@ -926,14 +980,15 @@ data:
           async function makePayment() {
             const debt_id = document.getElementById('pay-debt').value;
             const amount = document.getElementById('pay-amount').value;
+            const note = document.getElementById('pay-note').value;
             if (!debt_id||!amount)
               return showAlert('alert-payment','Please fill all required fields','error');
             await fetch(API+'/payments', {
               method:'POST', headers:headers(),
-              body:JSON.stringify({debt_id, amount, note:document.getElementById('pay-note').value})
+              body:JSON.stringify({debt_id, amount, note})
             });
             showAlert('alert-payment','Payment recorded!','success');
-            ['pay-amount','pay-note'].forEach(id=>document.getElementById(id).value='');
+            document.getElementById('pay-amount').value = '';
             loadDebtDropdowns();
           }
 
@@ -941,13 +996,15 @@ data:
             const debtId = document.getElementById('filter-debt').value;
             if (!debtId) return;
             const payments = await fetch(API+'/payments/'+debtId, {headers:headers()}).then(r=>r.json());
-            document.getElementById('payments-table').innerHTML = payments.map(p=>`
-              <tr>
-                <td style="color:#34d399">${fmt(p.amount)}</td>
-                <td>${p.note||'-'}</td>
-                <td>${p.recorded_by_name||'-'}</td>
-                <td>${fmtDate(p.paid_at)}</td>
-              </tr>`).join('');
+            document.getElementById('payments-table').innerHTML = payments.length ?
+              payments.map(p=>`
+                <tr>
+                  <td style="color:#34d399">${fmt(p.amount)}</td>
+                  <td>${p.note||'-'}</td>
+                  <td>${p.recorded_by_name||'-'}</td>
+                  <td>${fmtDate(p.paid_at)}</td>
+                </tr>`).join('') :
+              '<tr><td colspan="4" style="color:#c4b5fd;text-align:center">No payments yet</td></tr>';
           }
 
           // ── Quick Pay Modal ──
@@ -960,14 +1017,11 @@ data:
 
           async function submitModalPayment() {
             const amount = document.getElementById('modal-amount').value;
+            const note = document.getElementById('modal-note').value;
             if (!amount) return;
             await fetch(API+'/payments', {
               method:'POST', headers:headers(),
-              body:JSON.stringify({
-                debt_id:selectedDebtId,
-                amount,
-                note:document.getElementById('modal-note').value
-              })
+              body:JSON.stringify({debt_id:selectedDebtId, amount, note})
             });
             closeModal('payment-modal');
             loadDebts();
@@ -988,7 +1042,12 @@ data:
                   </div>`;
                 return;
               }
-              el.innerHTML = reminders.map(r => `
+              // Group by customer — show one card per customer
+              const byCustomer = {};
+              reminders.forEach(r => {
+                if (!byCustomer[r.customer_id]) byCustomer[r.customer_id] = r;
+              });
+              el.innerHTML = Object.values(byCustomer).map(r => `
                 <div class="reminder-card">
                   <div class="reminder-top">
                     <div>
@@ -996,9 +1055,8 @@ data:
                         <i class="fa-solid fa-user"></i> ${r.customer_name}
                       </div>
                       <div class="reminder-details">
-                        <i class="fa-solid fa-tag"></i> ${r.description} &nbsp;|&nbsp;
-                        <i class="fa-solid fa-calendar"></i> Due: ${fmtDate(r.due_date)} &nbsp;|&nbsp;
-                        <i class="fa-solid fa-phone"></i> ${r.customer_phone || 'No phone'}
+                        <i class="fa-solid fa-phone"></i> ${r.customer_phone || 'No phone'} &nbsp;|&nbsp;
+                        <i class="fa-solid fa-triangle-exclamation"></i> Has overdue debts
                       </div>
                     </div>
                     <div class="reminder-balance">KES ${fmt(r.balance)}</div>
@@ -1007,11 +1065,11 @@ data:
                     ${r.customer_phone ? `
                       <button class="btn btn-whatsapp btn-sm"
                         onclick='openReminderModal(${JSON.stringify(r)})'>
-                        <i class="fa-brands fa-whatsapp"></i> WhatsApp
+                        <i class="fa-brands fa-whatsapp"></i> WhatsApp All Debts
                       </button>
                       <button class="btn btn-sms btn-sm"
                         onclick='openSmsOnly(${JSON.stringify(r)})'>
-                        <i class="fa-solid fa-message"></i> SMS
+                        <i class="fa-solid fa-message"></i> SMS All Debts
                       </button>` :
                       `<span style="color:#f87171;font-size:0.82em">
                         <i class="fa-solid fa-circle-exclamation"></i> No phone number
@@ -1019,28 +1077,7 @@ data:
                     }
                   </div>
                 </div>`).join('');
-            } catch(e) {
-              console.error('Reminders error:', e);
-            }
-          }
-
-          function openSmsOnly(debt) {
-            const message = buildMessage(debt);
-            const encodedMsg = encodeURIComponent(message);
-            // Log directly
-            const entry = {
-              type: 'sms',
-              customerName: debt.customer_name,
-              debtId: debt.id,
-              phone: debt.customer_phone,
-              message,
-              time: new Date().toISOString()
-            };
-            messageLog.unshift(entry);
-            localStorage.setItem('hw_msg_log', JSON.stringify(messageLog));
-            renderMessageHistory();
-            // Open SMS
-            window.open(`sms:${debt.customer_phone}?body=${encodedMsg}`);
+            } catch(e) { console.error('Reminders error:', e); }
           }
 
           // ── Reports ──
@@ -1083,7 +1120,7 @@ data:
               body:JSON.stringify({name, username, password, role})
             });
             const data = await res.json();
-            if (!res.ok) return showAlert('alert-staff', data.error||'Error adding staff','error');
+            if (!res.ok) return showAlert('alert-staff', data.error||'Error','error');
             showAlert('alert-staff','Staff added successfully!','success');
             ['staff-name','staff-username','staff-password'].forEach(id=>document.getElementById(id).value='');
             loadStaff();
