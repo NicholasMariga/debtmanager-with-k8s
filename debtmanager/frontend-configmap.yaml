@@ -48,395 +48,124 @@ data:
             box-shadow: 0 25px 50px rgba(0,0,0,0.5);
           }
 
-          .login-logo {
-            font-size: 3em;
-            color: #a78bfa;
-            margin-bottom: 10px;
-          }
+          .login-logo { font-size: 3em; color: #a78bfa; margin-bottom: 10px; }
+          .login-title { font-size: 1.5em; font-weight: bold; color: white; margin-bottom: 5px; }
+          .login-subtitle { font-size: 0.85em; color: #c4b5fd; margin-bottom: 30px; }
 
-          .login-title {
-            font-size: 1.5em;
-            font-weight: bold;
-            color: white;
-            margin-bottom: 5px;
-          }
-
-          .login-subtitle {
-            font-size: 0.85em;
-            color: #c4b5fd;
-            margin-bottom: 30px;
-          }
-
-          .login-form .form-group {
-            margin-bottom: 15px;
-            text-align: left;
-          }
-
-          .login-form label {
-            font-size: 0.8em;
-            color: #c4b5fd;
-            display: block;
-            margin-bottom: 6px;
-          }
-
-          .login-form .input-wrap {
-            position: relative;
-          }
-
-          .login-form .input-wrap i {
-            position: absolute;
-            left: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #a78bfa;
-            font-size: 0.9em;
-          }
-
-          .login-form input {
-            width: 100%;
-            background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 10px;
-            padding: 12px 12px 12px 38px;
-            color: white;
-            font-size: 0.9em;
-            outline: none;
-            transition: border 0.3s;
-          }
-
+          .login-form .form-group { margin-bottom: 15px; text-align: left; }
+          .login-form label { font-size: 0.8em; color: #c4b5fd; display: block; margin-bottom: 6px; }
+          .login-form .input-wrap { position: relative; }
+          .login-form .input-wrap i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #a78bfa; font-size: 0.9em; }
+          .login-form input { width: 100%; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; padding: 12px 12px 12px 38px; color: white; font-size: 0.9em; outline: none; transition: border 0.3s; }
           .login-form input:focus { border-color: #a78bfa; }
 
-          .login-btn {
-            width: 100%;
-            background: linear-gradient(135deg, #a78bfa, #7c3aed);
-            color: white;
-            padding: 13px;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 1em;
-            margin-top: 10px;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-          }
+          .login-btn { width: 100%; background: linear-gradient(135deg, #a78bfa, #7c3aed); color: white; padding: 13px; border: none; border-radius: 10px; cursor: pointer; font-size: 1em; margin-top: 10px; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+          .login-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(167,139,250,0.5); }
 
-          .login-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(167,139,250,0.5);
-          }
+          .login-error { background: rgba(248,113,113,0.15); border: 1px solid #f87171; color: #f87171; padding: 10px; border-radius: 8px; font-size: 0.85em; margin-bottom: 15px; display: none; }
 
-          .login-error {
-            background: rgba(248,113,113,0.15);
-            border: 1px solid #f87171;
-            color: #f87171;
-            padding: 10px;
-            border-radius: 8px;
-            font-size: 0.85em;
-            margin-bottom: 15px;
-            display: none;
-          }
+          .role-badges { display: flex; gap: 8px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
+          .role-badge { background: rgba(167,139,250,0.15); border: 1px solid rgba(167,139,250,0.3); color: #c4b5fd; padding: 4px 12px; border-radius: 20px; font-size: 0.75em; }
 
-          .role-badges {
-            display: flex;
-            gap: 8px;
-            justify-content: center;
-            margin-top: 20px;
-            flex-wrap: wrap;
-          }
-
-          .role-badge {
-            background: rgba(167,139,250,0.15);
-            border: 1px solid rgba(167,139,250,0.3);
-            color: #c4b5fd;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.75em;
-          }
-
-          /* ── APP (post-login) ── */
+          /* ── APP ── */
           .app-page { display: none; }
 
-          /* Top Bar */
-          .topbar {
-            position: fixed;
-            top: 0; left: 0; right: 0;
-            height: 60px;
-            background: rgba(15,12,41,0.95);
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 20px;
-            z-index: 200;
-          }
-
-          .topbar-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-          }
-
+          .topbar { position: fixed; top: 0; left: 0; right: 0; height: 60px; background: rgba(15,12,41,0.95); border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 200; }
+          .topbar-left { display: flex; align-items: center; gap: 12px; }
           .topbar-logo i { color: #a78bfa; font-size: 1.4em; }
           .topbar-title { font-size: 1em; font-weight: bold; }
           .topbar-title span { color: #a78bfa; }
-
-          .topbar-right {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-          }
-
-          .user-info {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.85em;
-          }
-
+          .topbar-right { display: flex; align-items: center; gap: 15px; }
+          .user-info { display: flex; align-items: center; gap: 8px; font-size: 0.85em; }
           .user-info i { color: #a78bfa; }
-          .user-name { color: white; }
-          .user-role {
-            padding: 3px 10px;
-            border-radius: 20px;
-            font-size: 0.75em;
-            font-weight: bold;
-          }
-
+          .user-role { padding: 3px 10px; border-radius: 20px; font-size: 0.75em; font-weight: bold; }
           .role-owner { background: rgba(167,139,250,0.3); color: #a78bfa; }
           .role-manager { background: rgba(52,211,153,0.2); color: #34d399; }
           .role-cashier { background: rgba(251,191,36,0.2); color: #fbbf24; }
-
-          .logout-btn {
-            background: rgba(248,113,113,0.15);
-            border: 1px solid rgba(248,113,113,0.3);
-            color: #f87171;
-            padding: 6px 14px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.82em;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-          }
-
+          .logout-btn { background: rgba(248,113,113,0.15); border: 1px solid rgba(248,113,113,0.3); color: #f87171; padding: 6px 14px; border-radius: 8px; cursor: pointer; font-size: 0.82em; transition: all 0.3s; display: flex; align-items: center; gap: 6px; }
           .logout-btn:hover { background: rgba(248,113,113,0.3); }
 
-          /* Sidebar */
-          .sidebar {
-            position: fixed;
-            top: 60px; left: 0;
-            width: 220px;
-            height: calc(100% - 60px);
-            background: rgba(255,255,255,0.03);
-            border-right: 1px solid rgba(255,255,255,0.08);
-            padding: 15px 0;
-            z-index: 100;
-            overflow-y: auto;
-          }
-
-          .nav-section {
-            font-size: 0.7em;
-            color: rgba(255,255,255,0.3);
-            padding: 10px 20px 5px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-          }
-
-          .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 11px 20px;
-            cursor: pointer;
-            transition: all 0.3s;
-            color: #c4b5fd;
-            font-size: 0.88em;
-          }
-
-          .nav-item:hover, .nav-item.active {
-            background: rgba(167,139,250,0.15);
-            color: white;
-            border-left: 3px solid #a78bfa;
-          }
-
+          .sidebar { position: fixed; top: 60px; left: 0; width: 220px; height: calc(100% - 60px); background: rgba(255,255,255,0.03); border-right: 1px solid rgba(255,255,255,0.08); padding: 15px 0; z-index: 100; overflow-y: auto; }
+          .nav-section { font-size: 0.7em; color: rgba(255,255,255,0.3); padding: 10px 20px 5px; text-transform: uppercase; letter-spacing: 1px; }
+          .nav-item { display: flex; align-items: center; gap: 12px; padding: 11px 20px; cursor: pointer; transition: all 0.3s; color: #c4b5fd; font-size: 0.88em; }
+          .nav-item:hover, .nav-item.active { background: rgba(167,139,250,0.15); color: white; border-left: 3px solid #a78bfa; }
           .nav-item i { width: 18px; text-align: center; }
           .nav-item.hidden { display: none; }
 
-          /* Main */
-          .main {
-            margin-left: 220px;
-            margin-top: 60px;
-            padding: 25px;
-            min-height: calc(100vh - 60px);
-          }
-
+          .main { margin-left: 220px; margin-top: 60px; padding: 25px; min-height: calc(100vh - 60px); }
           .page { display: none; }
           .page.active { display: block; }
-
-          .page-title {
-            font-size: 1.4em;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-          }
-
+          .page-title { font-size: 1.4em; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
           .page-title i { color: #a78bfa; }
 
-          /* Stats */
-          .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 15px;
-            margin-bottom: 25px;
-          }
-
-          .stat-card {
-            background: rgba(255,255,255,0.06);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 12px;
-            padding: 18px;
-            text-align: center;
-            transition: all 0.3s;
-          }
-
+          .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; margin-bottom: 25px; }
+          .stat-card { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 18px; text-align: center; transition: all 0.3s; }
           .stat-card:hover { transform: translateY(-3px); border-color: #a78bfa; }
           .stat-card i { font-size: 1.6em; color: #a78bfa; margin-bottom: 8px; display: block; }
           .stat-value { font-size: 1.6em; font-weight: bold; }
           .stat-label { font-size: 0.78em; color: #c4b5fd; margin-top: 4px; }
 
-          /* Cards */
-          .card {
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-          }
+          .card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+          .card h3 { color: #a78bfa; margin-bottom: 15px; font-size: 0.95em; display: flex; align-items: center; gap: 8px; }
 
-          .card h3 {
-            color: #a78bfa;
-            margin-bottom: 15px;
-            font-size: 0.95em;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-          }
-
-          .form-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-            gap: 12px;
-            margin-bottom: 15px;
-          }
-
+          .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 15px; }
           .form-group { display: flex; flex-direction: column; gap: 5px; }
           label { font-size: 0.8em; color: #c4b5fd; }
-
-          input, select {
-            background: rgba(255,255,255,0.07);
-            border: 1px solid rgba(255,255,255,0.15);
-            border-radius: 8px;
-            padding: 9px 12px;
-            color: white;
-            font-size: 0.88em;
-            outline: none;
-            transition: border 0.3s;
-          }
-
+          input, select { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 9px 12px; color: white; font-size: 0.88em; outline: none; transition: border 0.3s; }
           input:focus, select:focus { border-color: #a78bfa; }
           select option { background: #1a1a2e; }
 
-          .btn {
-            background: linear-gradient(135deg, #a78bfa, #7c3aed);
-            color: white;
-            padding: 9px 18px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.88em;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-          }
-
+          .btn { background: linear-gradient(135deg, #a78bfa, #7c3aed); color: white; padding: 9px 18px; border: none; border-radius: 8px; cursor: pointer; font-size: 0.88em; transition: all 0.3s; display: inline-flex; align-items: center; gap: 7px; text-decoration: none; }
           .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(167,139,250,0.4); }
           .btn-sm { padding: 5px 10px; font-size: 0.78em; }
           .btn-green { background: linear-gradient(135deg, #34d399, #059669); }
           .btn-red { background: linear-gradient(135deg, #f87171, #dc2626); }
+          .btn-whatsapp { background: linear-gradient(135deg, #25d366, #128c7e); }
+          .btn-sms { background: linear-gradient(135deg, #60a5fa, #2563eb); }
 
-          /* Table */
           table { width: 100%; border-collapse: collapse; font-size: 0.85em; }
-          th {
-            background: rgba(167,139,250,0.15);
-            padding: 10px 12px;
-            text-align: left;
-            color: #c4b5fd;
-            font-weight: normal;
-          }
+          th { background: rgba(167,139,250,0.15); padding: 10px 12px; text-align: left; color: #c4b5fd; font-weight: normal; }
           td { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.04); }
           tr:hover td { background: rgba(255,255,255,0.02); }
 
-          /* Badges */
           .badge { padding: 3px 9px; border-radius: 20px; font-size: 0.75em; font-weight: bold; }
           .badge-paid { background: rgba(52,211,153,0.2); color: #34d399; }
           .badge-unpaid { background: rgba(248,113,113,0.2); color: #f87171; }
           .badge-partial { background: rgba(251,191,36,0.2); color: #fbbf24; }
           .badge-overdue { background: rgba(239,68,68,0.3); color: #fca5a5; }
 
-          /* Alert */
-          .alert {
-            padding: 10px 14px;
-            border-radius: 8px;
-            margin-bottom: 12px;
-            font-size: 0.85em;
-            display: none;
-          }
+          .alert { padding: 10px 14px; border-radius: 8px; margin-bottom: 12px; font-size: 0.85em; display: none; }
           .alert-success { background: rgba(52,211,153,0.15); border: 1px solid #34d399; color: #34d399; }
           .alert-error { background: rgba(248,113,113,0.15); border: 1px solid #f87171; color: #f87171; }
 
-          /* Reminders */
-          .reminder-card {
-            background: rgba(251,191,36,0.08);
-            border: 1px solid rgba(251,191,36,0.25);
-            border-radius: 10px;
-            padding: 14px;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-          }
-          .reminder-card .name { font-weight: bold; color: #fbbf24; }
-          .reminder-card .details { font-size: 0.82em; color: #c4b5fd; margin-top: 3px; }
-          .reminder-card .balance { font-size: 1.1em; font-weight: bold; color: #f87171; }
+          /* Reminder Cards */
+          .reminder-card { background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.25); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+          .reminder-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+          .reminder-name { font-weight: bold; color: #fbbf24; font-size: 1em; margin-bottom: 4px; }
+          .reminder-details { font-size: 0.82em; color: #c4b5fd; }
+          .reminder-balance { font-size: 1.2em; font-weight: bold; color: #f87171; white-space: nowrap; }
+          .reminder-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
           /* Modal */
-          .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0,0,0,0.75);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-          }
+          .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); z-index: 1000; align-items: center; justify-content: center; }
           .modal.open { display: flex; }
-          .modal-box {
-            background: #1a1a2e;
-            border: 1px solid rgba(255,255,255,0.15);
-            border-radius: 16px;
-            padding: 25px;
-            width: 400px;
-            max-width: 90%;
-          }
+          .modal-box { background: #1a1a2e; border: 1px solid rgba(255,255,255,0.15); border-radius: 16px; padding: 25px; width: 400px; max-width: 90%; }
           .modal-box h3 { color: #a78bfa; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
           .modal-close { float: right; cursor: pointer; color: #c4b5fd; }
+
+          /* Message Preview */
+          .msg-preview { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 12px; margin: 12px 0; font-size: 0.85em; color: #e5e7eb; white-space: pre-line; line-height: 1.6; }
+
+          /* History log */
+          .log-entry { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.83em; }
+          .log-entry:last-child { border-bottom: none; }
+          .log-icon { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85em; flex-shrink: 0; }
+          .log-whatsapp { background: rgba(37,211,102,0.2); color: #25d366; }
+          .log-sms { background: rgba(96,165,250,0.2); color: #60a5fa; }
+          .log-info { flex: 1; }
+          .log-name { color: white; font-weight: bold; }
+          .log-desc { color: #c4b5fd; font-size: 0.9em; }
+          .log-time { color: rgba(255,255,255,0.3); font-size: 0.8em; white-space: nowrap; }
         </style>
       </head>
       <body>
@@ -444,17 +173,13 @@ data:
         <!-- ══ LOGIN PAGE ══ -->
         <div class="login-page" id="login-page">
           <div class="login-box">
-            <div class="login-logo">
-              <i class="fa-solid fa-store"></i>
-            </div>
+            <div class="login-logo"><i class="fa-solid fa-store"></i></div>
             <div class="login-title">Happywise Ent</div>
             <div class="login-subtitle">Debt Management System</div>
-
             <div class="login-error" id="login-error">
               <i class="fa-solid fa-circle-xmark"></i>
               <span id="login-error-msg">Invalid credentials</span>
             </div>
-
             <div class="login-form">
               <div class="form-group">
                 <label>Username</label>
@@ -474,7 +199,6 @@ data:
                 <i class="fa-solid fa-right-to-bracket"></i> Sign In
               </button>
             </div>
-
             <div class="role-badges">
               <span class="role-badge"><i class="fa-solid fa-crown"></i> Owner</span>
               <span class="role-badge"><i class="fa-solid fa-user-tie"></i> Manager</span>
@@ -519,7 +243,6 @@ data:
             <div class="nav-item" onclick="showPage('payments', event)">
               <i class="fa-solid fa-money-bill-wave"></i> Payments
             </div>
-
             <div class="nav-section">Management</div>
             <div class="nav-item nav-reminders" onclick="showPage('reminders', event)">
               <i class="fa-solid fa-bell"></i> Reminders
@@ -570,11 +293,8 @@ data:
                 <table>
                   <thead>
                     <tr>
-                      <th>Customer</th>
-                      <th>Description</th>
-                      <th>Amount (KES)</th>
-                      <th>Balance (KES)</th>
-                      <th>Status</th>
+                      <th>Customer</th><th>Description</th>
+                      <th>Amount (KES)</th><th>Balance (KES)</th><th>Status</th>
                     </tr>
                   </thead>
                   <tbody id="recent-debts"></tbody>
@@ -594,7 +314,7 @@ data:
                     <input type="text" id="cust-name" placeholder="e.g. John Kamau">
                   </div>
                   <div class="form-group">
-                    <label>Phone</label>
+                    <label>Phone (with 07...) *</label>
                     <input type="text" id="cust-phone" placeholder="e.g. 0712345678">
                   </div>
                   <div class="form-group">
@@ -612,7 +332,7 @@ data:
                   <thead>
                     <tr>
                       <th>Name</th><th>Phone</th><th>Email</th>
-                      <th>Outstanding (KES)</th><th>Joined</th>
+                      <th>Outstanding (KES)</th><th>Actions</th>
                     </tr>
                   </thead>
                   <tbody id="customers-table"></tbody>
@@ -655,7 +375,7 @@ data:
                     <tr>
                       <th>Customer</th><th>Description</th><th>Total (KES)</th>
                       <th>Paid (KES)</th><th>Balance (KES)</th>
-                      <th>Due Date</th><th>Status</th><th>Action</th>
+                      <th>Due Date</th><th>Status</th><th>Actions</th>
                     </tr>
                   </thead>
                   <tbody id="debts-table"></tbody>
@@ -699,7 +419,10 @@ data:
                 </div>
                 <table>
                   <thead>
-                    <tr><th>Debt</th><th>Amount (KES)</th><th>Note</th><th>Recorded By</th><th>Date</th></tr>
+                    <tr>
+                      <th>Amount (KES)</th><th>Note</th>
+                      <th>Recorded By</th><th>Date</th>
+                    </tr>
                   </thead>
                   <tbody id="payments-table"></tbody>
                 </table>
@@ -709,9 +432,24 @@ data:
             <!-- REMINDERS -->
             <div class="page" id="page-reminders">
               <div class="page-title"><i class="fa-solid fa-bell"></i> Reminders</div>
+
               <div class="card">
-                <h3><i class="fa-solid fa-triangle-exclamation"></i> Debts Due Within 7 Days</h3>
+                <h3><i class="fa-solid fa-triangle-exclamation"></i> Overdue Debts</h3>
+                <p style="color:#c4b5fd;font-size:0.85em;margin-bottom:15px">
+                  <i class="fa-solid fa-circle-info"></i>
+                  Click WhatsApp or SMS to send a reminder directly from your phone.
+                  The message is pre-filled — you just press Send.
+                </p>
                 <div id="reminders-list"></div>
+              </div>
+
+              <div class="card">
+                <h3><i class="fa-solid fa-clock-rotate-left"></i> Message History</h3>
+                <div id="message-history">
+                  <p style="color:#c4b5fd;font-size:0.85em">
+                    Messages you have sent will appear here.
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -787,7 +525,10 @@ data:
                 <h3><i class="fa-solid fa-list"></i> All Staff</h3>
                 <table>
                   <thead>
-                    <tr><th>Name</th><th>Username</th><th>Role</th><th>Status</th><th>Joined</th><th>Action</th></tr>
+                    <tr>
+                      <th>Name</th><th>Username</th><th>Role</th>
+                      <th>Status</th><th>Joined</th><th>Action</th>
+                    </tr>
                   </thead>
                   <tbody id="staff-table"></tbody>
                 </table>
@@ -800,7 +541,7 @@ data:
         <!-- Payment Modal -->
         <div class="modal" id="payment-modal">
           <div class="modal-box">
-            <span class="modal-close" onclick="closeModal()">
+            <span class="modal-close" onclick="closeModal('payment-modal')">
               <i class="fa-solid fa-xmark"></i>
             </span>
             <h3><i class="fa-solid fa-money-bill-wave"></i> Quick Payment</h3>
@@ -819,16 +560,52 @@ data:
           </div>
         </div>
 
+        <!-- Message Preview Modal -->
+        <div class="modal" id="message-modal">
+          <div class="modal-box">
+            <span class="modal-close" onclick="closeModal('message-modal')">
+              <i class="fa-solid fa-xmark"></i>
+            </span>
+            <h3 id="msg-modal-title">
+              <i class="fa-brands fa-whatsapp"></i> Send Reminder
+            </h3>
+            <p style="color:#c4b5fd;font-size:0.82em;margin-bottom:5px">
+              Message preview — edit if needed before sending:
+            </p>
+            <textarea id="msg-preview-text"
+              style="width:100%;height:150px;background:rgba(255,255,255,0.05);
+              border:1px solid rgba(255,255,255,0.15);border-radius:8px;
+              padding:10px;color:white;font-size:0.85em;resize:vertical;
+              outline:none;line-height:1.6"></textarea>
+            <div style="display:flex;gap:10px;margin-top:15px;flex-wrap:wrap">
+              <a id="whatsapp-link" href="#" target="_blank"
+                class="btn btn-whatsapp" onclick="logMessage('whatsapp')">
+                <i class="fa-brands fa-whatsapp"></i> Open in WhatsApp
+              </a>
+              <a id="sms-link" href="#" target="_blank"
+                class="btn btn-sms" onclick="logMessage('sms')">
+                <i class="fa-solid fa-message"></i> Open in SMS
+              </a>
+            </div>
+            <p style="color:rgba(255,255,255,0.3);font-size:0.75em;margin-top:10px">
+              <i class="fa-solid fa-circle-info"></i>
+              WhatsApp/SMS will open with message pre-filled.
+              You press Send from your phone.
+            </p>
+          </div>
+        </div>
+
         <script>
           const API = '/api';
           let token = localStorage.getItem('hw_token');
           let currentUser = JSON.parse(localStorage.getItem('hw_user') || 'null');
           let selectedDebtId = null;
+          let currentReminderPhone = null;
+          let currentReminderName = null;
+          let messageLog = JSON.parse(localStorage.getItem('hw_msg_log') || '[]');
 
           // ── Init ──
-          if (token && currentUser) {
-            showApp();
-          }
+          if (token && currentUser) showApp();
 
           // ── Login ──
           async function doLogin() {
@@ -872,25 +649,20 @@ data:
           function showApp() {
             document.getElementById('login-page').style.display = 'none';
             document.getElementById('app-page').style.display = 'block';
-            // Set user info
             document.getElementById('topbar-name').textContent = currentUser.name;
             const roleEl = document.getElementById('topbar-role');
             roleEl.textContent = currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1);
             roleEl.className = 'user-role role-' + currentUser.role;
-            // Show/hide nav based on role
             const isOwner = currentUser.role === 'owner';
-            const isManagerOrOwner = ['owner','manager'].includes(currentUser.role);
-            document.querySelectorAll('.nav-reminders').forEach(el =>
-              el.classList.toggle('hidden', !isManagerOrOwner));
-            document.querySelectorAll('.nav-reports').forEach(el =>
-              el.classList.toggle('hidden', !isManagerOrOwner));
-            document.querySelectorAll('.nav-staff').forEach(el =>
-              el.classList.toggle('hidden', !isOwner));
+            const isMgrOrOwner = ['owner','manager'].includes(currentUser.role);
+            document.querySelectorAll('.nav-reminders').forEach(el => el.classList.toggle('hidden', !isMgrOrOwner));
+            document.querySelectorAll('.nav-reports').forEach(el => el.classList.toggle('hidden', !isMgrOrOwner));
+            document.querySelectorAll('.nav-staff').forEach(el => el.classList.toggle('hidden', !isOwner));
             loadDashboard();
           }
 
           function headers() {
-            return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token };
+            return {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token};
           }
 
           // ── Navigation ──
@@ -908,8 +680,16 @@ data:
             if (page === 'staff') loadStaff();
           }
 
+          // ── Helpers ──
           function fmt(n) { return parseFloat(n||0).toLocaleString('en-KE', {minimumFractionDigits:2}); }
           function fmtDate(d) { return d ? new Date(d).toLocaleDateString('en-KE') : '-'; }
+          function fmtPhone(phone) {
+            // Convert 07XXXXXXXX to 2547XXXXXXXX for WhatsApp
+            if (!phone) return '';
+            if (phone.startsWith('0')) return '254' + phone.slice(1);
+            if (phone.startsWith('+')) return phone.slice(1);
+            return phone;
+          }
 
           function statusBadge(d) {
             if (d.status==='paid') return '<span class="badge badge-paid">Paid</span>';
@@ -926,25 +706,120 @@ data:
             setTimeout(() => el.style.display = 'none', 3000);
           }
 
+          function closeModal(id) {
+            document.getElementById(id).classList.remove('open');
+          }
+
+          // ── WhatsApp & SMS Deep Links ──
+          function buildMessage(debt) {
+            return `Happywise Ent - Debt Reminder\n\nDear ${debt.customer_name},\n\nThis is a friendly reminder that you have an outstanding debt with us:\n\nDescription: ${debt.description}\nTotal Amount: KES ${fmt(debt.total_amount)}\nAmount Paid: KES ${fmt(debt.amount_paid)}\nBalance Due: KES ${fmt(debt.balance)}\nDue Date: ${fmtDate(debt.due_date)}\n\nKindly make your payment at your earliest convenience.\n\nThank you for your business!\nHappywise Ent`;
+          }
+
+          function openReminderModal(debt) {
+            currentReminderPhone = debt.customer_phone;
+            currentReminderName = debt.customer_name;
+
+            const message = buildMessage(debt);
+            const encodedMsg = encodeURIComponent(message);
+            const phone = fmtPhone(debt.customer_phone);
+
+            // Set modal title
+            document.getElementById('msg-modal-title').innerHTML =
+              `<i class="fa-solid fa-paper-plane"></i> Send Reminder to ${debt.customer_name}`;
+
+            // Set editable message preview
+            document.getElementById('msg-preview-text').value = message;
+
+            // Set WhatsApp deep link
+            document.getElementById('whatsapp-link').href =
+              `https://wa.me/${phone}?text=${encodedMsg}`;
+
+            // Set SMS deep link
+            document.getElementById('sms-link').href =
+              `sms:${debt.customer_phone}?body=${encodedMsg}`;
+
+            // Store debt info for logging
+            document.getElementById('whatsapp-link').dataset.debtId = debt.id;
+            document.getElementById('whatsapp-link').dataset.customerName = debt.customer_name;
+            document.getElementById('sms-link').dataset.debtId = debt.id;
+            document.getElementById('sms-link').dataset.customerName = debt.customer_name;
+
+            document.getElementById('message-modal').classList.add('open');
+          }
+
+          function logMessage(type) {
+            // Get latest message from textarea (user may have edited it)
+            const msg = document.getElementById('msg-preview-text').value;
+            const debtId = document.getElementById('whatsapp-link').dataset.debtId;
+            const customerName = document.getElementById('whatsapp-link').dataset.customerName;
+
+            // Log to localStorage
+            const entry = {
+              type,
+              customerName,
+              debtId,
+              phone: currentReminderPhone,
+              message: msg,
+              time: new Date().toISOString()
+            };
+
+            messageLog.unshift(entry);
+            if (messageLog.length > 50) messageLog = messageLog.slice(0, 50);
+            localStorage.setItem('hw_msg_log', JSON.stringify(messageLog));
+
+            // Close modal after short delay
+            setTimeout(() => closeModal('message-modal'), 500);
+
+            // Refresh history if on reminders page
+            renderMessageHistory();
+          }
+
+          function renderMessageHistory() {
+            const el = document.getElementById('message-history');
+            if (!el) return;
+            if (!messageLog.length) {
+              el.innerHTML = '<p style="color:#c4b5fd;font-size:0.85em">No messages sent yet.</p>';
+              return;
+            }
+            el.innerHTML = messageLog.map(m => `
+              <div class="log-entry">
+                <div class="log-icon ${m.type === 'whatsapp' ? 'log-whatsapp' : 'log-sms'}">
+                  <i class="fa-${m.type === 'whatsapp' ? 'brands fa-whatsapp' : 'solid fa-message'}"></i>
+                </div>
+                <div class="log-info">
+                  <div class="log-name">${m.customerName}</div>
+                  <div class="log-desc">
+                    ${m.type === 'whatsapp' ? 'WhatsApp' : 'SMS'} sent to ${m.phone}
+                  </div>
+                </div>
+                <div class="log-time">${fmtDate(m.time)}</div>
+              </div>
+            `).join('');
+          }
+
           // ── Dashboard ──
           async function loadDashboard() {
-            const [rep, debts] = await Promise.all([
-              fetch(API+'/reports', {headers:headers()}).then(r=>r.json()),
-              fetch(API+'/debts', {headers:headers()}).then(r=>r.json())
-            ]);
-            document.getElementById('stat-customers').textContent = rep.total_customers || 0;
-            document.getElementById('stat-debts').textContent = rep.total_debts || 0;
-            document.getElementById('stat-outstanding').textContent = fmt(rep.total_outstanding);
-            document.getElementById('stat-collected').textContent = fmt(rep.total_collected);
-            document.getElementById('stat-overdue').textContent = rep.overdue_debts || 0;
-            document.getElementById('recent-debts').innerHTML = debts.slice(0,5).map(d=>`
-              <tr>
-                <td>${d.customer_name}</td>
-                <td>${d.description}</td>
-                <td>${fmt(d.total_amount)}</td>
-                <td>${fmt(d.balance)}</td>
-                <td>${statusBadge(d)}</td>
-              </tr>`).join('');
+            try {
+              const [rep, debts] = await Promise.all([
+                fetch(API+'/reports', {headers:headers()}).then(r=>r.json()),
+                fetch(API+'/debts', {headers:headers()}).then(r=>r.json())
+              ]);
+              document.getElementById('stat-customers').textContent = rep.total_customers || 0;
+              document.getElementById('stat-debts').textContent = rep.total_debts || 0;
+              document.getElementById('stat-outstanding').textContent = fmt(rep.total_outstanding);
+              document.getElementById('stat-collected').textContent = fmt(rep.total_collected);
+              document.getElementById('stat-overdue').textContent = rep.overdue_debts || 0;
+              document.getElementById('recent-debts').innerHTML = debts.slice(0,5).map(d=>`
+                <tr>
+                  <td>${d.customer_name}</td>
+                  <td>${d.description}</td>
+                  <td>${fmt(d.total_amount)}</td>
+                  <td>${fmt(d.balance)}</td>
+                  <td>${statusBadge(d)}</td>
+                </tr>`).join('');
+            } catch(e) {
+              console.error('Dashboard error:', e);
+            }
           }
 
           // ── Customers ──
@@ -956,17 +831,31 @@ data:
                 <td>${c.phone||'-'}</td>
                 <td>${c.email||'-'}</td>
                 <td style="color:${parseFloat(c.total_outstanding)>0?'#f87171':'#34d399'}">${fmt(c.total_outstanding)}</td>
-                <td>${fmtDate(c.created_at)}</td>
+                <td style="display:flex;gap:6px;flex-wrap:wrap">
+                  ${c.phone ? `
+                    <a href="https://wa.me/${fmtPhone(c.phone)}" target="_blank"
+                      class="btn btn-whatsapp btn-sm">
+                      <i class="fa-brands fa-whatsapp"></i>
+                    </a>
+                    <a href="sms:${c.phone}" class="btn btn-sms btn-sm">
+                      <i class="fa-solid fa-message"></i>
+                    </a>` : '-'}
+                </td>
               </tr>`).join('');
           }
 
           async function addCustomer() {
             const name = document.getElementById('cust-name').value.trim();
             if (!name) return showAlert('alert-customer','Name is required','error');
-            await fetch(API+'/customers', {
+            const res = await fetch(API+'/customers', {
               method:'POST', headers:headers(),
-              body:JSON.stringify({name, phone:document.getElementById('cust-phone').value, email:document.getElementById('cust-email').value})
+              body:JSON.stringify({
+                name,
+                phone: document.getElementById('cust-phone').value,
+                email: document.getElementById('cust-email').value
+              })
             });
+            if (!res.ok) return showAlert('alert-customer','Error adding customer','error');
             showAlert('alert-customer','Customer added successfully!','success');
             ['cust-name','cust-phone','cust-email'].forEach(id=>document.getElementById(id).value='');
             loadCustomers();
@@ -977,7 +866,7 @@ data:
             const customers = await fetch(API+'/customers', {headers:headers()}).then(r=>r.json());
             document.getElementById('debt-customer').innerHTML =
               '<option value="">Select customer</option>' +
-              customers.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+              customers.map(c=>`<option value="${c.id}">${c.name} (${c.phone||'No phone'})</option>`).join('');
           }
 
           async function loadDebts() {
@@ -991,7 +880,16 @@ data:
                 <td style="color:${parseFloat(d.balance)>0?'#f87171':'#34d399'}">${fmt(d.balance)}</td>
                 <td>${fmtDate(d.due_date)}</td>
                 <td>${statusBadge(d)}</td>
-                <td>${d.status!=='paid'?`<button class="btn btn-green btn-sm" onclick="openPayModal(${d.id},'${d.customer_name}',${d.balance})"><i class="fa-solid fa-money-bill-wave"></i> Pay</button>`:''}</td>
+                <td style="display:flex;gap:5px;flex-wrap:wrap">
+                  ${d.status!=='paid'?`
+                    <button class="btn btn-green btn-sm" onclick="openPayModal(${d.id},'${d.customer_name}',${d.balance})">
+                      <i class="fa-solid fa-money-bill-wave"></i> Pay
+                    </button>` : ''}
+                  ${d.customer_phone && d.status!=='paid' ? `
+                    <button class="btn btn-whatsapp btn-sm" onclick="openReminderModal(${JSON.stringify(d).replace(/"/g, '&quot;')})">
+                      <i class="fa-brands fa-whatsapp"></i>
+                    </button>` : ''}
+                </td>
               </tr>`).join('');
           }
 
@@ -1003,7 +901,10 @@ data:
               return showAlert('alert-debt','Please fill all required fields','error');
             await fetch(API+'/debts', {
               method:'POST', headers:headers(),
-              body:JSON.stringify({customer_id, description, total_amount, due_date:document.getElementById('debt-due').value||null})
+              body:JSON.stringify({
+                customer_id, description, total_amount,
+                due_date: document.getElementById('debt-due').value||null
+              })
             });
             showAlert('alert-debt','Debt recorded successfully!','success');
             ['debt-desc','debt-amount','debt-due'].forEach(id=>document.getElementById(id).value='');
@@ -1014,9 +915,9 @@ data:
           async function loadDebtDropdowns() {
             const debts = await fetch(API+'/debts', {headers:headers()}).then(r=>r.json());
             const unpaid = debts.filter(d=>d.status!=='paid');
-            const opts = '<option value="">Select debt</option>' +
+            document.getElementById('pay-debt').innerHTML =
+              '<option value="">Select debt</option>' +
               unpaid.map(d=>`<option value="${d.id}">${d.customer_name} - ${d.description} (KES ${fmt(d.balance)})</option>`).join('');
-            document.getElementById('pay-debt').innerHTML = opts;
             document.getElementById('filter-debt').innerHTML =
               '<option value="">Select debt to view history</option>' +
               debts.map(d=>`<option value="${d.id}">${d.customer_name} - ${d.description}</option>`).join('');
@@ -1025,7 +926,8 @@ data:
           async function makePayment() {
             const debt_id = document.getElementById('pay-debt').value;
             const amount = document.getElementById('pay-amount').value;
-            if (!debt_id||!amount) return showAlert('alert-payment','Please fill all required fields','error');
+            if (!debt_id||!amount)
+              return showAlert('alert-payment','Please fill all required fields','error');
             await fetch(API+'/payments', {
               method:'POST', headers:headers(),
               body:JSON.stringify({debt_id, amount, note:document.getElementById('pay-note').value})
@@ -1041,7 +943,6 @@ data:
             const payments = await fetch(API+'/payments/'+debtId, {headers:headers()}).then(r=>r.json());
             document.getElementById('payments-table').innerHTML = payments.map(p=>`
               <tr>
-                <td>#${p.debt_id}</td>
                 <td style="color:#34d399">${fmt(p.amount)}</td>
                 <td>${p.note||'-'}</td>
                 <td>${p.recorded_by_name||'-'}</td>
@@ -1057,38 +958,89 @@ data:
             document.getElementById('payment-modal').classList.add('open');
           }
 
-          function closeModal() {
-            document.getElementById('payment-modal').classList.remove('open');
-            selectedDebtId = null;
-          }
-
           async function submitModalPayment() {
             const amount = document.getElementById('modal-amount').value;
             if (!amount) return;
             await fetch(API+'/payments', {
               method:'POST', headers:headers(),
-              body:JSON.stringify({debt_id:selectedDebtId, amount, note:document.getElementById('modal-note').value})
+              body:JSON.stringify({
+                debt_id:selectedDebtId,
+                amount,
+                note:document.getElementById('modal-note').value
+              })
             });
-            closeModal();
-            loadDebts(); loadDashboard();
+            closeModal('payment-modal');
+            loadDebts();
+            loadDashboard();
           }
 
           // ── Reminders ──
           async function loadReminders() {
-            const reminders = await fetch(API+'/reminders', {headers:headers()}).then(r=>r.json());
-            const el = document.getElementById('reminders-list');
-            if (!reminders.length) {
-              el.innerHTML = '<p style="color:#34d399"><i class="fa-solid fa-circle-check"></i> No upcoming due debts!</p>';
-              return;
+            renderMessageHistory();
+            try {
+              const reminders = await fetch(API+'/reminders', {headers:headers()}).then(r=>r.json());
+              const el = document.getElementById('reminders-list');
+              if (!reminders.length) {
+                el.innerHTML = `
+                  <div style="text-align:center;padding:30px;color:#34d399">
+                    <i class="fa-solid fa-circle-check" style="font-size:2em;margin-bottom:10px;display:block"></i>
+                    No overdue debts! All customers are up to date.
+                  </div>`;
+                return;
+              }
+              el.innerHTML = reminders.map(r => `
+                <div class="reminder-card">
+                  <div class="reminder-top">
+                    <div>
+                      <div class="reminder-name">
+                        <i class="fa-solid fa-user"></i> ${r.customer_name}
+                      </div>
+                      <div class="reminder-details">
+                        <i class="fa-solid fa-tag"></i> ${r.description} &nbsp;|&nbsp;
+                        <i class="fa-solid fa-calendar"></i> Due: ${fmtDate(r.due_date)} &nbsp;|&nbsp;
+                        <i class="fa-solid fa-phone"></i> ${r.customer_phone || 'No phone'}
+                      </div>
+                    </div>
+                    <div class="reminder-balance">KES ${fmt(r.balance)}</div>
+                  </div>
+                  <div class="reminder-actions">
+                    ${r.customer_phone ? `
+                      <button class="btn btn-whatsapp btn-sm"
+                        onclick='openReminderModal(${JSON.stringify(r)})'>
+                        <i class="fa-brands fa-whatsapp"></i> WhatsApp
+                      </button>
+                      <button class="btn btn-sms btn-sm"
+                        onclick='openSmsOnly(${JSON.stringify(r)})'>
+                        <i class="fa-solid fa-message"></i> SMS
+                      </button>` :
+                      `<span style="color:#f87171;font-size:0.82em">
+                        <i class="fa-solid fa-circle-exclamation"></i> No phone number
+                      </span>`
+                    }
+                  </div>
+                </div>`).join('');
+            } catch(e) {
+              console.error('Reminders error:', e);
             }
-            el.innerHTML = reminders.map(r=>`
-              <div class="reminder-card">
-                <div>
-                  <div class="name"><i class="fa-solid fa-user"></i> ${r.customer_name}</div>
-                  <div class="details">${r.description} | Due: ${fmtDate(r.due_date)} | Phone: ${r.customer_phone||'N/A'}</div>
-                </div>
-                <div class="balance">KES ${fmt(r.balance)}</div>
-              </div>`).join('');
+          }
+
+          function openSmsOnly(debt) {
+            const message = buildMessage(debt);
+            const encodedMsg = encodeURIComponent(message);
+            // Log directly
+            const entry = {
+              type: 'sms',
+              customerName: debt.customer_name,
+              debtId: debt.id,
+              phone: debt.customer_phone,
+              message,
+              time: new Date().toISOString()
+            };
+            messageLog.unshift(entry);
+            localStorage.setItem('hw_msg_log', JSON.stringify(messageLog));
+            renderMessageHistory();
+            // Open SMS
+            window.open(`sms:${debt.customer_phone}?body=${encodedMsg}`);
           }
 
           // ── Reports ──
@@ -1109,10 +1061,13 @@ data:
               <tr>
                 <td>${s.name}</td>
                 <td>${s.username}</td>
-                <td><span class="badge role-${s.role}" style="background:rgba(167,139,250,0.2);color:#a78bfa">${s.role}</span></td>
-                <td><span style="color:${s.active?'#34d399':'#f87171'}">${s.active?'Active':'Inactive'}</span></td>
+                <td><span class="badge" style="background:rgba(167,139,250,0.2);color:#a78bfa">${s.role}</span></td>
+                <td style="color:${s.active?'#34d399':'#f87171'}">${s.active?'Active':'Inactive'}</td>
                 <td>${fmtDate(s.created_at)}</td>
-                <td>${s.username!=='owner'?`<button class="btn btn-red btn-sm" onclick="deleteStaff(${s.id})"><i class="fa-solid fa-trash"></i></button>`:'-'}</td>
+                <td>${s.username!=='owner'?`
+                  <button class="btn btn-red btn-sm" onclick="deleteStaff(${s.id})">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>`:'-'}</td>
               </tr>`).join('');
           }
 
@@ -1121,7 +1076,8 @@ data:
             const username = document.getElementById('staff-username').value.trim();
             const password = document.getElementById('staff-password').value;
             const role = document.getElementById('staff-role').value;
-            if (!name||!username||!password) return showAlert('alert-staff','Please fill all fields','error');
+            if (!name||!username||!password)
+              return showAlert('alert-staff','Please fill all fields','error');
             const res = await fetch(API+'/staff', {
               method:'POST', headers:headers(),
               body:JSON.stringify({name, username, password, role})
