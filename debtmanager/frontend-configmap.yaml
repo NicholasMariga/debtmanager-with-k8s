@@ -375,7 +375,7 @@ data:
                       <option value="Cash">Cash</option>
                       <option value="M-Pesa">M-Pesa</option>
                       <option value="Bank Transfer">Bank Transfer</option>
-                      <option value="Cheque">Cheque</option>
+                    <!--   <option value="Cheque">Cheque</option> -->
                     </select>
                   </div>
                 </div>
@@ -495,7 +495,7 @@ data:
                 <option value="Cash">Cash</option>
                 <option value="M-Pesa">M-Pesa</option>
                 <option value="Bank Transfer">Bank Transfer</option>
-                <option value="Cheque">Cheque</option>
+               <!-- <option value="Cheque">Cheque</option> -->
               </select>
             </div>
             <button class="btn btn-green" onclick="submitModalPayment()"><i class="fa-solid fa-check"></i> Confirm Payment</button>
