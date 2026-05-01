@@ -754,7 +754,7 @@ data:
 
             const grandBalance = grandTotal - grandPaid;
 
-            return `Happywise Ent - Debt Reminder\n\nDear ${debt.customer_name},\n\nThis is a friendly reminder about your outstanding debt(s) with us:\n\n${debtLines}─────────────────────\nTOTAL BALANCE DUE: KES ${fmt(grandBalance)}\n─────────────────────\n\nKindly make your payment at your earliest convenience.\nYou can reach us for any queries.\n\nThank you for your business!\nHappywise Ent`;
+            return `Happywise Ent - Debt Reminder\n\nDear ${debt.customer_name},\n\nThis is a friendly reminder about your outstanding debt(s) with us:\n\n${debtLines}---------------------\nTOTAL BALANCE DUE: KES ${fmt(grandBalance)}\n---------------------\n\nKindly make your payment at your earliest convenience.\nYou can reach us for any queries.\n\nThank you for your business!\nHappywise Ent`;
           }
 
           // ── Open Reminder Modal ──
