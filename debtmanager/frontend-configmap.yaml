@@ -107,6 +107,20 @@ data:
             <!-- DASHBOARD -->
             <div class="page active" id="page-dashboard">
               <div class="page-title"><i class="fa-solid fa-chart-pie"></i> Dashboard</div>
+              <div class="dash-filter">
+                <span style="font-size:0.82em;color:#c4b5fd"><i class="fa-solid fa-filter"></i> Filter:</span>
+                <button class="btn btn-sm active" id="dflt-all" onclick="setDashFilter('all')">All Time</button>
+                <button class="btn btn-sm" id="dflt-week" onclick="setDashFilter('week')">This Week</button>
+                <button class="btn btn-sm" id="dflt-month" onclick="setDashFilter('month')">This Month</button>
+                <button class="btn btn-sm" id="dflt-year" onclick="setDashFilter('year')">This Year</button>
+                <button class="btn btn-sm" id="dflt-custom" onclick="setDashFilter('custom')">Custom</button>
+                <div id="dflt-custom-inputs" style="display:none;gap:6px;align-items:center">
+                  <input type="date" id="dflt-from" style="width:130px">
+                  <span style="color:#c4b5fd;font-size:0.82em">to</span>
+                  <input type="date" id="dflt-to" style="width:130px">
+                  <button class="btn btn-sm" onclick="loadDashboard()"><i class="fa-solid fa-check"></i> Go</button>
+                </div>
+              </div>
               <div class="stats">
                 <div class="stat-card"><i class="fa-solid fa-users"></i><div class="stat-value" id="stat-customers">-</div><div class="stat-label">Customers</div></div>
                 <div class="stat-card"><i class="fa-solid fa-file-invoice-dollar"></i><div class="stat-value" id="stat-debts">-</div><div class="stat-label">Total Debts</div></div>
@@ -184,6 +198,7 @@ data:
                     <option value="partial">Partial</option>
                     <option value="paid">Paid</option>
                     <option value="overdue">Overdue</option>
+                    <option value="writeoff">Written Off</option>
                   </select>
                   <button class="btn btn-yellow btn-sm" onclick="exportDebtsCSV()"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
                   <button class="btn btn-green btn-sm" onclick="exportDebtsExcel()"><i class="fa-solid fa-file-excel"></i> Export Excel</button>
@@ -284,7 +299,10 @@ data:
               </div>
               <div class="card">
                 <h3><i class="fa-solid fa-list"></i> Aging Details</h3>
-                <div style="margin-bottom:15px"><button class="btn btn-yellow btn-sm" onclick="exportAgingCSV()"><i class="fa-solid fa-file-csv"></i> Export CSV</button></div>
+                <div style="margin-bottom:15px;display:flex;gap:10px">
+                  <button class="btn btn-yellow btn-sm" onclick="exportAgingCSV()"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
+                  <button class="btn btn-orange btn-sm" onclick="printAging()"><i class="fa-solid fa-print"></i> Print</button>
+                </div>
                 <table>
                   <thead><tr><th>Customer</th><th>Description</th><th>Date Taken</th><th>Balance (KES)</th><th>Days Outstanding</th><th>Aging Band</th></tr></thead>
                   <tbody id="aging-table"></tbody>
@@ -372,6 +390,37 @@ data:
             <p style="color:rgba(255,255,255,0.3);font-size:0.75em;margin-top:10px">
               <i class="fa-solid fa-circle-info"></i> WhatsApp/SMS opens with message pre-filled. You press Send.
             </p>
+          </div>
+        </div>
+
+        <!-- Customer Note Modal -->
+        <div class="modal" id="note-modal">
+          <div class="modal-box">
+            <span class="modal-close" onclick="closeModal('note-modal')"><i class="fa-solid fa-xmark"></i></span>
+            <h3><i class="fa-solid fa-note-sticky"></i> Customer Note</h3>
+            <p style="color:#c4b5fd;font-size:0.83em;margin-bottom:12px" id="note-customer-name"></p>
+            <div class="form-group" style="margin-bottom:15px">
+              <label>Note</label>
+              <textarea id="note-text" style="width:100%;height:110px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:10px;color:white;font-size:0.88em;resize:vertical;outline:none" placeholder="e.g. Calls after 5pm, disputes charges..."></textarea>
+            </div>
+            <div style="display:flex;gap:10px">
+              <button class="btn" onclick="saveCustomerNote()"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+              <button class="btn btn-red" onclick="clearCustomerNote()"><i class="fa-solid fa-trash"></i> Clear</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Write-Off Modal -->
+        <div class="modal" id="writeoff-modal">
+          <div class="modal-box">
+            <span class="modal-close" onclick="closeModal('writeoff-modal')"><i class="fa-solid fa-xmark"></i></span>
+            <h3><i class="fa-solid fa-ban"></i> Write Off Debt</h3>
+            <p style="color:#c4b5fd;font-size:0.83em;margin-bottom:12px" id="writeoff-debt-info"></p>
+            <div class="form-group" style="margin-bottom:15px">
+              <label>Reason *</label>
+              <input type="text" id="writeoff-reason" placeholder="e.g. Bad debt, customer relocated...">
+            </div>
+            <button class="btn btn-red" onclick="confirmWriteOff()"><i class="fa-solid fa-ban"></i> Write Off</button>
           </div>
         </div>
 

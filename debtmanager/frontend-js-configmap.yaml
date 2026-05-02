@@ -18,6 +18,9 @@ data:
     let barChartInstance = null;
     let donutChartInstance = null;
     let lastReceiptData = null;
+    let dashFilter = 'all';
+    let currentNoteCustomerId = null;
+    let currentWriteOffDebtId = null;
 
     if (token && currentUser) showApp();
 
@@ -82,6 +85,29 @@ data:
       if (page==='reports') { loadReports(); loadStatementDropdown(); }
       if (page==='aging') loadAging();
       if (page==='staff') loadStaff();
+    }
+
+    function setDashFilter(f) {
+      dashFilter = f;
+      document.querySelectorAll('.dash-filter .btn').forEach(b => b.classList.remove('active'));
+      const btn = document.getElementById('dflt-'+f);
+      if (btn) btn.classList.add('active');
+      const customDiv = document.getElementById('dflt-custom-inputs');
+      if (customDiv) customDiv.style.display = f === 'custom' ? 'flex' : 'none';
+      if (f !== 'custom') loadDashboard();
+    }
+
+    function getDashFilterRange() {
+      if (dashFilter === 'all') return null;
+      const now = new Date();
+      if (dashFilter === 'week') { const f=new Date(now); f.setDate(now.getDate()-7); return {from:f,to:now}; }
+      if (dashFilter === 'month') { return {from:new Date(now.getFullYear(),now.getMonth(),1),to:now}; }
+      if (dashFilter === 'year') { return {from:new Date(now.getFullYear(),0,1),to:now}; }
+      if (dashFilter === 'custom') {
+        const fv=document.getElementById('dflt-from').value, tv=document.getElementById('dflt-to').value;
+        return {from:fv?new Date(fv):null, to:tv?new Date(tv+'T23:59:59'):now};
+      }
+      return null;
     }
 
     function fmt(n) { return parseFloat(n||0).toLocaleString('en-KE',{minimumFractionDigits:2}); }
@@ -261,29 +287,47 @@ data:
           fetch(API+'/debts',{headers:headers()}).then(r=>r.json())
         ]);
         allDebtsCache = debts;
-        document.getElementById('stat-customers').textContent = rep.total_customers||0;
-        document.getElementById('stat-debts').textContent = rep.total_debts||0;
-        document.getElementById('stat-outstanding').textContent = fmt(rep.total_outstanding);
-        document.getElementById('stat-collected').textContent = fmt(rep.total_collected);
-        document.getElementById('stat-overdue').textContent = rep.overdue_debts||0;
-        document.getElementById('recent-debts').innerHTML = debts.slice(0,5).map(d=>`
+
+        const range = getDashFilterRange();
+        const fd = range ? debts.filter(d => {
+          const dt = new Date(d.created_at);
+          return (!range.from || dt >= range.from) && dt <= range.to;
+        }) : debts;
+
+        const gTotal = fd.reduce((s,d)=>s+parseFloat(d.total_amount),0);
+        const gPaid  = fd.reduce((s,d)=>s+parseFloat(d.amount_paid),0);
+        const gBal   = fd.reduce((s,d)=>s+parseFloat(d.balance),0);
+        const overdueC = fd.filter(d=>d.due_date&&new Date(d.due_date)<new Date()&&d.status!=='paid').length;
+
+        document.getElementById('stat-customers').textContent = range ? [...new Set(fd.map(d=>d.customer_id))].length : (rep.total_customers||0);
+        document.getElementById('stat-debts').textContent = range ? fd.length : (rep.total_debts||0);
+        document.getElementById('stat-outstanding').textContent = range ? fmt(gBal) : fmt(rep.total_outstanding);
+        document.getElementById('stat-collected').textContent = range ? fmt(gPaid) : fmt(rep.total_collected);
+        document.getElementById('stat-overdue').textContent = range ? overdueC : (rep.overdue_debts||0);
+
+        document.getElementById('recent-debts').innerHTML = fd.slice(0,5).map(d=>`
           <tr><td>${d.customer_name}</td><td>${d.description}</td><td>${fmt(d.total_amount)}</td><td>${fmt(d.balance)}</td><td>${statusBadge(d)}</td></tr>`).join('');
+
+        const barTotal = range ? gTotal : parseFloat(rep.total_debt_amount||0);
+        const barPaid  = range ? gPaid  : parseFloat(rep.total_collected||0);
+        const barBal   = range ? gBal   : parseFloat(rep.total_outstanding||0);
 
         const barCtx = document.getElementById('barChart').getContext('2d');
         if (barChartInstance) barChartInstance.destroy();
         barChartInstance = new Chart(barCtx, {
           type:'bar',
-          data:{labels:['Total Issued','Collected','Outstanding'],datasets:[{label:'KES',data:[parseFloat(rep.total_debt_amount||0),parseFloat(rep.total_collected||0),parseFloat(rep.total_outstanding||0)],backgroundColor:['rgba(167,139,250,0.7)','rgba(52,211,153,0.7)','rgba(248,113,113,0.7)'],borderColor:['#a78bfa','#34d399','#f87171'],borderWidth:1,borderRadius:6}]},
+          data:{labels:['Total Issued','Collected','Outstanding'],datasets:[{label:'KES',data:[barTotal,barPaid,barBal],backgroundColor:['rgba(167,139,250,0.7)','rgba(52,211,153,0.7)','rgba(248,113,113,0.7)'],borderColor:['#a78bfa','#34d399','#f87171'],borderWidth:1,borderRadius:6}]},
           options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>'KES '+ctx.parsed.y.toLocaleString('en-KE',{minimumFractionDigits:2})}}},scales:{x:{ticks:{color:'#c4b5fd',font:{size:11}},grid:{color:'rgba(255,255,255,0.05)'}},y:{ticks:{color:'#c4b5fd',font:{size:11},callback:val=>'KES '+val.toLocaleString()},grid:{color:'rgba(255,255,255,0.05)'}}}}
         });
 
         const donutCtx = document.getElementById('donutChart').getContext('2d');
         if (donutChartInstance) donutChartInstance.destroy();
-        const paidC=parseInt(rep.paid_debts||0), unpaidC=parseInt(rep.unpaid_debts||0);
-        const partC=debts.filter(d=>parseFloat(d.amount_paid)>0&&d.status!=='paid').length;
+        const paidC = fd.filter(d=>d.status==='paid').length;
+        const partC = fd.filter(d=>parseFloat(d.amount_paid)>0&&d.status!=='paid').length;
+        const unpC  = fd.filter(d=>parseFloat(d.amount_paid)===0&&d.status!=='paid'&&!(d.due_date&&new Date(d.due_date)<new Date())).length;
         donutChartInstance = new Chart(donutCtx, {
           type:'doughnut',
-          data:{labels:['Paid','Partial','Unpaid','Overdue'],datasets:[{data:[paidC,partC,Math.max(0,unpaidC-partC),parseInt(rep.overdue_debts||0)],backgroundColor:['rgba(52,211,153,0.8)','rgba(251,191,36,0.8)','rgba(167,139,250,0.8)','rgba(248,113,113,0.8)'],borderColor:['#34d399','#fbbf24','#a78bfa','#f87171'],borderWidth:2}]},
+          data:{labels:['Paid','Partial','Unpaid','Overdue'],datasets:[{data:[paidC,partC,unpC,overdueC],backgroundColor:['rgba(52,211,153,0.8)','rgba(251,191,36,0.8)','rgba(167,139,250,0.8)','rgba(248,113,113,0.8)'],borderColor:['#34d399','#fbbf24','#a78bfa','#f87171'],borderWidth:2}]},
           options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'bottom',labels:{color:'#c4b5fd',font:{size:11},padding:10,boxWidth:12}},tooltip:{callbacks:{label:ctx=>ctx.label+': '+ctx.parsed+' debts'}}}}
         });
       } catch(e) { console.error('Dashboard error:',e); }
@@ -296,6 +340,7 @@ data:
     }
 
     function renderCustomers(customers) {
+      const notes = JSON.parse(localStorage.getItem('hw_cust_notes')||'{}');
       document.getElementById('customers-table').innerHTML = customers.map(c=>`
         <tr>
           <td><i class="fa-solid fa-user" style="color:#a78bfa;margin-right:6px"></i>${c.name}</td>
@@ -308,9 +353,36 @@ data:
                 <a href="sms:${c.phone}" class="btn btn-sms btn-sm"><i class="fa-solid fa-message"></i> SMS</a>`
               :'-'}
               <button class="btn btn-orange btn-sm" onclick="viewStatement(${c.id})"><i class="fa-solid fa-file-lines"></i> Statement</button>
+              <button class="note-btn ${notes[c.id]?'has-note':''}" onclick="openNoteModal(${c.id},'${c.name.replace(/'/g,"\\'")}')">${notes[c.id]?'<i class="fa-solid fa-note-sticky"></i> Note':'<i class="fa-regular fa-note-sticky"></i> Note'}</button>
             </div>
+            ${notes[c.id]?`<div style="margin-top:5px;font-size:0.75em;color:#fbbf24;white-space:pre-wrap">${notes[c.id]}</div>`:''}
           </td>
         </tr>`).join('');
+    }
+
+    function openNoteModal(custId, custName) {
+      currentNoteCustomerId = custId;
+      document.getElementById('note-customer-name').textContent = custName;
+      const notes = JSON.parse(localStorage.getItem('hw_cust_notes')||'{}');
+      document.getElementById('note-text').value = notes[custId]||'';
+      document.getElementById('note-modal').classList.add('open');
+    }
+
+    function saveCustomerNote() {
+      const note = document.getElementById('note-text').value.trim();
+      const notes = JSON.parse(localStorage.getItem('hw_cust_notes')||'{}');
+      if (note) notes[currentNoteCustomerId] = note; else delete notes[currentNoteCustomerId];
+      localStorage.setItem('hw_cust_notes', JSON.stringify(notes));
+      closeModal('note-modal');
+      renderCustomers(allCustomersCache);
+    }
+
+    function clearCustomerNote() {
+      const notes = JSON.parse(localStorage.getItem('hw_cust_notes')||'{}');
+      delete notes[currentNoteCustomerId];
+      localStorage.setItem('hw_cust_notes', JSON.stringify(notes));
+      closeModal('note-modal');
+      renderCustomers(allCustomersCache);
     }
 
     function filterCustomers() {
@@ -339,41 +411,81 @@ data:
 
     async function loadDebts() {
       const d = await fetch(API+'/debts',{headers:headers()}).then(r=>r.json());
-      allDebtsCache=d; renderDebts(d);
+      allDebtsCache=d;
+      const wo = JSON.parse(localStorage.getItem('hw_writeoffs')||'{}');
+      renderDebts(d.filter(x=>!wo[x.id]));
     }
 
     function renderDebts(debts) {
-      document.getElementById('debts-table').innerHTML = debts.map(d=>`
-        <tr>
+      const wo = JSON.parse(localStorage.getItem('hw_writeoffs')||'{}');
+      document.getElementById('debts-table').innerHTML = debts.map(d=>{
+        const isWO = !!wo[d.id];
+        return `
+        <tr class="${isWO?'writeoff-row':''}">
           <td>${d.customer_name}</td><td>${d.description}</td><td>${fmtDateTime(d.created_at)}</td>
           <td>${fmt(d.total_amount)}</td>
           <td style="color:#34d399">${fmt(d.amount_paid)}</td>
           <td style="color:${parseFloat(d.balance)>0?'#f87171':'#34d399'}">${fmt(d.balance)}</td>
-          <td>${fmtDate(d.due_date)}</td><td>${statusBadge(d)}</td>
+          <td>${fmtDate(d.due_date)}</td>
+          <td>${isWO?`<span class="badge badge-writeoff"><i class="fa-solid fa-ban"></i> Written Off</span>`:statusBadge(d)}</td>
           <td>
             <div class="action-btns">
-              ${d.status!=='paid'?`<button class="btn btn-green btn-sm" onclick="openPayModal(${d.id},'${d.customer_name}',${d.balance})"><i class="fa-solid fa-money-bill-wave"></i> Pay</button>`:''}
-              ${d.customer_phone&&d.status!=='paid'?`
-                <button class="btn btn-whatsapp btn-sm" onclick='openReminderModal(${JSON.stringify(d).replace(/"/g,"&quot;")})'>
-                  <i class="fa-brands fa-whatsapp"></i> WhatsApp
-                </button>
-                <button class="btn btn-sms btn-sm" onclick='openSmsOnly(${JSON.stringify(d).replace(/"/g,"&quot;")})'>
-                  <i class="fa-solid fa-message"></i> SMS
-                </button>`:''}
+              ${isWO?`
+                <span style="font-size:0.75em;color:#9ca3af">${wo[d.id].reason}</span>
+                <button class="btn btn-sm" onclick="undoWriteOff(${d.id})"><i class="fa-solid fa-rotate-left"></i> Undo</button>`
+              :`${d.status!=='paid'?`<button class="btn btn-green btn-sm" onclick="openPayModal(${d.id},'${d.customer_name}',${d.balance})"><i class="fa-solid fa-money-bill-wave"></i> Pay</button>`:''}
+                ${d.customer_phone&&d.status!=='paid'?`
+                  <button class="btn btn-whatsapp btn-sm" onclick='openReminderModal(${JSON.stringify(d).replace(/"/g,"&quot;")})'>
+                    <i class="fa-brands fa-whatsapp"></i> WhatsApp
+                  </button>
+                  <button class="btn btn-sms btn-sm" onclick='openSmsOnly(${JSON.stringify(d).replace(/"/g,"&quot;")})'>
+                    <i class="fa-solid fa-message"></i> SMS
+                  </button>`:''}
+                ${d.status!=='paid'?`<button class="btn btn-sm" style="background:rgba(107,114,128,0.3);color:#9ca3af" onclick="openWriteOffModal(${d.id},'${d.description.replace(/'/g,"\\'")}',${d.balance})"><i class="fa-solid fa-ban"></i> Write Off</button>`:''}`}
             </div>
           </td>
-        </tr>`).join('');
+        </tr>`;
+      }).join('');
     }
 
     function filterDebts() {
       const q = document.getElementById('search-debts').value.toLowerCase();
       const s = document.getElementById('filter-status').value;
+      const wo = JSON.parse(localStorage.getItem('hw_writeoffs')||'{}');
       let f = allDebtsCache.filter(d=>d.customer_name.toLowerCase().includes(q)||d.description.toLowerCase().includes(q));
-      if (s==='paid') f=f.filter(d=>d.status==='paid');
-      else if (s==='unpaid') f=f.filter(d=>d.status!=='paid'&&parseFloat(d.amount_paid)===0);
-      else if (s==='partial') f=f.filter(d=>parseFloat(d.amount_paid)>0&&d.status!=='paid');
-      else if (s==='overdue') f=f.filter(d=>d.due_date&&new Date(d.due_date)<new Date()&&d.status!=='paid');
+      if (s==='writeoff') { f=f.filter(d=>wo[d.id]); }
+      else {
+        f=f.filter(d=>!wo[d.id]); // hide written-off from all other views
+        if (s==='paid') f=f.filter(d=>d.status==='paid');
+        else if (s==='unpaid') f=f.filter(d=>d.status!=='paid'&&parseFloat(d.amount_paid)===0);
+        else if (s==='partial') f=f.filter(d=>parseFloat(d.amount_paid)>0&&d.status!=='paid');
+        else if (s==='overdue') f=f.filter(d=>d.due_date&&new Date(d.due_date)<new Date()&&d.status!=='paid');
+      }
       renderDebts(f);
+    }
+
+    function openWriteOffModal(debtId, desc, balance) {
+      currentWriteOffDebtId = debtId;
+      document.getElementById('writeoff-debt-info').textContent = `${desc} — Balance: KES ${fmt(balance)}`;
+      document.getElementById('writeoff-reason').value = '';
+      document.getElementById('writeoff-modal').classList.add('open');
+    }
+
+    function confirmWriteOff() {
+      const reason = document.getElementById('writeoff-reason').value.trim();
+      if (!reason) return;
+      const wo = JSON.parse(localStorage.getItem('hw_writeoffs')||'{}');
+      wo[currentWriteOffDebtId] = {reason, date: new Date().toISOString()};
+      localStorage.setItem('hw_writeoffs', JSON.stringify(wo));
+      closeModal('writeoff-modal');
+      loadDebts();
+    }
+
+    function undoWriteOff(debtId) {
+      const wo = JSON.parse(localStorage.getItem('hw_writeoffs')||'{}');
+      delete wo[debtId];
+      localStorage.setItem('hw_writeoffs', JSON.stringify(wo));
+      loadDebts();
     }
 
     async function addDebt() {
@@ -605,6 +717,28 @@ data:
       document.getElementById('age-90-amount').textContent=fmt(sumB(b90));
       document.getElementById('aging-table').innerHTML=aged.sort((a,b)=>b.days-a.days).map(d=>`
         <tr><td>${d.customer_name}</td><td>${d.description}</td><td>${fmtDate(d.created_at)}</td><td style="color:#f87171">${fmt(d.balance)}</td><td>${d.days} days</td><td>${agingBadge(d.days)}</td></tr>`).join('');
+    }
+
+    function printAging() {
+      const b30=document.getElementById('age-30-count').textContent, b30a=document.getElementById('age-30-amount').textContent;
+      const b60=document.getElementById('age-60-count').textContent, b60a=document.getElementById('age-60-amount').textContent;
+      const b90=document.getElementById('age-90-count').textContent, b90a=document.getElementById('age-90-amount').textContent;
+      const rows=document.getElementById('aging-table').innerHTML.replace(/<span[^>]*>([^<]*)<\/span>/g,'$1');
+      const win=window.open('','_blank');
+      win.document.write(`<html><head><title>Debt Aging - Happywise Ent</title>
+        <style>body{font-family:Arial,sans-serif;padding:30px;color:#1a1a2e}.summary{display:flex;gap:15px;margin:15px 0}.sum-card{flex:1;padding:12px;border-radius:8px;text-align:center;font-size:.9em}.sum-card strong{display:block;font-size:1.4em}table{width:100%;border-collapse:collapse;font-size:.88em;margin-top:15px}th{background:#f0f0f0;padding:8px;text-align:left}td{padding:8px;border-bottom:1px solid #eee}</style>
+        </head><body>
+        <h2>Happywise Ent — Debt Aging Report</h2>
+        <p style="color:#666">${new Date().toLocaleString('en-KE')}</p>
+        <div class="summary">
+          <div class="sum-card" style="background:#fffbeb;border:1px solid #fbbf24"><strong>${b30}</strong>debts 0-30 days<br>KES ${b30a}</div>
+          <div class="sum-card" style="background:#fff7ed;border:1px solid #fb923c"><strong>${b60}</strong>debts 31-60 days<br>KES ${b60a}</div>
+          <div class="sum-card" style="background:#fef2f2;border:1px solid #f87171"><strong>${b90}</strong>debts 60+ days<br>KES ${b90a}</div>
+        </div>
+        <table><thead><tr><th>Customer</th><th>Description</th><th>Date Taken</th><th>Balance (KES)</th><th>Days Outstanding</th><th>Aging Band</th></tr></thead>
+        <tbody>${rows}</tbody></table>
+        <script>window.print();<\/script></body></html>`);
+      win.document.close();
     }
 
     // ── Export ──

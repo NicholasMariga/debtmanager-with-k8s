@@ -168,3 +168,14 @@ data:
     .log-name { color: white; font-weight: bold; }
     .log-desc { color: #c4b5fd; font-size: 0.9em; }
     .log-time { color: rgba(255,255,255,0.3); font-size: 0.8em; white-space: nowrap; }
+
+    .dash-filter { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
+    .dash-filter .btn { opacity: 0.55; }
+    .dash-filter .btn.active { opacity: 1; box-shadow: 0 0 0 2px #a78bfa; }
+
+    .badge-writeoff { background: rgba(107,114,128,0.2); color: #9ca3af; }
+    .writeoff-row td { opacity: 0.5; text-decoration: line-through; }
+    .writeoff-row td:last-child { opacity: 1; text-decoration: none; }
+
+    .note-btn { background: rgba(167,139,250,0.12); border: 1px solid rgba(167,139,250,0.25); color: #c4b5fd; padding: 4px 9px; border-radius: 6px; cursor: pointer; font-size: 0.75em; white-space: nowrap; }
+    .note-btn.has-note { background: rgba(251,191,36,0.15); border-color: rgba(251,191,36,0.35); color: #fbbf24; }
