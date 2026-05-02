@@ -24,6 +24,7 @@ def hash_password(password):
 def init_db():
     conn = get_db()
     cur = conn.cursor()
+    # Core tables
     cur.execute('''
         CREATE TABLE IF NOT EXISTS staff (
             id SERIAL PRIMARY KEY,
@@ -61,7 +62,20 @@ def init_db():
             paid_at TIMESTAMP DEFAULT NOW()
         );
     ''')
-    # Create default owner account if not exists
+    # Migrations: safe to run on every startup
+    cur.execute("ALTER TABLE debts ADD COLUMN IF NOT EXISTS debt_date TIMESTAMP")
+    cur.execute("UPDATE debts SET debt_date = created_at WHERE debt_date IS NULL")
+    cur.execute("ALTER TABLE customers ADD COLUMN IF NOT EXISTS note TEXT")
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS write_offs (
+            id SERIAL PRIMARY KEY,
+            debt_id INTEGER REFERENCES debts(id) UNIQUE,
+            reason VARCHAR(255) NOT NULL,
+            written_off_by INTEGER REFERENCES staff(id),
+            written_off_at TIMESTAMP DEFAULT NOW()
+        )
+    ''')
+    # Default owner account
     cur.execute("SELECT id FROM staff WHERE username = 'owner'")
     if not cur.fetchone():
         cur.execute(
@@ -145,20 +159,16 @@ def add_staff():
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
     data = request.json
-    name = data['name']
-    username = data['username']
-    password = hash_password(data['password'])
-    role = data['role']
     conn = get_db()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     try:
         cur.execute(
             "INSERT INTO staff (name, username, password, role) VALUES (%s, %s, %s, %s) RETURNING id, name, username, role",
-            (name, username, password, role)
+            (data['name'], data['username'], hash_password(data['password']), data['role'])
         )
         staff = cur.fetchone()
         conn.commit()
-    except Exception as e:
+    except Exception:
         cur.close()
         conn.close()
         return jsonify({"error": "Username already exists"}), 400
@@ -206,20 +216,35 @@ def add_customer():
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
     data = request.json
-    name = data['name']
-    phone = data.get('phone', '')
-    email = data.get('email', '')
     conn = get_db()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cur.execute(
         'INSERT INTO customers (name, phone, email) VALUES (%s, %s, %s) RETURNING *',
-        (name, phone, email)
+        (data['name'], data.get('phone', ''), data.get('email', ''))
     )
     customer = cur.fetchone()
     conn.commit()
     cur.close()
     conn.close()
     return jsonify(dict(customer)), 201
+
+@app.route('/customers/<int:customer_id>', methods=['PUT'])
+def update_customer(customer_id):
+    user = require_auth()
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+    data = request.json
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute(
+        'UPDATE customers SET note = %s WHERE id = %s RETURNING *',
+        (data.get('note'), customer_id)
+    )
+    customer = cur.fetchone()
+    conn.commit()
+    cur.close()
+    conn.close()
+    return jsonify(dict(customer))
 
 # ── Debts ──
 @app.route('/debts', methods=['GET'])
@@ -234,10 +259,13 @@ def get_debts():
             c.name as customer_name,
             c.phone as customer_phone,
             (d.total_amount - d.amount_paid) as balance,
-            s.name as created_by_name
+            s.name as created_by_name,
+            wo.reason as writeoff_reason,
+            wo.written_off_at
         FROM debts d
         JOIN customers c ON d.customer_id = c.id
         LEFT JOIN staff s ON d.created_by = s.id
+        LEFT JOIN write_offs wo ON d.id = wo.debt_id
         ORDER BY d.created_at DESC
     ''')
     debts = cur.fetchall()
@@ -255,19 +283,70 @@ def add_debt():
     description = data['description']
     total_amount = data['total_amount']
     due_date = data.get('due_date', None)
+    debt_date = data.get('debt_date', None)
     created_by = user['id']
     conn = get_db()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cur.execute(
-        '''INSERT INTO debts (customer_id, description, total_amount, due_date, created_by)
-           VALUES (%s, %s, %s, %s, %s) RETURNING *''',
-        (customer_id, description, total_amount, due_date, created_by)
+        '''INSERT INTO debts (customer_id, description, total_amount, due_date, debt_date, created_by)
+           VALUES (%s, %s, %s, %s, %s, %s) RETURNING *''',
+        (customer_id, description, total_amount, due_date, debt_date, created_by)
     )
     debt = cur.fetchone()
     conn.commit()
     cur.close()
     conn.close()
     return jsonify(dict(debt)), 201
+
+# ── Write-offs ──
+@app.route('/writeoffs', methods=['GET'])
+def get_writeoffs():
+    user = require_auth()
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute('SELECT * FROM write_offs ORDER BY written_off_at DESC')
+    writeoffs = cur.fetchall()
+    cur.close()
+    conn.close()
+    return jsonify([dict(w) for w in writeoffs])
+
+@app.route('/writeoffs', methods=['POST'])
+def add_writeoff():
+    user = require_auth()
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+    data = request.json
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    try:
+        cur.execute(
+            'INSERT INTO write_offs (debt_id, reason, written_off_by) VALUES (%s, %s, %s) RETURNING *',
+            (data['debt_id'], data['reason'], user['id'])
+        )
+        writeoff = cur.fetchone()
+        conn.commit()
+    except Exception:
+        cur.close()
+        conn.close()
+        return jsonify({"error": "Already written off"}), 400
+    cur.close()
+    conn.close()
+    return jsonify(dict(writeoff)), 201
+
+@app.route('/writeoffs/<int:debt_id>', methods=['DELETE'])
+def delete_writeoff(debt_id):
+    user = require_auth()
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute('DELETE FROM write_offs WHERE debt_id = %s', (debt_id,))
+    conn.commit()
+    cur.close()
+    conn.close()
+    return jsonify({"message": "Write-off removed"})
 
 # ── Payments ──
 @app.route('/payments', methods=['POST'])
@@ -282,19 +361,16 @@ def make_payment():
     recorded_by = user['id']
     conn = get_db()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    # Record payment
     cur.execute(
         'INSERT INTO payments (debt_id, amount, note, recorded_by) VALUES (%s, %s, %s, %s) RETURNING *',
         (debt_id, amount, note, recorded_by)
     )
     payment = cur.fetchone()
-    # Update debt amount paid
     cur.execute(
         'UPDATE debts SET amount_paid = amount_paid + %s WHERE id = %s RETURNING *',
         (amount, debt_id)
     )
     debt = cur.fetchone()
-    # Mark as paid if fully settled
     if float(debt['amount_paid']) >= float(debt['total_amount']):
         cur.execute("UPDATE debts SET status = 'paid' WHERE id = %s", (debt_id,))
     conn.commit()
@@ -362,8 +438,11 @@ def get_reminders():
             (d.total_amount - d.amount_paid) as balance
         FROM debts d
         JOIN customers c ON d.customer_id = c.id
+        LEFT JOIN write_offs wo ON d.id = wo.debt_id
         WHERE d.status != 'paid'
-        AND d.due_date <= NOW() + INTERVAL '7 days'
+        AND d.due_date IS NOT NULL
+        AND d.due_date < NOW()
+        AND wo.id IS NULL
         ORDER BY d.due_date ASC
     ''')
     reminders = cur.fetchall()

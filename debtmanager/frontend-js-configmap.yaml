@@ -157,8 +157,7 @@ data:
     async function buildWhatsAppMessage(debt) {
       document.getElementById('msg-preview-text').value = 'Loading all debts for '+debt.customer_name+'...';
       const allDebts = await fetch(API+'/debts',{headers:headers()}).then(r=>r.json());
-      const wo = JSON.parse(localStorage.getItem('hw_writeoffs')||'{}');
-      const cDebts = allDebts.filter(d => d.customer_id===debt.customer_id && d.status!=='paid' && !wo[d.id]);
+      const cDebts = allDebts.filter(d => d.customer_id===debt.customer_id && d.status!=='paid' && !d.writeoff_reason);
       let lines='', gTotal=0, gPaid=0;
       for (let i=0; i<cDebts.length; i++) {
         const d = cDebts[i];
@@ -186,8 +185,7 @@ data:
     // ── Build SMS Message (single customer summary: total debt, payments, balance) ──
     async function buildSmsMessage(debt) {
       const allDebts = await fetch(API+'/debts',{headers:headers()}).then(r=>r.json());
-      const wo = JSON.parse(localStorage.getItem('hw_writeoffs')||'{}');
-      const cDebts = allDebts.filter(d => d.customer_id===debt.customer_id && d.status!=='paid' && !wo[d.id]);
+      const cDebts = allDebts.filter(d => d.customer_id===debt.customer_id && d.status!=='paid' && !d.writeoff_reason);
       let gTotal=0, gPaid=0, paidLines='';
       for (const d of cDebts) {
         gTotal += parseFloat(d.total_amount);
@@ -285,10 +283,9 @@ data:
     }
 
     function updateRemindersBadge() {
-      const wo = JSON.parse(localStorage.getItem('hw_writeoffs')||'{}');
       const count = allDebtsCache.filter(d =>
         d.due_date && new Date(d.due_date) < new Date() &&
-        d.status !== 'paid' && !wo[d.id]
+        d.status !== 'paid' && !d.writeoff_reason
       ).length;
       const badge = document.getElementById('reminders-badge');
       if (!badge) return;
@@ -304,7 +301,6 @@ data:
           fetch(API+'/debts',{headers:headers()}).then(r=>r.json())
         ]);
         allDebtsCache = debts;
-        const wo = JSON.parse(localStorage.getItem('hw_writeoffs')||'{}');
 
         const range = getDashFilterRange();
         const fd = range ? debts.filter(d => {
@@ -312,8 +308,8 @@ data:
           return (!range.from || dt >= range.from) && dt <= range.to;
         }) : debts;
 
-        const activeDebts = fd.filter(d => !wo[d.id]);
-        const writtenOffDebts = fd.filter(d => !!wo[d.id]);
+        const activeDebts = fd.filter(d => !d.writeoff_reason);
+        const writtenOffDebts = fd.filter(d => !!d.writeoff_reason);
 
         const gTotal = activeDebts.reduce((s,d)=>s+parseFloat(d.total_amount),0);
         const gPaid  = activeDebts.reduce((s,d)=>s+parseFloat(d.amount_paid),0);
@@ -386,8 +382,7 @@ data:
     }
 
     function getCustomerRisk(customerId) {
-      const wo = JSON.parse(localStorage.getItem('hw_writeoffs')||'{}');
-      const cDebts = allDebtsCache.filter(d => d.customer_id === customerId && !wo[d.id]);
+      const cDebts = allDebtsCache.filter(d => d.customer_id === customerId && !d.writeoff_reason);
       if (!cDebts.length) return null;
       const paid = cDebts.filter(d => d.status === 'paid').length;
       const active = cDebts.filter(d => d.status !== 'paid').length;
@@ -420,8 +415,7 @@ data:
       document.querySelectorAll('[id^="sort-debt-"]').forEach(el => { el.className = 'fa-solid fa-sort'; el.style.opacity='0.4'; });
       const icon = document.getElementById(iconMap[key]);
       if (icon) { icon.className = 'fa-solid fa-sort-'+(debtSortDir>0?'up':'down'); icon.style.opacity='1'; }
-      const wo = JSON.parse(localStorage.getItem('hw_writeoffs')||'{}');
-      const visible = allDebtsCache.filter(d => !wo[d.id]);
+      const visible = allDebtsCache.filter(d => !d.writeoff_reason);
       const sorted = [...visible].sort((a,b) => {
         const numKeys = ['total_amount','balance'];
         const av = numKeys.includes(key) ? parseFloat(a[key]||0) : (a[key]||'').toString();
@@ -438,9 +432,8 @@ data:
         fetch(API+'/debts',{headers:headers()}).then(r=>r.json())
       ]);
       allDebtsCache = debts;
-      const wo = JSON.parse(localStorage.getItem('hw_writeoffs')||'{}');
       const adjusted = customers.map(c => {
-        const woBalance = debts.filter(d=>d.customer_id===c.id&&!!wo[d.id]).reduce((s,d)=>s+parseFloat(d.balance),0);
+        const woBalance = debts.filter(d=>d.customer_id===c.id&&!!d.writeoff_reason).reduce((s,d)=>s+parseFloat(d.balance),0);
         return {...c, total_outstanding: Math.max(0, parseFloat(c.total_outstanding||0) - woBalance)};
       });
       allCustomersCache = adjusted;
@@ -459,16 +452,14 @@ data:
     }
 
     function renderCustomers(customers) {
-      const notes = JSON.parse(localStorage.getItem('hw_cust_notes')||'{}');
       const riskColors = {good:['rgba(52,211,153,0.15)','#34d399'],slow:['rgba(251,191,36,0.15)','#fbbf24'],defaulter:['rgba(248,113,113,0.15)','#f87171']};
       const riskLabels = {good:'Good Payer',slow:'Slow Payer',defaulter:'Defaulter'};
-      const wo2 = JSON.parse(localStorage.getItem('hw_writeoffs')||'{}');
       document.getElementById('customers-table').innerHTML = customers.map(c=>{
         const lastContacted = getLastContacted(c.name);
         const risk = getCustomerRisk(c.id);
         const rc = risk ? riskColors[risk] : null;
         const riskBadge = risk ? `<span style="background:${rc[0]};color:${rc[1]};border-radius:4px;padding:1px 6px;font-size:0.7em;margin-left:5px;vertical-align:middle">${riskLabels[risk]}</span>` : '';
-        const activeCount = allDebtsCache.filter(d => d.customer_id===c.id && d.status!=='paid' && !wo2[d.id]).length;
+        const activeCount = allDebtsCache.filter(d => d.customer_id===c.id && d.status!=='paid' && !d.writeoff_reason).length;
         return `
         <tr>
           <td>
@@ -487,37 +478,32 @@ data:
                 <a href="sms:${c.phone}" class="btn btn-sms btn-sm"><i class="fa-solid fa-message"></i> SMS</a>`
               :'-'}
               <button class="btn btn-orange btn-sm" onclick="viewStatement(${c.id})"><i class="fa-solid fa-file-lines"></i> Statement</button>
-              <button class="note-btn ${notes[c.id]?'has-note':''}" onclick="openNoteModal(${c.id},'${c.name.replace(/'/g,"\\'")}')">${notes[c.id]?'<i class="fa-solid fa-note-sticky"></i> Note':'<i class="fa-regular fa-note-sticky"></i> Note'}</button>
+              <button class="note-btn ${c.note?'has-note':''}" onclick="openNoteModal(${c.id},'${c.name.replace(/'/g,"\\'")}','${(c.note||'').replace(/'/g,"\\'")}' )">${c.note?'<i class="fa-solid fa-note-sticky"></i> Note':'<i class="fa-regular fa-note-sticky"></i> Note'}</button>
             </div>
-            ${notes[c.id]?`<div style="margin-top:5px;font-size:0.75em;color:#fbbf24;white-space:pre-wrap">${notes[c.id]}</div>`:''}
+            ${c.note?`<div style="margin-top:5px;font-size:0.75em;color:#fbbf24;white-space:pre-wrap">${c.note}</div>`:''}
           </td>
         </tr>`;
       }).join('');
     }
 
-    function openNoteModal(custId, custName) {
+    function openNoteModal(custId, custName, currentNote) {
       currentNoteCustomerId = custId;
       document.getElementById('note-customer-name').textContent = custName;
-      const notes = JSON.parse(localStorage.getItem('hw_cust_notes')||'{}');
-      document.getElementById('note-text').value = notes[custId]||'';
+      document.getElementById('note-text').value = (currentNote||'').trim();
       document.getElementById('note-modal').classList.add('open');
     }
 
-    function saveCustomerNote() {
-      const note = document.getElementById('note-text').value.trim();
-      const notes = JSON.parse(localStorage.getItem('hw_cust_notes')||'{}');
-      if (note) notes[currentNoteCustomerId] = note; else delete notes[currentNoteCustomerId];
-      localStorage.setItem('hw_cust_notes', JSON.stringify(notes));
+    async function saveCustomerNote() {
+      const note = document.getElementById('note-text').value.trim() || null;
+      await fetch(API+'/customers/'+currentNoteCustomerId, {method:'PUT', headers:headers(), body:JSON.stringify({note})});
       closeModal('note-modal');
-      renderCustomers(allCustomersCache);
+      loadCustomers();
     }
 
-    function clearCustomerNote() {
-      const notes = JSON.parse(localStorage.getItem('hw_cust_notes')||'{}');
-      delete notes[currentNoteCustomerId];
-      localStorage.setItem('hw_cust_notes', JSON.stringify(notes));
+    async function clearCustomerNote() {
+      await fetch(API+'/customers/'+currentNoteCustomerId, {method:'PUT', headers:headers(), body:JSON.stringify({note:null})});
       closeModal('note-modal');
-      renderCustomers(allCustomersCache);
+      loadCustomers();
     }
 
     function filterCustomers() {
@@ -547,15 +533,13 @@ data:
     async function loadDebts() {
       const d = await fetch(API+'/debts',{headers:headers()}).then(r=>r.json());
       allDebtsCache=d;
-      const wo = JSON.parse(localStorage.getItem('hw_writeoffs')||'{}');
-      renderDebts(d.filter(x=>!wo[x.id]));
+      renderDebts(d.filter(x=>!x.writeoff_reason));
     }
 
     function renderDebts(debts) {
-      const wo = JSON.parse(localStorage.getItem('hw_writeoffs')||'{}');
       const nowD = new Date(); const in7D = new Date(); in7D.setDate(nowD.getDate()+7);
       document.getElementById('debts-table').innerHTML = debts.map(d=>{
-        const isWO = !!wo[d.id];
+        const isWO = !!d.writeoff_reason;
         const isDueSoon = !isWO && d.due_date && d.status!=='paid' && new Date(d.due_date)>=nowD && new Date(d.due_date)<=in7D;
         return `
         <tr class="${isWO?'writeoff-row':isDueSoon?'due-soon-row':''}">
@@ -568,7 +552,7 @@ data:
           <td>
             <div class="action-btns">
               ${isWO?`
-                <span style="font-size:0.75em;color:#9ca3af">${wo[d.id].reason}</span>
+                <span style="font-size:0.75em;color:#9ca3af">${d.writeoff_reason}</span>
                 <button class="btn btn-sm" onclick="undoWriteOff(${d.id})"><i class="fa-solid fa-rotate-left"></i> Undo</button>`
               :`${d.status!=='paid'?`<button class="btn btn-green btn-sm" onclick="openPayModal(${d.id},'${d.customer_name}',${d.balance})"><i class="fa-solid fa-money-bill-wave"></i> Pay</button>`:''}
                 ${d.customer_phone&&d.status!=='paid'?`
@@ -588,11 +572,10 @@ data:
     function filterDebts() {
       const q = document.getElementById('search-debts').value.toLowerCase();
       const s = document.getElementById('filter-status').value;
-      const wo = JSON.parse(localStorage.getItem('hw_writeoffs')||'{}');
       let f = allDebtsCache.filter(d=>d.customer_name.toLowerCase().includes(q)||d.description.toLowerCase().includes(q));
-      if (s==='writeoff') { f=f.filter(d=>wo[d.id]); }
+      if (s==='writeoff') { f=f.filter(d=>!!d.writeoff_reason); }
       else {
-        f=f.filter(d=>!wo[d.id]); // hide written-off from all other views
+        f=f.filter(d=>!d.writeoff_reason);
         if (s==='paid') f=f.filter(d=>d.status==='paid');
         else if (s==='unpaid') f=f.filter(d=>d.status!=='paid'&&parseFloat(d.amount_paid)===0);
         else if (s==='partial') f=f.filter(d=>parseFloat(d.amount_paid)>0&&d.status!=='paid');
@@ -608,20 +591,16 @@ data:
       document.getElementById('writeoff-modal').classList.add('open');
     }
 
-    function confirmWriteOff() {
+    async function confirmWriteOff() {
       const reason = document.getElementById('writeoff-reason').value.trim();
       if (!reason) return;
-      const wo = JSON.parse(localStorage.getItem('hw_writeoffs')||'{}');
-      wo[currentWriteOffDebtId] = {reason, date: new Date().toISOString()};
-      localStorage.setItem('hw_writeoffs', JSON.stringify(wo));
+      await fetch(API+'/writeoffs', {method:'POST', headers:headers(), body:JSON.stringify({debt_id:currentWriteOffDebtId, reason})});
       closeModal('writeoff-modal');
       loadDebts();
     }
 
-    function undoWriteOff(debtId) {
-      const wo = JSON.parse(localStorage.getItem('hw_writeoffs')||'{}');
-      delete wo[debtId];
-      localStorage.setItem('hw_writeoffs', JSON.stringify(wo));
+    async function undoWriteOff(debtId) {
+      await fetch(API+'/writeoffs/'+debtId, {method:'DELETE', headers:headers()});
       loadDebts();
     }
 
@@ -631,17 +610,7 @@ data:
       const total_amount=document.getElementById('debt-amount').value;
       const debt_date=document.getElementById('debt-date').value;
       if (!customer_id||!description||!total_amount) return showAlert('alert-debt','Please fill all required fields','error');
-      const res=await fetch(API+'/debts',{method:'POST',headers:headers(),body:JSON.stringify({customer_id,description,total_amount,due_date:document.getElementById('debt-due').value||null,debt_date:debt_date||null})});
-      if (debt_date) {
-        try {
-          const saved=await res.clone().json();
-          if (saved.id) {
-            const dates=JSON.parse(localStorage.getItem('hw_debt_dates')||'{}');
-            dates[saved.id]=debt_date;
-            localStorage.setItem('hw_debt_dates',JSON.stringify(dates));
-          }
-        } catch(e) {}
-      }
+      await fetch(API+'/debts',{method:'POST',headers:headers(),body:JSON.stringify({customer_id,description,total_amount,due_date:document.getElementById('debt-due').value||null,debt_date:debt_date||null})});
       showAlert('alert-debt','Debt recorded successfully!','success');
       ['debt-desc','debt-amount','debt-due'].forEach(id=>document.getElementById(id).value='');
       const now=new Date(); now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
@@ -652,8 +621,7 @@ data:
     // ── Payments ──
     async function loadDebtDropdowns() {
       const debts = await fetch(API+'/debts',{headers:headers()}).then(r=>r.json());
-      const wo = JSON.parse(localStorage.getItem('hw_writeoffs')||'{}');
-      const unpaid = debts.filter(d=>d.status!=='paid'&&!wo[d.id]);
+      const unpaid = debts.filter(d=>d.status!=='paid'&&!d.writeoff_reason);
       document.getElementById('pay-debt').innerHTML = '<option value="">Select debt</option>'+unpaid.map(d=>`<option value="${d.id}">${d.customer_name} - ${d.description} (KES ${fmt(d.balance)})</option>`).join('');
       document.getElementById('filter-debt').innerHTML = '<option value="">Select debt to view history</option>'+debts.map(d=>`<option value="${d.id}">${d.customer_name} - ${d.description}</option>`).join('');
     }
@@ -779,8 +747,7 @@ data:
           fetch(API+'/reminders',{headers:headers()}).then(r=>r.json()),
           fetch(API+'/debts',{headers:headers()}).then(r=>r.json())
         ]);
-        const wo = JSON.parse(localStorage.getItem('hw_writeoffs')||'{}');
-        const activeReminders = reminders.filter(r => !wo[r.id]);
+        const activeReminders = reminders; // write-offs already excluded by backend
         const el=document.getElementById('reminders-list');
         if (!activeReminders.length) {
           el.innerHTML=`<div style="text-align:center;padding:30px;color:#34d399"><i class="fa-solid fa-circle-check" style="font-size:2em;margin-bottom:10px;display:block"></i>No overdue debts! All customers are up to date.</div>`;
@@ -793,7 +760,7 @@ data:
         });
         // Split: never paid vs overdue (has paid something before)
         const groups = Object.values(byC).map(r => {
-          const cDebts = debts.filter(d => d.customer_id===r.customer_id && !wo[d.id]);
+          const cDebts = debts.filter(d => d.customer_id===r.customer_id && !d.writeoff_reason);
           return {...r, everPaid: cDebts.some(d => parseFloat(d.amount_paid) > 0)};
         });
         const neverPaid = groups.filter(r => !r.everPaid);
@@ -821,8 +788,7 @@ data:
         fetch(API+'/reports',{headers:headers()}).then(r=>r.json()),
         fetch(API+'/debts',{headers:headers()}).then(r=>r.json())
       ]);
-      const wo = JSON.parse(localStorage.getItem('hw_writeoffs')||'{}');
-      const woDebts = debts.filter(d => !!wo[d.id]);
+      const woDebts = debts.filter(d => !!d.writeoff_reason);
       const woBalance = woDebts.reduce((s,d)=>s+parseFloat(d.balance),0);
       const woCount = woDebts.length;
       const adjOutstanding = Math.max(0, parseFloat(rep.total_outstanding||0) - woBalance);
@@ -845,7 +811,7 @@ data:
         const d = new Date(); d.setDate(1); d.setMonth(d.getMonth()-i);
         months.push({label:d.toLocaleDateString('en-KE',{month:'short',year:'numeric'}), year:d.getFullYear(), month:d.getMonth()});
       }
-      const activeDebtsR = debts.filter(d=>!wo[d.id]);
+      const activeDebtsR = debts.filter(d=>!d.writeoff_reason);
       const mIssued = months.map(m => activeDebtsR.filter(d=>{ const dt=new Date(d.created_at); return dt.getFullYear()===m.year&&dt.getMonth()===m.month; }).reduce((s,d)=>s+parseFloat(d.total_amount),0));
       const mCollected = months.map(m => activeDebtsR.filter(d=>{ const dt=new Date(d.created_at); return dt.getFullYear()===m.year&&dt.getMonth()===m.month; }).reduce((s,d)=>s+parseFloat(d.amount_paid),0));
       const trendCtx = document.getElementById('trendChart').getContext('2d');
@@ -922,11 +888,9 @@ data:
     async function loadAging() {
       const debts=await fetch(API+'/debts',{headers:headers()}).then(r=>r.json());
       const now=new Date();
-      const customDates=JSON.parse(localStorage.getItem('hw_debt_dates')||'{}');
-      const wo=JSON.parse(localStorage.getItem('hw_writeoffs')||'{}');
-      const unpaid=debts.filter(d=>d.status!=='paid'&&!wo[d.id]);
+      const unpaid=debts.filter(d=>d.status!=='paid'&&!d.writeoff_reason);
       const aged=unpaid.map(d=>{
-        const effectiveDate=customDates[d.id]||d.created_at;
+        const effectiveDate=d.debt_date||d.created_at;
         const days=Math.floor((now-new Date(effectiveDate))/(1000*60*60*24));
         return{...d,days,created_at:effectiveDate};
       });
