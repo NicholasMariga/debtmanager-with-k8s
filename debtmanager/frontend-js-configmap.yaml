@@ -21,6 +21,8 @@ data:
     let dashFilter = 'all';
     let currentNoteCustomerId = null;
     let currentWriteOffDebtId = null;
+    let custSortKey = 'name', custSortDir = 1;
+    let debtSortKey = 'created_at', debtSortDir = -1;
 
     if (token && currentUser) showApp();
 
@@ -382,12 +384,59 @@ data:
       } catch(e) { console.error('Dashboard error:',e); }
     }
 
+    function getCustomerRisk(customerId) {
+      const wo = JSON.parse(localStorage.getItem('hw_writeoffs')||'{}');
+      const cDebts = allDebtsCache.filter(d => d.customer_id === customerId && !wo[d.id]);
+      if (!cDebts.length) return null;
+      const paid = cDebts.filter(d => d.status === 'paid').length;
+      const active = cDebts.filter(d => d.status !== 'paid').length;
+      const overdue = cDebts.filter(d => d.due_date && new Date(d.due_date) < new Date() && d.status !== 'paid').length;
+      const neverPaid = cDebts.filter(d => parseFloat(d.amount_paid) === 0 && d.status !== 'paid').length;
+      if (active === 0 && paid > 0) return 'good';
+      if (overdue === 0 && paid > 0) return 'good';
+      if (neverPaid === active && active > 0 && paid === 0) return 'defaulter';
+      if (overdue > 0) return 'slow';
+      return null;
+    }
+
+    function sortCustomers(key) {
+      if (custSortKey === key) custSortDir *= -1; else { custSortKey = key; custSortDir = 1; }
+      const iconMap = {name:'sort-cust-name', total_outstanding:'sort-cust-bal'};
+      document.querySelectorAll('[id^="sort-cust-"]').forEach(el => { el.className = 'fa-solid fa-sort'; el.style.opacity='0.4'; });
+      const icon = document.getElementById(iconMap[key]);
+      if (icon) { icon.className = 'fa-solid fa-sort-'+(custSortDir>0?'up':'down'); icon.style.opacity='1'; }
+      const sorted = [...allCustomersCache].sort((a,b) => {
+        const av = key==='total_outstanding' ? parseFloat(a[key]||0) : (a[key]||'').toString().toLowerCase();
+        const bv = key==='total_outstanding' ? parseFloat(b[key]||0) : (b[key]||'').toString().toLowerCase();
+        return av < bv ? -custSortDir : av > bv ? custSortDir : 0;
+      });
+      renderCustomers(sorted);
+    }
+
+    function sortDebts(key) {
+      if (debtSortKey === key) debtSortDir *= -1; else { debtSortKey = key; debtSortDir = 1; }
+      const iconMap = {customer_name:'sort-debt-cust', created_at:'sort-debt-date', total_amount:'sort-debt-total', balance:'sort-debt-bal', due_date:'sort-debt-due'};
+      document.querySelectorAll('[id^="sort-debt-"]').forEach(el => { el.className = 'fa-solid fa-sort'; el.style.opacity='0.4'; });
+      const icon = document.getElementById(iconMap[key]);
+      if (icon) { icon.className = 'fa-solid fa-sort-'+(debtSortDir>0?'up':'down'); icon.style.opacity='1'; }
+      const wo = JSON.parse(localStorage.getItem('hw_writeoffs')||'{}');
+      const visible = allDebtsCache.filter(d => !wo[d.id]);
+      const sorted = [...visible].sort((a,b) => {
+        const numKeys = ['total_amount','balance'];
+        const av = numKeys.includes(key) ? parseFloat(a[key]||0) : (a[key]||'').toString();
+        const bv = numKeys.includes(key) ? parseFloat(b[key]||0) : (b[key]||'').toString();
+        return av < bv ? -debtSortDir : av > bv ? debtSortDir : 0;
+      });
+      renderDebts(sorted);
+    }
+
     // ── Customers ──
     async function loadCustomers() {
       const [customers, debts] = await Promise.all([
         fetch(API+'/customers',{headers:headers()}).then(r=>r.json()),
         fetch(API+'/debts',{headers:headers()}).then(r=>r.json())
       ]);
+      allDebtsCache = debts;
       const wo = JSON.parse(localStorage.getItem('hw_writeoffs')||'{}');
       const adjusted = customers.map(c => {
         const woBalance = debts.filter(d=>d.customer_id===c.id&&!!wo[d.id]).reduce((s,d)=>s+parseFloat(d.balance),0);
@@ -410,12 +459,17 @@ data:
 
     function renderCustomers(customers) {
       const notes = JSON.parse(localStorage.getItem('hw_cust_notes')||'{}');
+      const riskColors = {good:['rgba(52,211,153,0.15)','#34d399'],slow:['rgba(251,191,36,0.15)','#fbbf24'],defaulter:['rgba(248,113,113,0.15)','#f87171']};
+      const riskLabels = {good:'Good Payer',slow:'Slow Payer',defaulter:'Defaulter'};
       document.getElementById('customers-table').innerHTML = customers.map(c=>{
         const lastContacted = getLastContacted(c.name);
+        const risk = getCustomerRisk(c.id);
+        const rc = risk ? riskColors[risk] : null;
+        const riskBadge = risk ? `<span style="background:${rc[0]};color:${rc[1]};border-radius:4px;padding:1px 6px;font-size:0.7em;margin-left:5px;vertical-align:middle">${riskLabels[risk]}</span>` : '';
         return `
         <tr>
           <td>
-            <i class="fa-solid fa-user" style="color:#a78bfa;margin-right:6px"></i>${c.name}
+            <i class="fa-solid fa-user" style="color:#a78bfa;margin-right:6px"></i>${c.name}${riskBadge}
             ${lastContacted?`<div style="font-size:0.72em;color:#6b7280;margin-top:2px"><i class="fa-solid fa-paper-plane" style="font-size:0.85em"></i> Contacted: ${lastContacted}</div>`:''}
           </td>
           <td>${c.phone||'-'}</td><td>${c.email||'-'}</td>

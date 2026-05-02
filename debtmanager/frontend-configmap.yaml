@@ -175,7 +175,7 @@ data:
                   <button class="btn btn-yellow btn-sm" onclick="exportCustomersCSV()"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
                 </div>
                 <table>
-                  <thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Outstanding (KES)</th><th>Actions</th></tr></thead>
+                  <thead><tr><th style="cursor:pointer;user-select:none" onclick="sortCustomers('name')">Name <i class="fa-solid fa-sort" id="sort-cust-name" style="opacity:0.4;font-size:.75em"></i></th><th>Phone</th><th>Email</th><th style="cursor:pointer;user-select:none" onclick="sortCustomers('total_outstanding')">Outstanding (KES) <i class="fa-solid fa-sort" id="sort-cust-bal" style="opacity:0.4;font-size:.75em"></i></th><th>Actions</th></tr></thead>
                   <tbody id="customers-table"></tbody>
                 </table>
               </div>
@@ -213,7 +213,7 @@ data:
                 </div>
                 <div style="overflow-x:auto">
                   <table>
-                    <thead><tr><th>Customer</th><th>Description</th><th>Date Taken</th><th>Total (KES)</th><th>Paid (KES)</th><th>Balance (KES)</th><th>Due Date</th><th>Status</th><th>Actions</th></tr></thead>
+                    <thead><tr><th style="cursor:pointer;user-select:none" onclick="sortDebts('customer_name')">Customer <i class="fa-solid fa-sort" id="sort-debt-cust" style="opacity:0.4;font-size:.75em"></i></th><th>Description</th><th style="cursor:pointer;user-select:none" onclick="sortDebts('created_at')">Date Taken <i class="fa-solid fa-sort" id="sort-debt-date" style="opacity:0.4;font-size:.75em"></i></th><th style="cursor:pointer;user-select:none" onclick="sortDebts('total_amount')">Total (KES) <i class="fa-solid fa-sort" id="sort-debt-total" style="opacity:0.4;font-size:.75em"></i></th><th>Paid (KES)</th><th style="cursor:pointer;user-select:none" onclick="sortDebts('balance')">Balance (KES) <i class="fa-solid fa-sort" id="sort-debt-bal" style="opacity:0.4;font-size:.75em"></i></th><th style="cursor:pointer;user-select:none" onclick="sortDebts('due_date')">Due Date <i class="fa-solid fa-sort" id="sort-debt-due" style="opacity:0.4;font-size:.75em"></i></th><th>Status</th><th>Actions</th></tr></thead>
                     <tbody id="debts-table"></tbody>
                   </table>
                 </div>
