@@ -287,6 +287,10 @@ data:
                 <div class="stat-card"><i class="fa-solid fa-percent" style="color:#34d399"></i><div class="stat-value" id="rep-collrate" style="color:#34d399">-</div><div class="stat-label">Collection Rate</div></div>
               </div>
               <div class="card">
+                <h3><i class="fa-solid fa-chart-line"></i> Monthly Trend (Last 6 Months)</h3>
+                <div class="chart-container"><canvas id="trendChart"></canvas></div>
+              </div>
+              <div class="card">
                 <h3><i class="fa-solid fa-file-lines"></i> Customer Statement</h3>
                 <div class="search-bar">
                   <select id="statement-customer" onchange="loadStatement()"><option value="">Select customer to view statement</option></select>
