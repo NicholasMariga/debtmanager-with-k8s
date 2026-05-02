@@ -127,6 +127,8 @@ data:
                 <div class="stat-card"><i class="fa-solid fa-triangle-exclamation"></i><div class="stat-value" id="stat-outstanding">-</div><div class="stat-label">Outstanding (KES)</div></div>
                 <div class="stat-card"><i class="fa-solid fa-circle-check"></i><div class="stat-value" id="stat-collected">-</div><div class="stat-label">Collected (KES)</div></div>
                 <div class="stat-card"><i class="fa-solid fa-clock"></i><div class="stat-value" id="stat-overdue">-</div><div class="stat-label">Overdue</div></div>
+                <div class="stat-card"><i class="fa-solid fa-ban" style="color:#9ca3af"></i><div class="stat-value" id="stat-writeoff" style="color:#9ca3af">-</div><div class="stat-label">Written Off (KES)</div></div>
+                <div class="stat-card"><i class="fa-solid fa-percent" style="color:#34d399"></i><div class="stat-value" id="stat-collrate" style="color:#34d399">-</div><div class="stat-label">Collection Rate</div></div>
               </div>
               <div class="charts-row">
                 <div class="chart-card">
@@ -137,6 +139,10 @@ data:
                   <h4><i class="fa-solid fa-chart-pie"></i> Debt Status Breakdown</h4>
                   <div class="chart-container"><canvas id="donutChart"></canvas></div>
                 </div>
+              </div>
+              <div class="card">
+                <h3><i class="fa-solid fa-ranking-star"></i> Top 5 Debtors</h3>
+                <div id="top-debtors-list"><p style="color:#c4b5fd;font-size:.85em">Loading...</p></div>
               </div>
               <div class="card">
                 <h3><i class="fa-solid fa-clock-rotate-left"></i> Recent Debts</h3>
@@ -275,6 +281,8 @@ data:
                 <div class="stat-card"><i class="fa-solid fa-circle-check"></i><div class="stat-value" id="rep-paid">-</div><div class="stat-label">Paid Debts</div></div>
                 <div class="stat-card"><i class="fa-solid fa-circle-xmark"></i><div class="stat-value" id="rep-unpaid">-</div><div class="stat-label">Unpaid Debts</div></div>
                 <div class="stat-card"><i class="fa-solid fa-clock"></i><div class="stat-value" id="rep-overdue">-</div><div class="stat-label">Overdue</div></div>
+                <div class="stat-card"><i class="fa-solid fa-ban" style="color:#9ca3af"></i><div class="stat-value" id="rep-writeoff" style="color:#9ca3af">-</div><div class="stat-label">Written Off (KES)</div></div>
+                <div class="stat-card"><i class="fa-solid fa-percent" style="color:#34d399"></i><div class="stat-value" id="rep-collrate" style="color:#34d399">-</div><div class="stat-label">Collection Rate</div></div>
               </div>
               <div class="card">
                 <h3><i class="fa-solid fa-file-lines"></i> Customer Statement</h3>

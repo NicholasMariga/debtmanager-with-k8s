@@ -154,7 +154,8 @@ data:
     async function buildWhatsAppMessage(debt) {
       document.getElementById('msg-preview-text').value = 'Loading all debts for '+debt.customer_name+'...';
       const allDebts = await fetch(API+'/debts',{headers:headers()}).then(r=>r.json());
-      const cDebts = allDebts.filter(d => d.customer_id===debt.customer_id && d.status!=='paid');
+      const wo = JSON.parse(localStorage.getItem('hw_writeoffs')||'{}');
+      const cDebts = allDebts.filter(d => d.customer_id===debt.customer_id && d.status!=='paid' && !wo[d.id]);
       let lines='', gTotal=0, gPaid=0;
       for (let i=0; i<cDebts.length; i++) {
         const d = cDebts[i];
@@ -182,7 +183,8 @@ data:
     // ── Build SMS Message (single customer summary: total debt, payments, balance) ──
     async function buildSmsMessage(debt) {
       const allDebts = await fetch(API+'/debts',{headers:headers()}).then(r=>r.json());
-      const cDebts = allDebts.filter(d => d.customer_id===debt.customer_id && d.status!=='paid');
+      const wo = JSON.parse(localStorage.getItem('hw_writeoffs')||'{}');
+      const cDebts = allDebts.filter(d => d.customer_id===debt.customer_id && d.status!=='paid' && !wo[d.id]);
       let gTotal=0, gPaid=0, paidLines='';
       for (const d of cDebts) {
         gTotal += parseFloat(d.total_amount);
@@ -287,6 +289,7 @@ data:
           fetch(API+'/debts',{headers:headers()}).then(r=>r.json())
         ]);
         allDebtsCache = debts;
+        const wo = JSON.parse(localStorage.getItem('hw_writeoffs')||'{}');
 
         const range = getDashFilterRange();
         const fd = range ? debts.filter(d => {
@@ -294,18 +297,46 @@ data:
           return (!range.from || dt >= range.from) && dt <= range.to;
         }) : debts;
 
-        const gTotal = fd.reduce((s,d)=>s+parseFloat(d.total_amount),0);
-        const gPaid  = fd.reduce((s,d)=>s+parseFloat(d.amount_paid),0);
-        const gBal   = fd.reduce((s,d)=>s+parseFloat(d.balance),0);
-        const overdueC = fd.filter(d=>d.due_date&&new Date(d.due_date)<new Date()&&d.status!=='paid').length;
+        const activeDebts = fd.filter(d => !wo[d.id]);
+        const writtenOffDebts = fd.filter(d => !!wo[d.id]);
 
-        document.getElementById('stat-customers').textContent = range ? [...new Set(fd.map(d=>d.customer_id))].length : (rep.total_customers||0);
-        document.getElementById('stat-debts').textContent = range ? fd.length : (rep.total_debts||0);
-        document.getElementById('stat-outstanding').textContent = range ? fmt(gBal) : fmt(rep.total_outstanding);
-        document.getElementById('stat-collected').textContent = range ? fmt(gPaid) : fmt(rep.total_collected);
-        document.getElementById('stat-overdue').textContent = range ? overdueC : (rep.overdue_debts||0);
+        const gTotal = activeDebts.reduce((s,d)=>s+parseFloat(d.total_amount),0);
+        const gPaid  = activeDebts.reduce((s,d)=>s+parseFloat(d.amount_paid),0);
+        const gBal   = activeDebts.reduce((s,d)=>s+parseFloat(d.balance),0);
+        const overdueC = activeDebts.filter(d=>d.due_date&&new Date(d.due_date)<new Date()&&d.status!=='paid').length;
+        const woTotal = writtenOffDebts.reduce((s,d)=>s+parseFloat(d.balance),0);
+        const collRate = gTotal > 0 ? ((gPaid / gTotal) * 100).toFixed(1) : '0.0';
 
-        document.getElementById('recent-debts').innerHTML = fd.slice(0,5).map(d=>`
+        document.getElementById('stat-customers').textContent = range ? [...new Set(activeDebts.map(d=>d.customer_id))].length : (rep.total_customers||0);
+        document.getElementById('stat-debts').textContent = activeDebts.length;
+        document.getElementById('stat-outstanding').textContent = fmt(gBal);
+        document.getElementById('stat-collected').textContent = fmt(gPaid);
+        document.getElementById('stat-overdue').textContent = overdueC;
+        document.getElementById('stat-writeoff').textContent = fmt(woTotal);
+        document.getElementById('stat-collrate').textContent = collRate + '%';
+
+        // Top 5 debtors
+        const custBal = {};
+        activeDebts.filter(d=>d.status!=='paid').forEach(d=>{
+          if (!custBal[d.customer_id]) custBal[d.customer_id] = {name:d.customer_name, bal:0};
+          custBal[d.customer_id].bal += parseFloat(d.balance);
+        });
+        const top5 = Object.values(custBal).sort((a,b)=>b.bal-a.bal).slice(0,5);
+        const topMax = top5.length ? top5[0].bal : 1;
+        document.getElementById('top-debtors-list').innerHTML = top5.length
+          ? top5.map((c,i)=>`
+              <div style="margin-bottom:12px">
+                <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+                  <span style="font-size:.88em">${i+1}. ${c.name}</span>
+                  <span style="color:#f87171;font-weight:bold;font-size:.88em">KES ${fmt(c.bal)}</span>
+                </div>
+                <div style="background:rgba(255,255,255,0.07);border-radius:4px;height:6px">
+                  <div style="background:linear-gradient(90deg,#a78bfa,#f87171);height:6px;border-radius:4px;width:${(c.bal/topMax*100).toFixed(1)}%"></div>
+                </div>
+              </div>`).join('')
+          : '<p style="color:#34d399;font-size:.85em"><i class="fa-solid fa-circle-check"></i> No outstanding debts!</p>';
+
+        document.getElementById('recent-debts').innerHTML = activeDebts.slice(0,5).map(d=>`
           <tr><td>${d.customer_name}</td><td>${d.description}</td><td>${fmt(d.total_amount)}</td><td>${fmt(d.balance)}</td><td>${statusBadge(d)}</td></tr>`).join('');
 
         const barTotal = range ? gTotal : parseFloat(rep.total_debt_amount||0);
@@ -322,12 +353,13 @@ data:
 
         const donutCtx = document.getElementById('donutChart').getContext('2d');
         if (donutChartInstance) donutChartInstance.destroy();
-        const paidC = fd.filter(d=>d.status==='paid').length;
-        const partC = fd.filter(d=>parseFloat(d.amount_paid)>0&&d.status!=='paid').length;
-        const unpC  = fd.filter(d=>parseFloat(d.amount_paid)===0&&d.status!=='paid'&&!(d.due_date&&new Date(d.due_date)<new Date())).length;
+        const paidC = activeDebts.filter(d=>d.status==='paid').length;
+        const partC = activeDebts.filter(d=>parseFloat(d.amount_paid)>0&&d.status!=='paid').length;
+        const unpC  = activeDebts.filter(d=>parseFloat(d.amount_paid)===0&&d.status!=='paid'&&!(d.due_date&&new Date(d.due_date)<new Date())).length;
+        const woC   = writtenOffDebts.length;
         donutChartInstance = new Chart(donutCtx, {
           type:'doughnut',
-          data:{labels:['Paid','Partial','Unpaid','Overdue'],datasets:[{data:[paidC,partC,unpC,overdueC],backgroundColor:['rgba(52,211,153,0.8)','rgba(251,191,36,0.8)','rgba(167,139,250,0.8)','rgba(248,113,113,0.8)'],borderColor:['#34d399','#fbbf24','#a78bfa','#f87171'],borderWidth:2}]},
+          data:{labels:['Paid','Partial','Unpaid','Overdue','Written Off'],datasets:[{data:[paidC,partC,unpC,overdueC,woC],backgroundColor:['rgba(52,211,153,0.8)','rgba(251,191,36,0.8)','rgba(167,139,250,0.8)','rgba(248,113,113,0.8)','rgba(107,114,128,0.8)'],borderColor:['#34d399','#fbbf24','#a78bfa','#f87171','#6b7280'],borderWidth:2}]},
           options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'bottom',labels:{color:'#c4b5fd',font:{size:11},padding:10,boxWidth:12}},tooltip:{callbacks:{label:ctx=>ctx.label+': '+ctx.parsed+' debts'}}}}
         });
       } catch(e) { console.error('Dashboard error:',e); }
@@ -335,8 +367,17 @@ data:
 
     // ── Customers ──
     async function loadCustomers() {
-      const c = await fetch(API+'/customers',{headers:headers()}).then(r=>r.json());
-      allCustomersCache = c; renderCustomers(c);
+      const [customers, debts] = await Promise.all([
+        fetch(API+'/customers',{headers:headers()}).then(r=>r.json()),
+        fetch(API+'/debts',{headers:headers()}).then(r=>r.json())
+      ]);
+      const wo = JSON.parse(localStorage.getItem('hw_writeoffs')||'{}');
+      const adjusted = customers.map(c => {
+        const woBalance = debts.filter(d=>d.customer_id===c.id&&!!wo[d.id]).reduce((s,d)=>s+parseFloat(d.balance),0);
+        return {...c, total_outstanding: Math.max(0, parseFloat(c.total_outstanding||0) - woBalance)};
+      });
+      allCustomersCache = adjusted;
+      renderCustomers(adjusted);
     }
 
     function renderCustomers(customers) {
@@ -515,7 +556,8 @@ data:
     // ── Payments ──
     async function loadDebtDropdowns() {
       const debts = await fetch(API+'/debts',{headers:headers()}).then(r=>r.json());
-      const unpaid = debts.filter(d=>d.status!=='paid');
+      const wo = JSON.parse(localStorage.getItem('hw_writeoffs')||'{}');
+      const unpaid = debts.filter(d=>d.status!=='paid'&&!wo[d.id]);
       document.getElementById('pay-debt').innerHTML = '<option value="">Select debt</option>'+unpaid.map(d=>`<option value="${d.id}">${d.customer_name} - ${d.description} (KES ${fmt(d.balance)})</option>`).join('');
       document.getElementById('filter-debt').innerHTML = '<option value="">Select debt to view history</option>'+debts.map(d=>`<option value="${d.id}">${d.customer_name} - ${d.description}</option>`).join('');
     }
@@ -611,13 +653,18 @@ data:
       renderMessageHistory();
       try {
         const reminders = await fetch(API+'/reminders',{headers:headers()}).then(r=>r.json());
+        const wo = JSON.parse(localStorage.getItem('hw_writeoffs')||'{}');
+        const activeReminders = reminders.filter(r => !wo[r.id]);
         const el=document.getElementById('reminders-list');
-        if (!reminders.length) {
+        if (!activeReminders.length) {
           el.innerHTML=`<div style="text-align:center;padding:30px;color:#34d399"><i class="fa-solid fa-circle-check" style="font-size:2em;margin-bottom:10px;display:block"></i>No overdue debts! All customers are up to date.</div>`;
           return;
         }
         const byC={};
-        reminders.forEach(r=>{if(!byC[r.customer_id])byC[r.customer_id]=r;});
+        activeReminders.forEach(r=>{
+          if(!byC[r.customer_id]) byC[r.customer_id]={...r, balance:0};
+          byC[r.customer_id].balance += parseFloat(r.balance);
+        });
         el.innerHTML=Object.values(byC).map(r=>`
           <div class="reminder-card">
             <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
@@ -647,13 +694,27 @@ data:
 
     // ── Reports ──
     async function loadReports() {
-      const rep=await fetch(API+'/reports',{headers:headers()}).then(r=>r.json());
+      const [rep, debts] = await Promise.all([
+        fetch(API+'/reports',{headers:headers()}).then(r=>r.json()),
+        fetch(API+'/debts',{headers:headers()}).then(r=>r.json())
+      ]);
+      const wo = JSON.parse(localStorage.getItem('hw_writeoffs')||'{}');
+      const woDebts = debts.filter(d => !!wo[d.id]);
+      const woBalance = woDebts.reduce((s,d)=>s+parseFloat(d.balance),0);
+      const woCount = woDebts.length;
+      const adjOutstanding = Math.max(0, parseFloat(rep.total_outstanding||0) - woBalance);
+      const adjUnpaid = Math.max(0, (rep.unpaid_debts||0) - woCount);
+      const totalIssued = parseFloat(rep.total_debt_amount||0);
+      const totalCollected = parseFloat(rep.total_collected||0);
+      const collRate = totalIssued > 0 ? ((totalCollected / totalIssued) * 100).toFixed(1) : '0.0';
       document.getElementById('rep-total').textContent=fmt(rep.total_debt_amount);
       document.getElementById('rep-collected').textContent=fmt(rep.total_collected);
-      document.getElementById('rep-outstanding').textContent=fmt(rep.total_outstanding);
+      document.getElementById('rep-outstanding').textContent=fmt(adjOutstanding);
       document.getElementById('rep-paid').textContent=rep.paid_debts;
-      document.getElementById('rep-unpaid').textContent=rep.unpaid_debts;
+      document.getElementById('rep-unpaid').textContent=adjUnpaid;
       document.getElementById('rep-overdue').textContent=rep.overdue_debts;
+      document.getElementById('rep-writeoff').textContent=fmt(woBalance);
+      document.getElementById('rep-collrate').textContent=collRate+'%';
     }
 
     async function loadStatementDropdown() {
