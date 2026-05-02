@@ -466,7 +466,7 @@ data:
 
     function openWriteOffModal(debtId, desc, balance) {
       currentWriteOffDebtId = debtId;
-      document.getElementById('writeoff-debt-info').textContent = `${desc} — Balance: KES ${fmt(balance)}`;
+      document.getElementById('writeoff-debt-info').textContent = `${desc} - Balance: KES ${fmt(balance)}`;
       document.getElementById('writeoff-reason').value = '';
       document.getElementById('writeoff-modal').classList.add('open');
     }
@@ -494,7 +494,17 @@ data:
       const total_amount=document.getElementById('debt-amount').value;
       const debt_date=document.getElementById('debt-date').value;
       if (!customer_id||!description||!total_amount) return showAlert('alert-debt','Please fill all required fields','error');
-      await fetch(API+'/debts',{method:'POST',headers:headers(),body:JSON.stringify({customer_id,description,total_amount,due_date:document.getElementById('debt-due').value||null,debt_date:debt_date||null})});
+      const res=await fetch(API+'/debts',{method:'POST',headers:headers(),body:JSON.stringify({customer_id,description,total_amount,due_date:document.getElementById('debt-due').value||null,debt_date:debt_date||null})});
+      if (debt_date) {
+        try {
+          const saved=await res.clone().json();
+          if (saved.id) {
+            const dates=JSON.parse(localStorage.getItem('hw_debt_dates')||'{}');
+            dates[saved.id]=debt_date;
+            localStorage.setItem('hw_debt_dates',JSON.stringify(dates));
+          }
+        } catch(e) {}
+      }
       showAlert('alert-debt','Debt recorded successfully!','success');
       ['debt-desc','debt-amount','debt-due'].forEach(id=>document.getElementById(id).value='');
       const now=new Date(); now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
@@ -705,8 +715,14 @@ data:
     async function loadAging() {
       const debts=await fetch(API+'/debts',{headers:headers()}).then(r=>r.json());
       const now=new Date();
-      const unpaid=debts.filter(d=>d.status!=='paid');
-      const aged=unpaid.map(d=>{const days=Math.floor((now-new Date(d.created_at))/(1000*60*60*24));return{...d,days};});
+      const customDates=JSON.parse(localStorage.getItem('hw_debt_dates')||'{}');
+      const wo=JSON.parse(localStorage.getItem('hw_writeoffs')||'{}');
+      const unpaid=debts.filter(d=>d.status!=='paid'&&!wo[d.id]);
+      const aged=unpaid.map(d=>{
+        const effectiveDate=customDates[d.id]||d.created_at;
+        const days=Math.floor((now-new Date(effectiveDate))/(1000*60*60*24));
+        return{...d,days,created_at:effectiveDate};
+      });
       const b30=aged.filter(d=>d.days<=30), b60=aged.filter(d=>d.days>30&&d.days<=60), b90=aged.filter(d=>d.days>60);
       const sumB=arr=>arr.reduce((s,d)=>s+parseFloat(d.balance),0);
       document.getElementById('age-30-count').textContent=b30.length;
@@ -728,7 +744,7 @@ data:
       win.document.write(`<html><head><title>Debt Aging - Happywise Ent</title>
         <style>body{font-family:Arial,sans-serif;padding:30px;color:#1a1a2e}.summary{display:flex;gap:15px;margin:15px 0}.sum-card{flex:1;padding:12px;border-radius:8px;text-align:center;font-size:.9em}.sum-card strong{display:block;font-size:1.4em}table{width:100%;border-collapse:collapse;font-size:.88em;margin-top:15px}th{background:#f0f0f0;padding:8px;text-align:left}td{padding:8px;border-bottom:1px solid #eee}</style>
         </head><body>
-        <h2>Happywise Ent — Debt Aging Report</h2>
+        <h2>Happywise Ent - Debt Aging Report</h2>
         <p style="color:#666">${new Date().toLocaleString('en-KE')}</p>
         <div class="summary">
           <div class="sum-card" style="background:#fffbeb;border:1px solid #fbbf24"><strong>${b30}</strong>debts 0-30 days<br>KES ${b30a}</div>
