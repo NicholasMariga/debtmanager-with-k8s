@@ -87,6 +87,13 @@ data:
     function fmt(n) { return parseFloat(n||0).toLocaleString('en-KE',{minimumFractionDigits:2}); }
     function fmtDate(d) { return d ? new Date(d).toLocaleDateString('en-KE') : '-'; }
     function fmtDateTime(d) { return d ? new Date(d).toLocaleString('en-KE') : '-'; }
+    function fmtDateTimeSms(d) {
+      if (!d) return '-';
+      const dt = new Date(d);
+      const date = dt.toLocaleDateString('en-KE');
+      const time = dt.toLocaleTimeString('en-KE', {hour:'2-digit', minute:'2-digit', hour12:false});
+      return date + ' ' + time;
+    }
     function fmtPhone(p) {
       if (!p) return '';
       if (p.startsWith('0')) return '254'+p.slice(1);
@@ -158,7 +165,7 @@ data:
             const pmts = await fetch(API+'/payments/'+d.id,{headers:headers()}).then(r=>r.json());
             pmts.forEach(p => {
               gPaid += parseFloat(p.amount);
-              paidLines += `Paid      : KES ${fmt(p.amount)} via ${p.note||'N/A'} on ${fmtDateTime(p.paid_at)}\n`;
+              paidLines += `Paid      : KES ${fmt(p.amount)} via ${p.note||'N/A'} on ${fmtDateTimeSms(p.paid_at)}\n`;
             });
           } catch(e) { gPaid += parseFloat(d.amount_paid); paidLines += `Paid      : KES ${fmt(d.amount_paid)}\n`; }
         }
@@ -193,8 +200,8 @@ data:
       document.getElementById('whatsapp-link').href =
         `https://wa.me/${phone}?text=${encodeURIComponent(waMsg)}`;
 
-      // SMS: use encodeURIComponent to handle commas, colons, and newlines
-      const smsEncoded = encodeURIComponent(smsMsg);
+      // SMS: encode newlines only — avoid encodeURIComponent which breaks SMS apps
+      const smsEncoded = smsMsg.replace(/\n/g, '%0A');
       document.getElementById('sms-link').href =
         `sms:${debt.customer_phone}?body=${smsEncoded}`;
 
@@ -207,8 +214,8 @@ data:
     // ── Open SMS Only (from reminders page and debts table) ──
     async function openSmsOnly(debt) {
       const smsMsg = await buildSmsMessage(debt);
-      // use encodeURIComponent to handle commas, colons, and newlines
-      const smsEncoded = encodeURIComponent(smsMsg);
+      // encode newlines only — avoid encodeURIComponent which breaks SMS apps
+      const smsEncoded = smsMsg.replace(/\n/g, '%0A');
       const entry = {type:'sms',customerName:debt.customer_name,debtId:debt.id,phone:debt.customer_phone,message:smsMsg,time:new Date().toISOString()};
       messageLog.unshift(entry);
       if (messageLog.length>50) messageLog=messageLog.slice(0,50);
