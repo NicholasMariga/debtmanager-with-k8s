@@ -82,7 +82,7 @@ data:
       document.getElementById('page-'+page).classList.add('active');
       if (event) event.currentTarget.classList.add('active');
       if (page==='dashboard') loadDashboard();
-      if (page==='customers') loadCustomers();
+      if (page==='customers') { loadCustomers(); loadArchivedCustomers(); }
       if (page==='debts') { loadDebts(); loadCustomerDropdown(); }
       if (page==='payments') loadDebtDropdowns();
       if (page==='reminders') loadReminders();
@@ -526,9 +526,54 @@ data:
     async function archiveCustomer(id, name) {
       const outstanding = allDebtsCache.filter(d=>d.customer_id===id&&d.status!=='paid'&&!d.writeoff_reason).reduce((s,d)=>s+parseFloat(d.balance||0),0);
       if (outstanding > 0) return showAlert('alert-customer',`Cannot archive ${name} - still has KES ${fmt(outstanding)} outstanding`,'error');
-      if (!confirm(`Archive ${name}? They will be hidden from the customer list.`)) return;
+      if (!confirm(`Archive ${name}? They will be hidden from the customer list but can be restored anytime.`)) return;
       await fetch(API+'/customers/'+id, {method:'DELETE', headers:headers()});
       loadCustomers();
+      loadArchivedCustomers();
+    }
+
+    async function loadArchivedCustomers() {
+      const data = await fetch(API+'/customers?archived=true', {headers:headers()}).then(r=>r.json());
+      const countEl = document.getElementById('archived-count');
+      if (countEl) countEl.textContent = data.length > 0 ? `(${data.length})` : '';
+      renderArchivedCustomers(data);
+    }
+
+    function renderArchivedCustomers(customers) {
+      const tbody = document.getElementById('archived-customers-table');
+      if (!tbody) return;
+      if (customers.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#6b7280;padding:16px">No archived customers</td></tr>';
+        return;
+      }
+      tbody.innerHTML = customers.map(c => `
+        <tr style="opacity:0.75">
+          <td><i class="fa-solid fa-user" style="color:#6b7280;margin-right:6px"></i>${c.name}</td>
+          <td>${c.phone||'-'}</td>
+          <td>${c.email||'-'}</td>
+          <td style="color:#9ca3af">${fmt(c.total_outstanding)}</td>
+          <td>
+            <button class="btn btn-sm" style="background:rgba(52,211,153,0.15);color:#34d399" onclick="unarchiveCustomer(${c.id},'${c.name.replace(/'/g,"\\'")}')">
+              <i class="fa-solid fa-rotate-left"></i> Restore
+            </button>
+          </td>
+        </tr>`).join('');
+    }
+
+    function toggleArchivedCustomers() {
+      const section = document.getElementById('archived-section');
+      const chevron = document.getElementById('archived-chevron');
+      const isOpen = section.style.display !== 'none';
+      section.style.display = isOpen ? 'none' : 'block';
+      chevron.style.transform = isOpen ? '' : 'rotate(180deg)';
+      if (!isOpen) loadArchivedCustomers();
+    }
+
+    async function unarchiveCustomer(id, name) {
+      if (!confirm(`Restore ${name}? They will appear in the customer list again with full history.`)) return;
+      await fetch(API+'/customers/'+id, {method:'PUT', headers:headers(), body:JSON.stringify({archived: false})});
+      loadCustomers();
+      loadArchivedCustomers();
     }
 
     // ── Debts ──

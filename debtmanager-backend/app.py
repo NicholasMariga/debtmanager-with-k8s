@@ -197,6 +197,7 @@ def get_customers():
     user = require_auth()
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
+    show_archived = request.args.get('archived') == 'true'
     conn = get_db()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cur.execute('''
@@ -204,10 +205,10 @@ def get_customers():
             COALESCE(SUM(d.total_amount - d.amount_paid), 0) as total_outstanding
         FROM customers c
         LEFT JOIN debts d ON c.id = d.customer_id AND d.status != 'paid'
-        WHERE c.archived = FALSE
+        WHERE c.archived = %s
         GROUP BY c.id
         ORDER BY c.name
-    ''')
+    ''', (show_archived,))
     customers = cur.fetchall()
     cur.close()
     conn.close()
@@ -252,9 +253,14 @@ def update_customer(customer_id):
     data = request.json
     conn = get_db()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    fields, values = ['note = %s'], [data.get('note')]
+    if 'archived' in data:
+        fields.append('archived = %s')
+        values.append(data['archived'])
+    values.append(customer_id)
     cur.execute(
-        'UPDATE customers SET note = %s WHERE id = %s RETURNING *',
-        (data.get('note'), customer_id)
+        f'UPDATE customers SET {", ".join(fields)} WHERE id = %s RETURNING *',
+        values
     )
     customer = cur.fetchone()
     conn.commit()

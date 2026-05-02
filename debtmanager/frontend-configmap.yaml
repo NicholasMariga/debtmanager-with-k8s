@@ -179,6 +179,18 @@ data:
                   <tbody id="customers-table"></tbody>
                 </table>
               </div>
+              <div class="card">
+                <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="toggleArchivedCustomers()">
+                  <h3 style="margin:0"><i class="fa-solid fa-box-archive" style="color:#6b7280"></i> Archived Customers <span id="archived-count" style="font-size:0.75em;color:#6b7280;font-weight:normal"></span></h3>
+                  <i class="fa-solid fa-chevron-down" id="archived-chevron" style="color:#6b7280;transition:transform 0.2s"></i>
+                </div>
+                <div id="archived-section" style="display:none;margin-top:14px">
+                  <table>
+                    <thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Total Debt History</th><th>Actions</th></tr></thead>
+                    <tbody id="archived-customers-table"></tbody>
+                  </table>
+                </div>
+              </div>
             </div>
 
             <!-- DEBTS -->
