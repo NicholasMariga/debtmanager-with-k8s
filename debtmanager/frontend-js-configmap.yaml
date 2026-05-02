@@ -593,7 +593,7 @@ data:
 
     function renderDebts(debts) {
       const nowD = new Date(); const in7D = new Date(); in7D.setDate(nowD.getDate()+7);
-      const catColors = {'Groceries':'#34d399','School Fees':'#60a5fa','Utilities':'#fbbf24','Medical':'#f87171','Rent':'#a78bfa','Other':'#9ca3af'};
+      const catColors = {'Weekly':'#34d399','After Two Weeks':'#60a5fa','End of Month':'#fbbf24','One-off':'#a78bfa'};
       document.getElementById('debts-table').innerHTML = debts.map(d=>{
         const isWO = !!d.writeoff_reason;
         const isDueSoon = !isWO && d.due_date && d.status!=='paid' && new Date(d.due_date)>=nowD && new Date(d.due_date)<=in7D;

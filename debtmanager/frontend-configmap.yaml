@@ -202,7 +202,7 @@ data:
                 <div class="form-row">
                   <div class="form-group"><label>Customer *</label><select id="debt-customer"></select></div>
                   <div class="form-group"><label>Description *</label><input type="text" id="debt-desc" placeholder="e.g. Groceries"></div>
-                  <div class="form-group"><label>Category</label><select id="debt-category"><option value="">No Category</option><option value="Groceries">Groceries</option><option value="School Fees">School Fees</option><option value="Utilities">Utilities</option><option value="Medical">Medical</option><option value="Rent">Rent</option><option value="Other">Other</option></select></div>
+                  <div class="form-group"><label>Payment Terms</label><select id="debt-category"><option value="">No Terms</option><option value="Weekly">Weekly</option><option value="After Two Weeks">After Two Weeks</option><option value="End of Month">End of Month</option><option value="One-off">One-off</option></select></div>
                   <div class="form-group"><label>Amount (KES) *</label><input type="number" id="debt-amount" placeholder="e.g. 5000"></div>
                   <div class="form-group"><label>Date Taken *</label><input type="datetime-local" id="debt-date"></div>
                   <div class="form-group"><label>Due Date</label><input type="date" id="debt-due"></div>
@@ -222,20 +222,18 @@ data:
                     <option value="writeoff">Written Off</option>
                   </select>
                   <select id="filter-category" onchange="filterDebts()">
-                    <option value="">All Categories</option>
-                    <option value="Groceries">Groceries</option>
-                    <option value="School Fees">School Fees</option>
-                    <option value="Utilities">Utilities</option>
-                    <option value="Medical">Medical</option>
-                    <option value="Rent">Rent</option>
-                    <option value="Other">Other</option>
+                    <option value="">All Payment Terms</option>
+                    <option value="Weekly">Weekly</option>
+                    <option value="After Two Weeks">After Two Weeks</option>
+                    <option value="End of Month">End of Month</option>
+                    <option value="One-off">One-off</option>
                   </select>
                   <button class="btn btn-yellow btn-sm" onclick="exportDebtsCSV()"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
                   <button class="btn btn-green btn-sm" onclick="exportDebtsExcel()"><i class="fa-solid fa-file-excel"></i> Export Excel</button>
                 </div>
                 <div style="overflow-x:auto">
                   <table>
-                    <thead><tr><th style="cursor:pointer;user-select:none" onclick="sortDebts('customer_name')">Customer <i class="fa-solid fa-sort" id="sort-debt-cust" style="opacity:0.4;font-size:.75em"></i></th><th>Description</th><th>Category</th><th style="cursor:pointer;user-select:none" onclick="sortDebts('created_at')">Date Taken <i class="fa-solid fa-sort" id="sort-debt-date" style="opacity:0.4;font-size:.75em"></i></th><th style="cursor:pointer;user-select:none" onclick="sortDebts('total_amount')">Total (KES) <i class="fa-solid fa-sort" id="sort-debt-total" style="opacity:0.4;font-size:.75em"></i></th><th>Paid (KES)</th><th style="cursor:pointer;user-select:none" onclick="sortDebts('balance')">Balance (KES) <i class="fa-solid fa-sort" id="sort-debt-bal" style="opacity:0.4;font-size:.75em"></i></th><th style="cursor:pointer;user-select:none" onclick="sortDebts('due_date')">Due Date <i class="fa-solid fa-sort" id="sort-debt-due" style="opacity:0.4;font-size:.75em"></i></th><th>Status</th><th>Actions</th></tr></thead>
+                    <thead><tr><th style="cursor:pointer;user-select:none" onclick="sortDebts('customer_name')">Customer <i class="fa-solid fa-sort" id="sort-debt-cust" style="opacity:0.4;font-size:.75em"></i></th><th>Description</th><th>Terms</th><th style="cursor:pointer;user-select:none" onclick="sortDebts('created_at')">Date Taken <i class="fa-solid fa-sort" id="sort-debt-date" style="opacity:0.4;font-size:.75em"></i></th><th style="cursor:pointer;user-select:none" onclick="sortDebts('total_amount')">Total (KES) <i class="fa-solid fa-sort" id="sort-debt-total" style="opacity:0.4;font-size:.75em"></i></th><th>Paid (KES)</th><th style="cursor:pointer;user-select:none" onclick="sortDebts('balance')">Balance (KES) <i class="fa-solid fa-sort" id="sort-debt-bal" style="opacity:0.4;font-size:.75em"></i></th><th style="cursor:pointer;user-select:none" onclick="sortDebts('due_date')">Due Date <i class="fa-solid fa-sort" id="sort-debt-due" style="opacity:0.4;font-size:.75em"></i></th><th>Status</th><th>Actions</th></tr></thead>
                     <tbody id="debts-table"></tbody>
                   </table>
                 </div>
@@ -468,7 +466,7 @@ data:
             <p style="color:#c4b5fd;font-size:0.83em;margin-bottom:12px" id="edit-debt-info"></p>
             <div class="form-row">
               <div class="form-group"><label>Description</label><input type="text" id="edit-debt-desc"></div>
-              <div class="form-group"><label>Category</label><select id="edit-debt-category"><option value="">No Category</option><option value="Groceries">Groceries</option><option value="School Fees">School Fees</option><option value="Utilities">Utilities</option><option value="Medical">Medical</option><option value="Rent">Rent</option><option value="Other">Other</option></select></div>
+              <div class="form-group"><label>Payment Terms</label><select id="edit-debt-category"><option value="">No Terms</option><option value="Weekly">Weekly</option><option value="After Two Weeks">After Two Weeks</option><option value="End of Month">End of Month</option><option value="One-off">One-off</option></select></div>
               <div class="form-group"><label>Amount (KES)</label><input type="number" id="edit-debt-amount"></div>
               <div class="form-group"><label>Date Taken</label><input type="datetime-local" id="edit-debt-date"></div>
               <div class="form-group"><label>Due Date</label><input type="date" id="edit-debt-due"></div>
