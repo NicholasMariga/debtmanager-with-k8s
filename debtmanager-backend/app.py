@@ -67,6 +67,7 @@ def init_db():
     cur.execute("UPDATE debts SET debt_date = created_at WHERE debt_date IS NULL")
     cur.execute("ALTER TABLE customers ADD COLUMN IF NOT EXISTS note TEXT")
     cur.execute("ALTER TABLE customers ADD COLUMN IF NOT EXISTS archived BOOLEAN DEFAULT FALSE")
+    cur.execute("ALTER TABLE customers ADD COLUMN IF NOT EXISTS credit_limit DECIMAL(10,2)")
     cur.execute("ALTER TABLE debts ADD COLUMN IF NOT EXISTS category VARCHAR(50)")
     cur.execute('''
         CREATE TABLE IF NOT EXISTS write_offs (
@@ -223,8 +224,8 @@ def add_customer():
     conn = get_db()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cur.execute(
-        'INSERT INTO customers (name, phone, email) VALUES (%s, %s, %s) RETURNING *',
-        (data['name'], data.get('phone', ''), data.get('email', ''))
+        'INSERT INTO customers (name, phone, email, credit_limit) VALUES (%s, %s, %s, %s) RETURNING *',
+        (data['name'], data.get('phone', ''), data.get('email', ''), data.get('credit_limit') or None)
     )
     customer = cur.fetchone()
     conn.commit()
@@ -257,6 +258,9 @@ def update_customer(customer_id):
     if 'archived' in data:
         fields.append('archived = %s')
         values.append(data['archived'])
+    if 'credit_limit' in data:
+        fields.append('credit_limit = %s')
+        values.append(data['credit_limit'])
     values.append(customer_id)
     cur.execute(
         f'UPDATE customers SET {", ".join(fields)} WHERE id = %s RETURNING *',

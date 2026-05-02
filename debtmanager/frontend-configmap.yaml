@@ -125,9 +125,9 @@ data:
               <div class="stats">
                 <div class="stat-card"><i class="fa-solid fa-users"></i><div class="stat-value" id="stat-customers">-</div><div class="stat-label">Customers</div></div>
                 <div class="stat-card"><i class="fa-solid fa-file-invoice-dollar"></i><div class="stat-value" id="stat-debts">-</div><div class="stat-label">Total Debts</div></div>
-                <div class="stat-card"><i class="fa-solid fa-triangle-exclamation"></i><div class="stat-value" id="stat-outstanding">-</div><div class="stat-label">Outstanding (KES)</div></div>
+                <div class="stat-card"><i class="fa-solid fa-triangle-exclamation"></i><div class="stat-value" id="stat-outstanding">-</div><div class="stat-label">Outstanding (KES)</div><div id="stat-month-change" style="font-size:0.65em;margin-top:3px;min-height:1em"></div></div>
                 <div class="stat-card"><i class="fa-solid fa-circle-check"></i><div class="stat-value" id="stat-collected">-</div><div class="stat-label">Collected (KES)</div></div>
-                <div class="stat-card"><i class="fa-solid fa-clock"></i><div class="stat-value" id="stat-overdue">-</div><div class="stat-label">Overdue</div></div>
+                <div class="stat-card"><i class="fa-solid fa-clock"></i><div class="stat-value" id="stat-overdue">-</div><div class="stat-label">Overdue</div><div id="stat-overdue-pct" style="font-size:0.65em;color:#9ca3af;margin-top:3px;min-height:1em"></div></div>
                 <div class="stat-card"><i class="fa-solid fa-calendar-days" style="color:#fbbf24"></i><div class="stat-value" id="stat-duesoon" style="color:#fbbf24">-</div><div class="stat-label">Due in 7 Days</div></div>
                 <div class="stat-card"><i class="fa-solid fa-ban" style="color:#9ca3af"></i><div class="stat-value" id="stat-writeoff" style="color:#9ca3af">-</div><div class="stat-label">Written Off (KES)</div></div>
                 <div class="stat-card"><i class="fa-solid fa-percent" style="color:#34d399"></i><div class="stat-value" id="stat-collrate" style="color:#34d399">-</div><div class="stat-label">Collection Rate</div></div>
@@ -165,6 +165,7 @@ data:
                   <div class="form-group"><label>Full Name *</label><input type="text" id="cust-name" placeholder="e.g. John Kamau"></div>
                   <div class="form-group"><label>Phone (07...) *</label><input type="text" id="cust-phone" placeholder="e.g. 0712345678"></div>
                   <div class="form-group"><label>Email</label><input type="email" id="cust-email" placeholder="e.g. john@email.com"></div>
+                  <div class="form-group"><label>Credit Limit (KES)</label><input type="number" id="cust-limit" placeholder="e.g. 5000 (optional)"></div>
                 </div>
                 <button class="btn" onclick="addCustomer()"><i class="fa-solid fa-plus"></i> Add Customer</button>
               </div>

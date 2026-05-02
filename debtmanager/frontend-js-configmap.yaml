@@ -331,6 +331,28 @@ data:
         document.getElementById('stat-writeoff').textContent = fmt(woTotal);
         document.getElementById('stat-collrate').textContent = collRate + '%';
 
+        // Overdue rate %
+        const activeUnpaid = activeDebts.filter(d=>d.status!=='paid').length;
+        const overdueEl = document.getElementById('stat-overdue-pct');
+        if (overdueEl) overdueEl.textContent = activeUnpaid > 0 ? `${((overdueC/activeUnpaid)*100).toFixed(0)}% of active debts` : '';
+
+        // Month-over-month new debt change
+        const mNow = new Date();
+        const thisMonStart = new Date(mNow.getFullYear(), mNow.getMonth(), 1);
+        const lastMonStart = new Date(mNow.getFullYear(), mNow.getMonth()-1, 1);
+        const thisMonDebt = debts.filter(d=>!d.writeoff_reason&&new Date(d.debt_date||d.created_at)>=thisMonStart).reduce((s,d)=>s+parseFloat(d.total_amount),0);
+        const lastMonDebt = debts.filter(d=>!d.writeoff_reason&&new Date(d.debt_date||d.created_at)>=lastMonStart&&new Date(d.debt_date||d.created_at)<thisMonStart).reduce((s,d)=>s+parseFloat(d.total_amount),0);
+        const monEl = document.getElementById('stat-month-change');
+        if (monEl) {
+          if (lastMonDebt > 0) {
+            const pct = (((thisMonDebt-lastMonDebt)/lastMonDebt)*100).toFixed(0);
+            const up = parseFloat(pct) >= 0;
+            monEl.innerHTML = `<span style="color:${up?'#f87171':'#34d399'}">${up?'▲':'▼'} ${Math.abs(pct)}% new debt vs last month</span>`;
+          } else {
+            monEl.textContent = '';
+          }
+        }
+
         // Top 5 debtors
         const custBal = {};
         activeDebts.filter(d=>d.status!=='paid').forEach(d=>{
@@ -461,6 +483,12 @@ data:
         const rc = risk ? riskColors[risk] : null;
         const riskBadge = risk ? `<span style="background:${rc[0]};color:${rc[1]};border-radius:4px;padding:1px 6px;font-size:0.7em;margin-left:5px;vertical-align:middle">${riskLabels[risk]}</span>` : '';
         const activeCount = allDebtsCache.filter(d => d.customer_id===c.id && d.status!=='paid' && !d.writeoff_reason).length;
+        const custDebts = allDebtsCache.filter(d=>d.customer_id===c.id&&!d.writeoff_reason);
+        const custTotal = custDebts.reduce((s,d)=>s+parseFloat(d.total_amount),0);
+        const custPaid = custDebts.reduce((s,d)=>s+parseFloat(d.amount_paid),0);
+        const custCollRate = custTotal > 0 ? ((custPaid/custTotal)*100).toFixed(0) : null;
+        const limit = parseFloat(c.credit_limit||0);
+        const remaining = limit > 0 ? limit - parseFloat(c.total_outstanding) : null;
         return `
         <tr>
           <td>
@@ -471,6 +499,8 @@ data:
           <td style="color:${parseFloat(c.total_outstanding)>0?'#f87171':'#34d399'}">
             ${fmt(c.total_outstanding)}
             ${activeCount>0?`<div style="font-size:0.72em;color:#c4b5fd;margin-top:2px">${activeCount} active debt${activeCount>1?'s':''}</div>`:''}
+            ${custCollRate!==null?`<div style="font-size:0.72em;color:#9ca3af;margin-top:2px">Paid ${custCollRate}% overall</div>`:''}
+            ${remaining!==null?`<div style="font-size:0.72em;margin-top:2px;color:${remaining<0?'#f87171':'#6b7280'}">Limit: KES ${fmt(limit)} &bull; ${remaining<0?'<span style="color:#f87171">Over by KES '+fmt(Math.abs(remaining))+'</span>':'KES '+fmt(remaining)+' left'}</div>`:''}
           </td>
           <td>
             <div class="action-btns">
@@ -480,6 +510,7 @@ data:
               :'-'}
               <button class="btn btn-orange btn-sm" onclick="viewStatement(${c.id})"><i class="fa-solid fa-file-lines"></i> Statement</button>
               <button class="note-btn ${c.note?'has-note':''}" onclick="openNoteModal(${c.id},'${c.name.replace(/'/g,"\\'")}','${(c.note||'').replace(/'/g,"\\'")}' )">${c.note?'<i class="fa-solid fa-note-sticky"></i> Note':'<i class="fa-regular fa-note-sticky"></i> Note'}</button>
+              <button class="btn btn-sm" style="background:rgba(96,165,250,0.15);color:#60a5fa" onclick="setCreditLimit(${c.id},'${c.name.replace(/'/g,"\\'")}',${c.credit_limit||0})"><i class="fa-solid fa-credit-card"></i> Limit</button>
               ${parseFloat(c.total_outstanding)<=0?`<button class="btn btn-sm" style="background:rgba(107,114,128,0.2);color:#6b7280" onclick="archiveCustomer(${c.id},'${c.name.replace(/'/g,"\\'")}')"><i class="fa-solid fa-box-archive"></i> Archive</button>`:''}
             </div>
             ${c.note?`<div style="margin-top:5px;font-size:0.75em;color:#fbbf24;white-space:pre-wrap">${c.note}</div>`:''}
@@ -516,10 +547,19 @@ data:
     async function addCustomer() {
       const name = document.getElementById('cust-name').value.trim();
       if (!name) return showAlert('alert-customer','Name is required','error');
-      const res = await fetch(API+'/customers',{method:'POST',headers:headers(),body:JSON.stringify({name,phone:document.getElementById('cust-phone').value,email:document.getElementById('cust-email').value})});
+      const limit = parseFloat(document.getElementById('cust-limit').value) || null;
+      const res = await fetch(API+'/customers',{method:'POST',headers:headers(),body:JSON.stringify({name,phone:document.getElementById('cust-phone').value,email:document.getElementById('cust-email').value,credit_limit:limit})});
       if (!res.ok) return showAlert('alert-customer','Error adding customer','error');
       showAlert('alert-customer','Customer added successfully!','success');
-      ['cust-name','cust-phone','cust-email'].forEach(id=>document.getElementById(id).value='');
+      ['cust-name','cust-phone','cust-email','cust-limit'].forEach(id=>document.getElementById(id).value='');
+      loadCustomers();
+    }
+
+    async function setCreditLimit(id, name, current) {
+      const val = prompt(`Credit limit for ${name} (KES)\nEnter 0 or leave empty to remove limit:`, current > 0 ? current : '');
+      if (val === null) return;
+      const limit = parseFloat(val) > 0 ? parseFloat(val) : null;
+      await fetch(API+'/customers/'+id, {method:'PUT', headers:headers(), body:JSON.stringify({credit_limit: limit})});
       loadCustomers();
     }
 
@@ -699,6 +739,14 @@ data:
       const total_amount=document.getElementById('debt-amount').value;
       const debt_date=document.getElementById('debt-date').value;
       if (!customer_id||!description||!total_amount) return showAlert('alert-debt','Please fill all required fields','error');
+      const cust = allCustomersCache.find(c=>c.id==customer_id);
+      if (cust && parseFloat(cust.credit_limit||0) > 0) {
+        const available = parseFloat(cust.credit_limit) - parseFloat(cust.total_outstanding);
+        if (parseFloat(total_amount) > available) {
+          const over = parseFloat(total_amount) - available;
+          if (!confirm(`Warning: This will exceed ${cust.name}'s credit limit by KES ${fmt(over)}.\nProceed anyway?`)) return;
+        }
+      }
       await fetch(API+'/debts',{method:'POST',headers:headers(),body:JSON.stringify({customer_id,description,total_amount,due_date:document.getElementById('debt-due').value||null,debt_date:debt_date||null,category:document.getElementById('debt-category').value||null})});
       showAlert('alert-debt','Debt recorded successfully!','success');
       ['debt-desc','debt-amount','debt-due'].forEach(id=>document.getElementById(id).value='');
