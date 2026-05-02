@@ -90,6 +90,7 @@ data:
             <div class="nav-section">Management</div>
             <div class="nav-item nav-reminders" onclick="showPage('reminders', event)">
               <i class="fa-solid fa-bell"></i> Reminders
+              <span id="reminders-badge" style="display:none;background:#f87171;color:white;border-radius:10px;padding:1px 7px;font-size:0.72em;margin-left:4px;font-weight:bold;vertical-align:middle"></span>
             </div>
             <div class="nav-item nav-reports" onclick="showPage('reports', event)">
               <i class="fa-solid fa-chart-bar"></i> Reports
