@@ -179,3 +179,5 @@ data:
 
     .note-btn { background: rgba(167,139,250,0.12); border: 1px solid rgba(167,139,250,0.25); color: #c4b5fd; padding: 4px 9px; border-radius: 6px; cursor: pointer; font-size: 0.75em; white-space: nowrap; }
     .note-btn.has-note { background: rgba(251,191,36,0.15); border-color: rgba(251,191,36,0.35); color: #fbbf24; }
+    .due-soon-row td { background: rgba(251,191,36,0.06); }
+    .due-soon-row td:first-child { border-left: 3px solid #fbbf24; }

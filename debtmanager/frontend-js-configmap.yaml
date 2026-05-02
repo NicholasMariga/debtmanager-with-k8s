@@ -462,11 +462,13 @@ data:
       const notes = JSON.parse(localStorage.getItem('hw_cust_notes')||'{}');
       const riskColors = {good:['rgba(52,211,153,0.15)','#34d399'],slow:['rgba(251,191,36,0.15)','#fbbf24'],defaulter:['rgba(248,113,113,0.15)','#f87171']};
       const riskLabels = {good:'Good Payer',slow:'Slow Payer',defaulter:'Defaulter'};
+      const wo2 = JSON.parse(localStorage.getItem('hw_writeoffs')||'{}');
       document.getElementById('customers-table').innerHTML = customers.map(c=>{
         const lastContacted = getLastContacted(c.name);
         const risk = getCustomerRisk(c.id);
         const rc = risk ? riskColors[risk] : null;
         const riskBadge = risk ? `<span style="background:${rc[0]};color:${rc[1]};border-radius:4px;padding:1px 6px;font-size:0.7em;margin-left:5px;vertical-align:middle">${riskLabels[risk]}</span>` : '';
+        const activeCount = allDebtsCache.filter(d => d.customer_id===c.id && d.status!=='paid' && !wo2[d.id]).length;
         return `
         <tr>
           <td>
@@ -474,7 +476,10 @@ data:
             ${lastContacted?`<div style="font-size:0.72em;color:#6b7280;margin-top:2px"><i class="fa-solid fa-paper-plane" style="font-size:0.85em"></i> Contacted: ${lastContacted}</div>`:''}
           </td>
           <td>${c.phone||'-'}</td><td>${c.email||'-'}</td>
-          <td style="color:${parseFloat(c.total_outstanding)>0?'#f87171':'#34d399'}">${fmt(c.total_outstanding)}</td>
+          <td style="color:${parseFloat(c.total_outstanding)>0?'#f87171':'#34d399'}">
+            ${fmt(c.total_outstanding)}
+            ${activeCount>0?`<div style="font-size:0.72em;color:#c4b5fd;margin-top:2px">${activeCount} active debt${activeCount>1?'s':''}</div>`:''}
+          </td>
           <td>
             <div class="action-btns">
               ${c.phone?`
@@ -548,10 +553,12 @@ data:
 
     function renderDebts(debts) {
       const wo = JSON.parse(localStorage.getItem('hw_writeoffs')||'{}');
+      const nowD = new Date(); const in7D = new Date(); in7D.setDate(nowD.getDate()+7);
       document.getElementById('debts-table').innerHTML = debts.map(d=>{
         const isWO = !!wo[d.id];
+        const isDueSoon = !isWO && d.due_date && d.status!=='paid' && new Date(d.due_date)>=nowD && new Date(d.due_date)<=in7D;
         return `
-        <tr class="${isWO?'writeoff-row':''}">
+        <tr class="${isWO?'writeoff-row':isDueSoon?'due-soon-row':''}">
           <td>${d.customer_name}</td><td>${d.description}</td><td>${fmtDateTime(d.created_at)}</td>
           <td>${fmt(d.total_amount)}</td>
           <td style="color:#34d399">${fmt(d.amount_paid)}</td>
@@ -794,13 +801,13 @@ data:
         let html = '';
         if (neverPaid.length) {
           html += `<div style="display:flex;align-items:center;gap:8px;margin:10px 0 8px;color:#f87171;font-size:0.82em;font-weight:bold">
-            <i class="fa-solid fa-circle-xmark"></i> NEVER PAID (${neverPaid.length}) — Needs urgent attention
+            <i class="fa-solid fa-circle-xmark"></i> NEVER PAID (${neverPaid.length}) - Needs urgent attention
           </div>`;
           html += neverPaid.map(buildReminderCard).join('');
         }
         if (overdue.length) {
           html += `<div style="display:flex;align-items:center;gap:8px;margin:${neverPaid.length?'18px':''} 0 8px;color:#fbbf24;font-size:0.82em;font-weight:bold">
-            <i class="fa-solid fa-triangle-exclamation"></i> OVERDUE (${overdue.length}) — Has payment history
+            <i class="fa-solid fa-triangle-exclamation"></i> OVERDUE (${overdue.length}) - Has payment history
           </div>`;
           html += overdue.map(buildReminderCard).join('');
         }
