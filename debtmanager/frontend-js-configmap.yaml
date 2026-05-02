@@ -144,29 +144,26 @@ data:
       return `Happywise Ent - Debt Reminder\n\nDear ${debt.customer_name},\n\nThis is a friendly reminder about your outstanding debt(s) with us:\n\n${lines}---------------------\nTOTAL BALANCE DUE: KES ${fmt(bal)}\n---------------------\n\nKindly make your payment at your earliest convenience.\nYou can reach us for any queries.\n\nThank you for your business!\nHappywise Ent`;
     }
 
-    // ── Build SMS Message (date, total, paid+method, balance per debt) ──
+    // ── Build SMS Message (single customer summary: total debt, payments, balance) ──
     async function buildSmsMessage(debt) {
       const allDebts = await fetch(API+'/debts',{headers:headers()}).then(r=>r.json());
       const cDebts = allDebts.filter(d => d.customer_id===debt.customer_id && d.status!=='paid');
-      let lines='', gTotal=0, gPaid=0;
-      for (let i=0; i<cDebts.length; i++) {
-        const d = cDebts[i];
+      let gTotal=0, gPaid=0, paidLines='';
+      for (const d of cDebts) {
         gTotal += parseFloat(d.total_amount);
-        gPaid += parseFloat(d.amount_paid);
-        lines += `Total  : KES ${fmt(d.total_amount)}\n`;
         if (parseFloat(d.amount_paid)>0) {
           try {
             const pmts = await fetch(API+'/payments/'+d.id,{headers:headers()}).then(r=>r.json());
-            pmts.forEach(p => { lines += `Paid   : KES ${fmt(p.amount)} via ${p.note||'N/A'}\n`; });
-          } catch(e) { lines += `Paid   : KES ${fmt(d.amount_paid)}\n`; }
-        } else {
-          lines += `Paid   : KES 0.00\n`;
+            pmts.forEach(p => {
+              gPaid += parseFloat(p.amount);
+              paidLines += `Paid      : KES ${fmt(p.amount)} via ${p.note||'N/A'}\n`;
+            });
+          } catch(e) { gPaid += parseFloat(d.amount_paid); paidLines += `Paid      : KES ${fmt(d.amount_paid)}\n`; }
         }
-        lines += `Balance: KES ${fmt(d.balance)}\n`;
-        lines += '\n';
       }
       const bal = gTotal - gPaid;
-      return `Happywise Ent - Debt Reminder\n\nDear ${debt.customer_name},\n\nOutstanding debt(s):\n\n${lines}---------------------\nTOTAL DUE: KES ${fmt(bal)}\n---------------------\n\nPlease pay at your earliest convenience.\nThank you!\nHappywise Ent`;
+      const body = `Total Debt: KES ${fmt(gTotal)}\n${paidLines||'Paid      : KES 0.00\n'}Balance   : KES ${fmt(bal)}`;
+      return `Happywise Ent - Debt Reminder\n\nDear ${debt.customer_name},\n\n${body}\n\nPlease pay at your earliest convenience.\nThank you!\nHappywise Ent`;
     }
 
     // ── Open Reminder Modal ──
