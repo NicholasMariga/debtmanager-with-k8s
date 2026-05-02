@@ -144,7 +144,7 @@ data:
       return `Happywise Ent - Debt Reminder\n\nDear ${debt.customer_name},\n\nThis is a friendly reminder about your outstanding debt(s) with us:\n\n${lines}---------------------\nTOTAL BALANCE DUE: KES ${fmt(bal)}\n---------------------\n\nKindly make your payment at your earliest convenience.\nYou can reach us for any queries.\n\nThank you for your business!\nHappywise Ent`;
     }
 
-    // ── Build SMS Message (full details, %0A for SMS app line breaks) ──
+    // ── Build SMS Message (date, total, paid+method, balance per debt) ──
     async function buildSmsMessage(debt) {
       const allDebts = await fetch(API+'/debts',{headers:headers()}).then(r=>r.json());
       const cDebts = allDebts.filter(d => d.customer_id===debt.customer_id && d.status!=='paid');
@@ -153,19 +153,16 @@ data:
         const d = cDebts[i];
         gTotal += parseFloat(d.total_amount);
         gPaid += parseFloat(d.amount_paid);
-        lines += `${i+1}. ${d.description}\n`;
-        lines += `Date Taken : ${fmtDate(d.created_at)}\n`;
-        lines += `Total      : KES ${fmt(d.total_amount)}\n`;
-        lines += `Due Date   : ${fmtDate(d.due_date)}\n`;
+        lines += `Total  : KES ${fmt(d.total_amount)}\n`;
         if (parseFloat(d.amount_paid)>0) {
           try {
             const pmts = await fetch(API+'/payments/'+d.id,{headers:headers()}).then(r=>r.json());
-            pmts.forEach(p => { lines += `Paid       : KES ${fmt(p.amount)} via ${p.note||'N/A'} on ${fmtDate(p.paid_at)}\n`; });
-          } catch(e) { lines += `Paid       : KES ${fmt(d.amount_paid)}\n`; }
-          lines += `Balance    : KES ${fmt(d.balance)}\n`;
+            pmts.forEach(p => { lines += `Paid   : KES ${fmt(p.amount)} via ${p.note||'N/A'}\n`; });
+          } catch(e) { lines += `Paid   : KES ${fmt(d.amount_paid)}\n`; }
         } else {
-          lines += `Balance    : KES ${fmt(d.total_amount)} (not yet paid)\n`;
+          lines += `Paid   : KES 0.00\n`;
         }
+        lines += `Balance: KES ${fmt(d.balance)}\n`;
         lines += '\n';
       }
       const bal = gTotal - gPaid;
