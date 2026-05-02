@@ -133,7 +133,7 @@ data:
         if (parseFloat(d.amount_paid)>0) {
           try {
             const pmts = await fetch(API+'/payments/'+d.id,{headers:headers()}).then(r=>r.json());
-            pmts.forEach(p => { lines += `   Paid       : KES ${fmt(p.amount)} via ${p.note||'N/A'} on ${fmtDate(p.paid_at)}\n`; });
+            pmts.forEach(p => { lines += `   Paid       : KES ${fmt(p.amount)} via ${p.note||'N/A'} on ${fmtDateTime(p.paid_at)}\n`; });
           } catch(e) { lines += `   Paid       : KES ${fmt(d.amount_paid)}\n`; }
           lines += `   Balance    : KES ${fmt(d.balance)}\n`;
         } else {
@@ -157,7 +157,7 @@ data:
             const pmts = await fetch(API+'/payments/'+d.id,{headers:headers()}).then(r=>r.json());
             pmts.forEach(p => {
               gPaid += parseFloat(p.amount);
-              paidLines += `Paid      : KES ${fmt(p.amount)} via ${p.note||'N/A'}\n`;
+              paidLines += `Paid      : KES ${fmt(p.amount)} via ${p.note||'N/A'} on ${fmtDate(p.paid_at)}\n`;
             });
           } catch(e) { gPaid += parseFloat(d.amount_paid); paidLines += `Paid      : KES ${fmt(d.amount_paid)}\n`; }
         }
