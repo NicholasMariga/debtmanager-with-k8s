@@ -66,6 +66,8 @@ def init_db():
     cur.execute("ALTER TABLE debts ADD COLUMN IF NOT EXISTS debt_date TIMESTAMP")
     cur.execute("UPDATE debts SET debt_date = created_at WHERE debt_date IS NULL")
     cur.execute("ALTER TABLE customers ADD COLUMN IF NOT EXISTS note TEXT")
+    cur.execute("ALTER TABLE customers ADD COLUMN IF NOT EXISTS archived BOOLEAN DEFAULT FALSE")
+    cur.execute("ALTER TABLE debts ADD COLUMN IF NOT EXISTS category VARCHAR(50)")
     cur.execute('''
         CREATE TABLE IF NOT EXISTS write_offs (
             id SERIAL PRIMARY KEY,
@@ -202,6 +204,7 @@ def get_customers():
             COALESCE(SUM(d.total_amount - d.amount_paid), 0) as total_outstanding
         FROM customers c
         LEFT JOIN debts d ON c.id = d.customer_id AND d.status != 'paid'
+        WHERE c.archived = FALSE
         GROUP BY c.id
         ORDER BY c.name
     ''')
@@ -227,6 +230,19 @@ def add_customer():
     cur.close()
     conn.close()
     return jsonify(dict(customer)), 201
+
+@app.route('/customers/<int:customer_id>', methods=['DELETE'])
+def archive_customer(customer_id):
+    user = require_auth()
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("UPDATE customers SET archived = TRUE WHERE id = %s", (customer_id,))
+    conn.commit()
+    cur.close()
+    conn.close()
+    return jsonify({"message": "Customer archived"})
 
 @app.route('/customers/<int:customer_id>', methods=['PUT'])
 def update_customer(customer_id):
@@ -284,19 +300,45 @@ def add_debt():
     total_amount = data['total_amount']
     due_date = data.get('due_date', None)
     debt_date = data.get('debt_date', None)
+    category = data.get('category', None)
     created_by = user['id']
     conn = get_db()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cur.execute(
-        '''INSERT INTO debts (customer_id, description, total_amount, due_date, debt_date, created_by)
-           VALUES (%s, %s, %s, %s, %s, %s) RETURNING *''',
-        (customer_id, description, total_amount, due_date, debt_date, created_by)
+        '''INSERT INTO debts (customer_id, description, total_amount, due_date, debt_date, category, created_by)
+           VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING *''',
+        (customer_id, description, total_amount, due_date, debt_date, category, created_by)
     )
     debt = cur.fetchone()
     conn.commit()
     cur.close()
     conn.close()
     return jsonify(dict(debt)), 201
+
+@app.route('/debts/<int:debt_id>', methods=['PUT'])
+def update_debt(debt_id):
+    user = require_auth()
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+    data = request.json
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute(
+        '''UPDATE debts SET description=%s, total_amount=%s, due_date=%s, debt_date=%s, category=%s
+           WHERE id=%s RETURNING *''',
+        (data.get('description'), data.get('total_amount'), data.get('due_date'),
+         data.get('debt_date'), data.get('category'), debt_id)
+    )
+    debt = cur.fetchone()
+    # Re-evaluate paid status
+    if float(debt['amount_paid']) >= float(debt['total_amount']):
+        cur.execute("UPDATE debts SET status='paid' WHERE id=%s", (debt_id,))
+    elif debt['status'] == 'paid':
+        cur.execute("UPDATE debts SET status='unpaid' WHERE id=%s", (debt_id,))
+    conn.commit()
+    cur.close()
+    conn.close()
+    return jsonify(dict(debt))
 
 # ── Write-offs ──
 @app.route('/writeoffs', methods=['GET'])

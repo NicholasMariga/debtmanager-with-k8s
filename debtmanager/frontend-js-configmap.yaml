@@ -24,6 +24,7 @@ data:
     let currentWriteOffDebtId = null;
     let custSortKey = 'name', custSortDir = 1;
     let debtSortKey = 'created_at', debtSortDir = -1;
+    let currentEditDebtId = null;
 
     if (token && currentUser) showApp();
 
@@ -479,6 +480,7 @@ data:
               :'-'}
               <button class="btn btn-orange btn-sm" onclick="viewStatement(${c.id})"><i class="fa-solid fa-file-lines"></i> Statement</button>
               <button class="note-btn ${c.note?'has-note':''}" onclick="openNoteModal(${c.id},'${c.name.replace(/'/g,"\\'")}','${(c.note||'').replace(/'/g,"\\'")}' )">${c.note?'<i class="fa-solid fa-note-sticky"></i> Note':'<i class="fa-regular fa-note-sticky"></i> Note'}</button>
+              ${parseFloat(c.total_outstanding)<=0?`<button class="btn btn-sm" style="background:rgba(107,114,128,0.2);color:#6b7280" onclick="archiveCustomer(${c.id},'${c.name.replace(/'/g,"\\'")}')"><i class="fa-solid fa-box-archive"></i> Archive</button>`:''}
             </div>
             ${c.note?`<div style="margin-top:5px;font-size:0.75em;color:#fbbf24;white-space:pre-wrap">${c.note}</div>`:''}
           </td>
@@ -521,6 +523,14 @@ data:
       loadCustomers();
     }
 
+    async function archiveCustomer(id, name) {
+      const outstanding = allDebtsCache.filter(d=>d.customer_id===id&&d.status!=='paid'&&!d.writeoff_reason).reduce((s,d)=>s+parseFloat(d.balance||0),0);
+      if (outstanding > 0) return showAlert('alert-customer',`Cannot archive ${name} - still has KES ${fmt(outstanding)} outstanding`,'error');
+      if (!confirm(`Archive ${name}? They will be hidden from the customer list.`)) return;
+      await fetch(API+'/customers/'+id, {method:'DELETE', headers:headers()});
+      loadCustomers();
+    }
+
     // ── Debts ──
     async function loadCustomerDropdown() {
       const c = await fetch(API+'/customers',{headers:headers()}).then(r=>r.json());
@@ -538,12 +548,16 @@ data:
 
     function renderDebts(debts) {
       const nowD = new Date(); const in7D = new Date(); in7D.setDate(nowD.getDate()+7);
+      const catColors = {'Groceries':'#34d399','School Fees':'#60a5fa','Utilities':'#fbbf24','Medical':'#f87171','Rent':'#a78bfa','Other':'#9ca3af'};
       document.getElementById('debts-table').innerHTML = debts.map(d=>{
         const isWO = !!d.writeoff_reason;
         const isDueSoon = !isWO && d.due_date && d.status!=='paid' && new Date(d.due_date)>=nowD && new Date(d.due_date)<=in7D;
+        const catBadge = d.category ? `<span style="background:rgba(0,0,0,0.25);color:${catColors[d.category]||'#9ca3af'};border:1px solid ${catColors[d.category]||'#9ca3af'};border-radius:4px;padding:0px 5px;font-size:0.68em;margin-left:5px;vertical-align:middle">${d.category}</span>` : '';
         return `
         <tr class="${isWO?'writeoff-row':isDueSoon?'due-soon-row':''}">
-          <td>${d.customer_name}</td><td>${d.description}</td><td>${fmtDateTime(d.created_at)}</td>
+          <td>${d.customer_name}</td>
+          <td>${d.description}${catBadge}</td>
+          <td>${fmtDateTime(d.created_at)}</td>
           <td>${fmt(d.total_amount)}</td>
           <td style="color:#34d399">${fmt(d.amount_paid)}</td>
           <td style="color:${parseFloat(d.balance)>0?'#f87171':'#34d399'}">${fmt(d.balance)}</td>
@@ -562,6 +576,7 @@ data:
                   <button class="btn btn-sms btn-sm" onclick='openSmsOnly(${JSON.stringify(d).replace(/"/g,"&quot;")})'>
                     <i class="fa-solid fa-message"></i> SMS
                   </button>`:''}
+                <button class="btn btn-sm" style="background:rgba(167,139,250,0.15);color:#a78bfa" onclick='openEditDebtModal(${JSON.stringify(d).replace(/"/g,"&quot;")})'><i class="fa-solid fa-pen"></i> Edit</button>
                 ${d.status!=='paid'?`<button class="btn btn-sm" style="background:rgba(107,114,128,0.3);color:#9ca3af" onclick="openWriteOffModal(${d.id},'${d.description.replace(/'/g,"\\'")}',${d.balance})"><i class="fa-solid fa-ban"></i> Write Off</button>`:''}`}
             </div>
           </td>
@@ -572,6 +587,7 @@ data:
     function filterDebts() {
       const q = document.getElementById('search-debts').value.toLowerCase();
       const s = document.getElementById('filter-status').value;
+      const cat = document.getElementById('filter-category').value;
       let f = allDebtsCache.filter(d=>d.customer_name.toLowerCase().includes(q)||d.description.toLowerCase().includes(q));
       if (s==='writeoff') { f=f.filter(d=>!!d.writeoff_reason); }
       else {
@@ -581,6 +597,7 @@ data:
         else if (s==='partial') f=f.filter(d=>parseFloat(d.amount_paid)>0&&d.status!=='paid');
         else if (s==='overdue') f=f.filter(d=>d.due_date&&new Date(d.due_date)<new Date()&&d.status!=='paid');
       }
+      if (cat) f=f.filter(d=>d.category===cat);
       renderDebts(f);
     }
 
@@ -604,13 +621,40 @@ data:
       loadDebts();
     }
 
+    function openEditDebtModal(d) {
+      currentEditDebtId = d.id;
+      document.getElementById('edit-debt-info').textContent = `${d.customer_name} - recorded ${fmtDateTime(d.created_at)}`;
+      document.getElementById('edit-debt-desc').value = d.description || '';
+      document.getElementById('edit-debt-category').value = d.category || '';
+      document.getElementById('edit-debt-amount').value = d.total_amount;
+      const dt = d.debt_date || d.created_at;
+      if (dt) {
+        const local = new Date(dt); local.setMinutes(local.getMinutes()-local.getTimezoneOffset());
+        document.getElementById('edit-debt-date').value = local.toISOString().slice(0,16);
+      }
+      document.getElementById('edit-debt-due').value = d.due_date ? d.due_date.slice(0,10) : '';
+      document.getElementById('edit-debt-modal').classList.add('open');
+    }
+
+    async function saveDebtEdit() {
+      const desc = document.getElementById('edit-debt-desc').value.trim();
+      const amount = document.getElementById('edit-debt-amount').value;
+      const due = document.getElementById('edit-debt-due').value || null;
+      const ddate = document.getElementById('edit-debt-date').value || null;
+      const cat = document.getElementById('edit-debt-category').value || null;
+      if (!desc || !amount) return;
+      await fetch(API+'/debts/'+currentEditDebtId, {method:'PUT', headers:headers(), body:JSON.stringify({description:desc, total_amount:parseFloat(amount), due_date:due, debt_date:ddate, category:cat})});
+      closeModal('edit-debt-modal');
+      loadDebts();
+    }
+
     async function addDebt() {
       const customer_id=document.getElementById('debt-customer').value;
       const description=document.getElementById('debt-desc').value.trim();
       const total_amount=document.getElementById('debt-amount').value;
       const debt_date=document.getElementById('debt-date').value;
       if (!customer_id||!description||!total_amount) return showAlert('alert-debt','Please fill all required fields','error');
-      await fetch(API+'/debts',{method:'POST',headers:headers(),body:JSON.stringify({customer_id,description,total_amount,due_date:document.getElementById('debt-due').value||null,debt_date:debt_date||null})});
+      await fetch(API+'/debts',{method:'POST',headers:headers(),body:JSON.stringify({customer_id,description,total_amount,due_date:document.getElementById('debt-due').value||null,debt_date:debt_date||null,category:document.getElementById('debt-category').value||null})});
       showAlert('alert-debt','Debt recorded successfully!','success');
       ['debt-desc','debt-amount','debt-due'].forEach(id=>document.getElementById(id).value='');
       const now=new Date(); now.setMinutes(now.getMinutes()-now.getTimezoneOffset());

@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: flask-backend
-        image: marigah/debtmanager-backend:2.0
+        image: marigah/debtmanager-backend:2.1
         ports:
         - containerPort: 5000
         envFrom:
