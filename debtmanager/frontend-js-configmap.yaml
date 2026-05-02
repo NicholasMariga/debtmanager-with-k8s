@@ -6,6 +6,7 @@ metadata:
 data:
   app.js: |
     const API = '/api';
+    const SHOP_NAME = "Lilian's Shop";
     let token = localStorage.getItem('hw_token');
     let currentUser = JSON.parse(localStorage.getItem('hw_user') || 'null');
     let selectedDebtId = null;
@@ -141,7 +142,7 @@ data:
         lines += '\n';
       }
       const bal = gTotal - gPaid;
-      return `Happywise Ent - Debt Reminder\n\nDear ${debt.customer_name},\n\nThis is a friendly reminder about your outstanding debt(s) with us:\n\n${lines}---------------------\nTOTAL BALANCE DUE: KES ${fmt(bal)}\n---------------------\n\nKindly make your payment at your earliest convenience.\nYou can reach us for any queries.\n\nThank you for your business!\nHappywise Ent`;
+      return `Happywise Ent - Debt Reminder - (${SHOP_NAME})\n\nDear ${debt.customer_name},\n\nThis is a friendly reminder about your outstanding debt(s) with us:\n\n${lines}---------------------\nTOTAL BALANCE DUE: KES ${fmt(bal)}\n---------------------\n\nKindly make your payment at your earliest convenience.\nYou can reach us for any queries.\n\nThank you for your business!\nHappywise Ent - (${SHOP_NAME})`;
     }
 
     // ── Build SMS Message (single customer summary: total debt, payments, balance) ──
@@ -163,7 +164,7 @@ data:
       }
       const bal = gTotal - gPaid;
       const body = `Total Debt: KES ${fmt(gTotal)}\n${paidLines||'Paid      : KES 0.00\n'}Balance   : KES ${fmt(bal)}`;
-      return `Happywise Ent - Debt Reminder\n\nDear ${debt.customer_name},\n\n${body}\n\nPlease pay at your earliest convenience.\nThank you!\nHappywise Ent`;
+      return `Happywise Ent - Debt Reminder - (${SHOP_NAME})\n\nDear ${debt.customer_name},\n\n${body}\n\nPlease pay at your earliest convenience.\nThank you!\nHappywise Ent - (${SHOP_NAME})`;
     }
 
     // ── Open Reminder Modal ──
