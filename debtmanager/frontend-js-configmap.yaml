@@ -297,11 +297,13 @@ data:
     // ── Dashboard ──
     async function loadDashboard() {
       try {
-        const [rep, debts] = await Promise.all([
+        const [rep, debts, customers] = await Promise.all([
           fetch(API+'/reports',{headers:headers()}).then(r=>r.json()),
-          fetch(API+'/debts',{headers:headers()}).then(r=>r.json())
+          fetch(API+'/debts',{headers:headers()}).then(r=>r.json()),
+          fetch(API+'/customers',{headers:headers()}).then(r=>r.json())
         ]);
         allDebtsCache = debts;
+        allCustomersCache = customers;
 
         const range = getDashFilterRange();
         const fd = range ? debts.filter(d => {
@@ -352,6 +354,11 @@ data:
             monEl.textContent = '';
           }
         }
+
+        // Over credit limit count
+        const overLimitCount = customers.filter(c=>parseFloat(c.credit_limit||0)>0&&parseFloat(c.total_outstanding)>=parseFloat(c.credit_limit)).length;
+        const olEl = document.getElementById('stat-overlimit');
+        if (olEl) olEl.textContent = overLimitCount;
 
         // Top 5 debtors
         const custBal = {};
@@ -556,6 +563,7 @@ data:
     }
 
     async function setCreditLimit(id, name, current) {
+      if (currentUser.role !== 'owner') return showAlert('alert-customer', 'Only the owner can adjust credit limits.', 'error');
       const val = prompt(`Credit limit for ${name} (KES)\nEnter 0 or leave empty to remove limit:`, current > 0 ? current : '');
       if (val === null) return;
       const limit = parseFloat(val) > 0 ? parseFloat(val) : null;
@@ -742,9 +750,8 @@ data:
       const cust = allCustomersCache.find(c=>c.id==customer_id);
       if (cust && parseFloat(cust.credit_limit||0) > 0) {
         const available = parseFloat(cust.credit_limit) - parseFloat(cust.total_outstanding);
-        if (parseFloat(total_amount) > available) {
-          const over = parseFloat(total_amount) - available;
-          if (!confirm(`Warning: This will exceed ${cust.name}'s credit limit by KES ${fmt(over)}.\nProceed anyway?`)) return;
+        if (parseFloat(total_amount) > available && currentUser.role !== 'owner') {
+          return showAlert('alert-debt', `Cannot add debt — ${cust.name} has KES ${fmt(Math.max(available,0))} credit available (limit KES ${fmt(cust.credit_limit)}). Only the owner can adjust the credit limit.`, 'error');
         }
       }
       await fetch(API+'/debts',{method:'POST',headers:headers(),body:JSON.stringify({customer_id,description,total_amount,due_date:document.getElementById('debt-due').value||null,debt_date:debt_date||null,category:document.getElementById('debt-category').value||null})});

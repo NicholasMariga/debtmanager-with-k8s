@@ -131,6 +131,7 @@ data:
                 <div class="stat-card"><i class="fa-solid fa-calendar-days" style="color:#fbbf24"></i><div class="stat-value" id="stat-duesoon" style="color:#fbbf24">-</div><div class="stat-label">Due in 7 Days</div></div>
                 <div class="stat-card"><i class="fa-solid fa-ban" style="color:#9ca3af"></i><div class="stat-value" id="stat-writeoff" style="color:#9ca3af">-</div><div class="stat-label">Written Off (KES)</div></div>
                 <div class="stat-card"><i class="fa-solid fa-percent" style="color:#34d399"></i><div class="stat-value" id="stat-collrate" style="color:#34d399">-</div><div class="stat-label">Collection Rate</div></div>
+                <div class="stat-card" style="cursor:pointer" onclick="showPage('customers',event)"><i class="fa-solid fa-credit-card" style="color:#f87171"></i><div class="stat-value" id="stat-overlimit" style="color:#f87171">-</div><div class="stat-label">Credit Limit Reached</div></div>
               </div>
               <div class="charts-row">
                 <div class="chart-card">
