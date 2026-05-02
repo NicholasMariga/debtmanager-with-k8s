@@ -169,6 +169,7 @@ data:
                   <div class="form-group"><label>Customer *</label><select id="debt-customer"></select></div>
                   <div class="form-group"><label>Description *</label><input type="text" id="debt-desc" placeholder="e.g. Groceries"></div>
                   <div class="form-group"><label>Amount (KES) *</label><input type="number" id="debt-amount" placeholder="e.g. 5000"></div>
+                  <div class="form-group"><label>Date Taken *</label><input type="datetime-local" id="debt-date"></div>
                   <div class="form-group"><label>Due Date</label><input type="date" id="debt-due"></div>
                 </div>
                 <button class="btn" onclick="addDebt()"><i class="fa-solid fa-plus"></i> Record Debt</button>

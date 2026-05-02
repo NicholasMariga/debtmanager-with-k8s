@@ -84,6 +84,7 @@ data:
 
     function fmt(n) { return parseFloat(n||0).toLocaleString('en-KE',{minimumFractionDigits:2}); }
     function fmtDate(d) { return d ? new Date(d).toLocaleDateString('en-KE') : '-'; }
+    function fmtDateTime(d) { return d ? new Date(d).toLocaleString('en-KE') : '-'; }
     function fmtPhone(p) {
       if (!p) return '';
       if (p.startsWith('0')) return '254'+p.slice(1);
@@ -328,6 +329,9 @@ data:
     async function loadCustomerDropdown() {
       const c = await fetch(API+'/customers',{headers:headers()}).then(r=>r.json());
       document.getElementById('debt-customer').innerHTML = '<option value="">Select customer</option>'+c.map(x=>`<option value="${x.id}">${x.name} (${x.phone||'No phone'})</option>`).join('');
+      const now = new Date();
+      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+      document.getElementById('debt-date').value = now.toISOString().slice(0,16);
     }
 
     async function loadDebts() {
@@ -338,7 +342,7 @@ data:
     function renderDebts(debts) {
       document.getElementById('debts-table').innerHTML = debts.map(d=>`
         <tr>
-          <td>${d.customer_name}</td><td>${d.description}</td><td>${fmtDate(d.created_at)}</td>
+          <td>${d.customer_name}</td><td>${d.description}</td><td>${fmtDateTime(d.created_at)}</td>
           <td>${fmt(d.total_amount)}</td>
           <td style="color:#34d399">${fmt(d.amount_paid)}</td>
           <td style="color:${parseFloat(d.balance)>0?'#f87171':'#34d399'}">${fmt(d.balance)}</td>
@@ -373,10 +377,13 @@ data:
       const customer_id=document.getElementById('debt-customer').value;
       const description=document.getElementById('debt-desc').value.trim();
       const total_amount=document.getElementById('debt-amount').value;
+      const debt_date=document.getElementById('debt-date').value;
       if (!customer_id||!description||!total_amount) return showAlert('alert-debt','Please fill all required fields','error');
-      await fetch(API+'/debts',{method:'POST',headers:headers(),body:JSON.stringify({customer_id,description,total_amount,due_date:document.getElementById('debt-due').value||null})});
+      await fetch(API+'/debts',{method:'POST',headers:headers(),body:JSON.stringify({customer_id,description,total_amount,due_date:document.getElementById('debt-due').value||null,debt_date:debt_date||null})});
       showAlert('alert-debt','Debt recorded successfully!','success');
       ['debt-desc','debt-amount','debt-due'].forEach(id=>document.getElementById(id).value='');
+      const now=new Date(); now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
+      document.getElementById('debt-date').value=now.toISOString().slice(0,16);
       loadDebts();
     }
 
