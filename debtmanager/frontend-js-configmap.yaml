@@ -315,7 +315,10 @@ data:
         const gTotal = activeDebts.reduce((s,d)=>s+parseFloat(d.total_amount),0);
         const gPaid  = activeDebts.reduce((s,d)=>s+parseFloat(d.amount_paid),0);
         const gBal   = activeDebts.reduce((s,d)=>s+parseFloat(d.balance),0);
-        const overdueC = activeDebts.filter(d=>d.due_date&&new Date(d.due_date)<new Date()&&d.status!=='paid').length;
+        const now = new Date();
+        const in7 = new Date(); in7.setDate(now.getDate()+7);
+        const overdueC = activeDebts.filter(d=>d.due_date&&new Date(d.due_date)<now&&d.status!=='paid').length;
+        const dueSoonC = activeDebts.filter(d=>d.due_date&&d.status!=='paid'&&new Date(d.due_date)>=now&&new Date(d.due_date)<=in7).length;
         const woTotal = writtenOffDebts.reduce((s,d)=>s+parseFloat(d.balance),0);
         const collRate = gTotal > 0 ? ((gPaid / gTotal) * 100).toFixed(1) : '0.0';
 
@@ -324,6 +327,7 @@ data:
         document.getElementById('stat-outstanding').textContent = fmt(gBal);
         document.getElementById('stat-collected').textContent = fmt(gPaid);
         document.getElementById('stat-overdue').textContent = overdueC;
+        document.getElementById('stat-duesoon').textContent = dueSoonC;
         document.getElementById('stat-writeoff').textContent = fmt(woTotal);
         document.getElementById('stat-collrate').textContent = collRate + '%';
 
@@ -393,11 +397,27 @@ data:
       renderCustomers(adjusted);
     }
 
+    function getLastContacted(customerName) {
+      const log = JSON.parse(localStorage.getItem('hw_msg_log')||'[]');
+      const entry = log.find(m => m.customerName === customerName);
+      if (!entry) return null;
+      const diffMs = new Date() - new Date(entry.time);
+      const days = Math.floor(diffMs / (1000*60*60*24));
+      if (days === 0) return 'today';
+      if (days === 1) return '1 day ago';
+      return days + ' days ago';
+    }
+
     function renderCustomers(customers) {
       const notes = JSON.parse(localStorage.getItem('hw_cust_notes')||'{}');
-      document.getElementById('customers-table').innerHTML = customers.map(c=>`
+      document.getElementById('customers-table').innerHTML = customers.map(c=>{
+        const lastContacted = getLastContacted(c.name);
+        return `
         <tr>
-          <td><i class="fa-solid fa-user" style="color:#a78bfa;margin-right:6px"></i>${c.name}</td>
+          <td>
+            <i class="fa-solid fa-user" style="color:#a78bfa;margin-right:6px"></i>${c.name}
+            ${lastContacted?`<div style="font-size:0.72em;color:#6b7280;margin-top:2px"><i class="fa-solid fa-paper-plane" style="font-size:0.85em"></i> Contacted: ${lastContacted}</div>`:''}
+          </td>
           <td>${c.phone||'-'}</td><td>${c.email||'-'}</td>
           <td style="color:${parseFloat(c.total_outstanding)>0?'#f87171':'#34d399'}">${fmt(c.total_outstanding)}</td>
           <td>
@@ -411,7 +431,8 @@ data:
             </div>
             ${notes[c.id]?`<div style="margin-top:5px;font-size:0.75em;color:#fbbf24;white-space:pre-wrap">${notes[c.id]}</div>`:''}
           </td>
-        </tr>`).join('');
+        </tr>`;
+      }).join('');
     }
 
     function openNoteModal(custId, custName) {
