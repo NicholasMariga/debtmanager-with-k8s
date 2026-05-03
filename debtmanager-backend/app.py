@@ -218,15 +218,16 @@ def update_staff(staff_id):
             "UPDATE staff SET password = %s WHERE id = %s RETURNING id, name, username, role, active",
             (hash_password(data['password']), staff_id)
         )
+        updated = cur.fetchone()
         log_audit(cur, 'staff_password_reset', 'staff', staff_id, {'staff': staff_name}, user['id'])
     elif 'active' in data:
         cur.execute(
             "UPDATE staff SET active = %s WHERE id = %s RETURNING id, name, username, role, active",
             (data['active'], staff_id)
         )
+        updated = cur.fetchone()
         action = 'staff_activated' if data['active'] else 'staff_deactivated'
         log_audit(cur, action, 'staff', staff_id, {'staff': staff_name}, user['id'])
-    updated = cur.fetchone()
     conn.commit()
     cur.close()
     conn.close()
