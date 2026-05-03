@@ -15,6 +15,7 @@ data:
     let allDebtsCache = [];
     let allCustomersCache = [];
     let allPaymentsCache = [];
+    let allStaffCache = [];
     let barChartInstance = null;
     let donutChartInstance = null;
     let trendChartInstance = null;
@@ -1194,8 +1195,8 @@ data:
 
     // ── Staff ──
     async function loadStaff() {
-      const staff=await fetch(API+'/staff',{headers:headers()}).then(r=>r.json());
-      document.getElementById('staff-table').innerHTML=staff.map(s=>`
+      allStaffCache = await fetch(API+'/staff',{headers:headers()}).then(r=>r.json());
+      document.getElementById('staff-table').innerHTML=allStaffCache.map(s=>`
         <tr>
           <td>${s.name}</td><td>${s.username}</td>
           <td><span class="badge" style="background:rgba(167,139,250,0.2);color:#a78bfa">${s.role}</span></td>
@@ -1203,10 +1204,10 @@ data:
           <td>${fmtDate(s.created_at)}</td>
           <td style="white-space:nowrap">
             ${s.username!=='owner'?`
-              <button class="btn btn-sm ${s.active?'btn-red':'btn-green'}" style="margin-right:4px" onclick="toggleStaffActive(${s.id},${JSON.stringify(s.name)},${s.active})">
+              <button class="btn btn-sm ${s.active?'btn-red':'btn-green'}" style="margin-right:4px" onclick="toggleStaffActive(${s.id},${s.active})">
                 <i class="fa-solid ${s.active?'fa-lock':'fa-lock-open'}"></i> ${s.active?'Deactivate':'Activate'}
               </button>
-              <button class="btn btn-sm" onclick="openResetPasswordModal(${s.id},${JSON.stringify(s.name)})">
+              <button class="btn btn-sm" onclick="openResetPasswordModal(${s.id})">
                 <i class="fa-solid fa-key"></i> Reset PWD
               </button>
             `:'-'}
@@ -1228,16 +1229,19 @@ data:
       loadStaff();
     }
 
-    async function toggleStaffActive(id, name, isActive) {
+    async function toggleStaffActive(id, isActive) {
+      const s = allStaffCache.find(x => x.id === id);
+      const name = s ? s.name : 'this staff member';
       const action = isActive ? 'Deactivate' : 'Activate';
-      if (!confirm(`${action} ${name}?\n\n${isActive?'They will immediately lose access to the system.':'They will regain access to the system.'}`)) return;
+      if (!confirm(`${action} ${name}?\n\n${isActive ? 'They will immediately lose access to the system.' : 'They will regain access to the system.'}`)) return;
       await fetch(API+'/staff/'+id, {method:'PUT', headers:headers(), body:JSON.stringify({active: !isActive})});
       loadStaff();
     }
 
-    function openResetPasswordModal(id, name) {
+    function openResetPasswordModal(id) {
+      const s = allStaffCache.find(x => x.id === id);
       currentResetStaffId = id;
-      document.getElementById('reset-pwd-name').textContent = `Resetting password for: ${name}`;
+      document.getElementById('reset-pwd-name').textContent = `Resetting password for: ${s ? s.name : 'staff member'}`;
       document.getElementById('reset-pwd-input').value = '';
       document.getElementById('reset-pwd-modal').classList.add('open');
     }
