@@ -670,6 +670,7 @@ data:
                     <i class="fa-solid fa-message"></i> SMS
                   </button>`:''}
                 <button class="btn btn-sm" style="background:rgba(167,139,250,0.15);color:#a78bfa" onclick='openEditDebtModal(${JSON.stringify(d).replace(/"/g,"&quot;")})'><i class="fa-solid fa-pen"></i> Edit</button>
+                <button class="btn btn-sm" style="background:rgba(96,165,250,0.15);color:#60a5fa" onclick='recordAgain(${JSON.stringify(d).replace(/"/g,"&quot;")})'><i class="fa-solid fa-rotate"></i> Record Again</button>
                 ${d.status!=='paid'?`<button class="btn btn-sm" style="background:rgba(107,114,128,0.3);color:#9ca3af" onclick="openWriteOffModal(${d.id},'${d.description.replace(/'/g,"\\'")}',${d.balance})"><i class="fa-solid fa-ban"></i> Write Off</button>`:''}`}
             </div>
           </td>
@@ -760,6 +761,17 @@ data:
       const now=new Date(); now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
       document.getElementById('debt-date').value=now.toISOString().slice(0,16);
       loadDebts();
+    }
+
+    async function recordAgain(d) {
+      showPage('debts', null);
+      await loadCustomerDropdown();
+      document.getElementById('debt-customer').value = d.customer_id;
+      document.getElementById('debt-desc').value = d.description;
+      document.getElementById('debt-amount').value = d.total_amount;
+      document.getElementById('debt-category').value = d.category || '';
+      document.getElementById('debt-due').value = '';
+      showAlert('alert-debt', `Pre-filled from ${d.customer_name}'s previous debt. Set a new due date and confirm.`, 'success');
     }
 
     // ── Payments ──
