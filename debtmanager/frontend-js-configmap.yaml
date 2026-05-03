@@ -753,7 +753,7 @@ data:
       if (cust && parseFloat(cust.credit_limit||0) > 0) {
         const available = parseFloat(cust.credit_limit) - parseFloat(cust.total_outstanding);
         if (parseFloat(total_amount) > available && currentUser.role !== 'owner') {
-          return showAlert('alert-debt', `Cannot add debt — ${cust.name} has KES ${fmt(Math.max(available,0))} credit available (limit KES ${fmt(cust.credit_limit)}). Only the owner can adjust the credit limit.`, 'error');
+          return showAlert('alert-debt', `Cannot add debt - ${cust.name} has KES ${fmt(Math.max(available,0))} credit available (limit KES ${fmt(cust.credit_limit)}). Only the owner can adjust the credit limit.`, 'error');
         }
       }
       await fetch(API+'/debts',{method:'POST',headers:headers(),body:JSON.stringify({customer_id,description,total_amount,due_date:document.getElementById('debt-due').value||null,debt_date:debt_date||null,category:document.getElementById('debt-category').value||null})});
@@ -776,7 +776,7 @@ data:
     }
 
     async function openTimelineModal(d) {
-      document.getElementById('timeline-debt-info').textContent = `${d.customer_name} — ${d.description} — KES ${fmt(d.total_amount)}`;
+      document.getElementById('timeline-debt-info').textContent = `${d.customer_name} - ${d.description} - KES ${fmt(d.total_amount)}`;
       document.getElementById('timeline-content').innerHTML = '<p style="color:#6b7280;text-align:center;padding:16px">Loading...</p>';
       document.getElementById('timeline-modal').classList.add('open');
       const payments = await fetch(API+'/payments/'+d.id, {headers:headers()}).then(r=>r.json());
@@ -786,7 +786,7 @@ data:
       events.push({type:'debt', date: new Date(d.debt_date||d.created_at), label:'Debt Recorded', amount: parseFloat(d.total_amount), detail: d.category||'', color:'#a78bfa', icon:'fa-file-invoice-dollar'});
       if (d.due_date) events.push({type:'due', date: new Date(d.due_date), label:'Due Date', amount:null, detail:'', color:'#fbbf24', icon:'fa-calendar-days'});
       payments.slice().reverse().forEach(p => {
-        events.push({type:'payment', date: new Date(p.paid_at), label:`Payment — ${p.note||'Cash'}`, amount: parseFloat(p.amount), detail: p.recorded_by_name ? `by ${p.recorded_by_name}` : '', color:'#34d399', icon:'fa-money-bill-wave'});
+        events.push({type:'payment', date: new Date(p.paid_at), label:`Payment - ${p.note||'Cash'}`, amount: parseFloat(p.amount), detail: p.recorded_by_name ? `by ${p.recorded_by_name}` : '', color:'#34d399', icon:'fa-money-bill-wave'});
       });
       if (d.writeoff_reason) events.push({type:'writeoff', date: new Date(d.written_off_at||d.created_at), label:'Written Off', amount:null, detail: d.writeoff_reason, color:'#9ca3af', icon:'fa-ban'});
       events.sort((a,b)=>a.date-b.date);
