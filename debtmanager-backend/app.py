@@ -4,6 +4,7 @@ import psycopg2
 import psycopg2.extras
 import os
 import hashlib
+import json
 from datetime import datetime
 
 app = Flask(__name__)
@@ -72,6 +73,17 @@ def init_db():
     cur.execute("ALTER TABLE debts ADD COLUMN IF NOT EXISTS notes TEXT")
     cur.execute("ALTER TABLE write_offs ADD COLUMN IF NOT EXISTS amount DECIMAL(10,2)")
     cur.execute('''
+        CREATE TABLE IF NOT EXISTS audit_logs (
+            id SERIAL PRIMARY KEY,
+            action VARCHAR(50) NOT NULL,
+            entity_type VARCHAR(50),
+            entity_id INTEGER,
+            details JSONB,
+            performed_by INTEGER REFERENCES staff(id),
+            performed_at TIMESTAMP DEFAULT NOW()
+        )
+    ''')
+    cur.execute('''
         CREATE TABLE IF NOT EXISTS write_offs (
             id SERIAL PRIMARY KEY,
             debt_id INTEGER REFERENCES debts(id) UNIQUE,
@@ -90,6 +102,12 @@ def init_db():
     conn.commit()
     cur.close()
     conn.close()
+
+def log_audit(cur, action, entity_type, entity_id, details, performed_by):
+    cur.execute(
+        'INSERT INTO audit_logs (action, entity_type, entity_id, details, performed_by) VALUES (%s, %s, %s, %s, %s)',
+        (action, entity_type, entity_id, psycopg2.extras.Json(details), performed_by)
+    )
 
 def require_auth(roles=None):
     token = request.headers.get('Authorization', '').replace('Bearer ', '')
@@ -127,6 +145,9 @@ def login():
     conn.close()
     if not user:
         return jsonify({"error": "Invalid credentials"}), 401
+    conn2 = get_db(); cur2 = conn2.cursor()
+    log_audit(cur2, 'login', 'staff', user['id'], {'username': user['username']}, user['id'])
+    conn2.commit(); cur2.close(); conn2.close()
     return jsonify({
         "token": user['password'],
         "user": {
@@ -243,6 +264,7 @@ def archive_customer(customer_id):
     conn = get_db()
     cur = conn.cursor()
     cur.execute("UPDATE customers SET archived = TRUE WHERE id = %s", (customer_id,))
+    log_audit(cur, 'customer_archived', 'customer', customer_id, {}, user['id'])
     conn.commit()
     cur.close()
     conn.close()
@@ -269,6 +291,10 @@ def update_customer(customer_id):
         values
     )
     customer = cur.fetchone()
+    if 'archived' in data and data['archived'] == False:
+        log_audit(cur, 'customer_restored', 'customer', customer_id, {}, user['id'])
+    elif 'credit_limit' in data:
+        log_audit(cur, 'credit_limit_changed', 'customer', customer_id, {'credit_limit': data.get('credit_limit')}, user['id'])
     conn.commit()
     cur.close()
     conn.close()
@@ -324,6 +350,7 @@ def add_debt():
         (customer_id, description, total_amount, due_date, debt_date, category, notes, created_by)
     )
     debt = cur.fetchone()
+    log_audit(cur, 'debt_added', 'debt', debt['id'], {'customer_id': customer_id, 'description': description, 'amount': float(total_amount)}, created_by)
     conn.commit()
     cur.close()
     conn.close()
@@ -337,6 +364,8 @@ def update_debt(debt_id):
     data = request.json
     conn = get_db()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute('SELECT description, total_amount FROM debts WHERE id = %s', (debt_id,))
+    old = dict(cur.fetchone())
     cur.execute(
         '''UPDATE debts SET description=%s, total_amount=%s, due_date=%s, debt_date=%s, category=%s, notes=%s
            WHERE id=%s RETURNING *''',
@@ -349,6 +378,10 @@ def update_debt(debt_id):
         cur.execute("UPDATE debts SET status='paid' WHERE id=%s", (debt_id,))
     elif debt['status'] == 'paid':
         cur.execute("UPDATE debts SET status='unpaid' WHERE id=%s", (debt_id,))
+    log_audit(cur, 'debt_edited', 'debt', debt_id, {
+        'old_description': old['description'], 'old_amount': float(old['total_amount']),
+        'new_description': data.get('description'), 'new_amount': float(data.get('total_amount', 0))
+    }, user['id'])
     conn.commit()
     cur.close()
     conn.close()
@@ -383,6 +416,7 @@ def add_writeoff():
             (data['debt_id'], data['reason'], amount, user['id'])
         )
         writeoff = cur.fetchone()
+        log_audit(cur, 'writeoff_added', 'debt', data['debt_id'], {'reason': data['reason'], 'amount': float(amount) if amount else None}, user['id'])
         conn.commit()
     except Exception:
         cur.close()
@@ -400,6 +434,7 @@ def delete_writeoff(debt_id):
     conn = get_db()
     cur = conn.cursor()
     cur.execute('DELETE FROM write_offs WHERE debt_id = %s', (debt_id,))
+    log_audit(cur, 'writeoff_undone', 'debt', debt_id, {}, user['id'])
     conn.commit()
     cur.close()
     conn.close()
@@ -430,6 +465,7 @@ def make_payment():
     debt = cur.fetchone()
     if float(debt['amount_paid']) >= float(debt['total_amount']):
         cur.execute("UPDATE debts SET status = 'paid' WHERE id = %s", (debt_id,))
+    log_audit(cur, 'payment_recorded', 'debt', debt_id, {'amount': float(amount), 'note': note}, recorded_by)
     conn.commit()
     cur.close()
     conn.close()
@@ -506,6 +542,46 @@ def get_reminders():
     cur.close()
     conn.close()
     return jsonify([dict(r) for r in reminders])
+
+# ── Audit Log ──
+@app.route('/audit', methods=['GET'])
+def get_audit():
+    user = require_auth(roles=['owner', 'manager'])
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    filters = []
+    params = []
+    staff_id = request.args.get('staff_id')
+    action = request.args.get('action')
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
+    if staff_id:
+        filters.append('al.performed_by = %s')
+        params.append(staff_id)
+    if action:
+        filters.append('al.action = %s')
+        params.append(action)
+    if date_from:
+        filters.append('al.performed_at >= %s')
+        params.append(date_from)
+    if date_to:
+        filters.append('al.performed_at <= %s')
+        params.append(date_to + ' 23:59:59')
+    where = ('WHERE ' + ' AND '.join(filters)) if filters else ''
+    cur.execute(f'''
+        SELECT al.*, s.name as staff_name
+        FROM audit_logs al
+        LEFT JOIN staff s ON al.performed_by = s.id
+        {where}
+        ORDER BY al.performed_at DESC
+        LIMIT 500
+    ''', params)
+    logs = cur.fetchall()
+    cur.close()
+    conn.close()
+    return jsonify([dict(l) for l in logs])
 
 if __name__ == '__main__':
     init_db()

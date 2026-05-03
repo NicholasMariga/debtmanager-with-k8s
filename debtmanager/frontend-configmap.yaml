@@ -101,6 +101,9 @@ data:
             <div class="nav-item nav-staff" onclick="showPage('staff', event)">
               <i class="fa-solid fa-user-gear"></i> Staff
             </div>
+            <div class="nav-item nav-audit" onclick="showPage('audit', event)">
+              <i class="fa-solid fa-clipboard-list"></i> Audit Log
+            </div>
           </div>
 
           <div class="main">
@@ -367,6 +370,29 @@ data:
                   <thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Status</th><th>Joined</th><th>Action</th></tr></thead>
                   <tbody id="staff-table"></tbody>
                 </table>
+              </div>
+            </div>
+
+            <!-- AUDIT LOG -->
+            <div class="page" id="page-audit">
+              <div class="page-title"><i class="fa-solid fa-clipboard-list"></i> Audit Log</div>
+              <div class="card">
+                <h3><i class="fa-solid fa-filter"></i> Filters</h3>
+                <div class="form-row">
+                  <div class="form-group"><label>Action</label><select id="audit-filter-action" onchange="loadAuditLog()"><option value="">All Actions</option><option value="login">Login</option><option value="debt_added">Debt Added</option><option value="debt_edited">Debt Edited</option><option value="payment_recorded">Payment Recorded</option><option value="writeoff_added">Write-off Added</option><option value="writeoff_undone">Write-off Undone</option><option value="customer_archived">Customer Archived</option><option value="customer_restored">Customer Restored</option><option value="credit_limit_changed">Credit Limit Changed</option></select></div>
+                  <div class="form-group nav-audit-staff"><label>Staff Member</label><select id="audit-filter-staff" onchange="loadAuditLog()"><option value="">All Staff</option></select></div>
+                  <div class="form-group"><label>From Date</label><input type="date" id="audit-filter-from" onchange="loadAuditLog()"></div>
+                  <div class="form-group"><label>To Date</label><input type="date" id="audit-filter-to" onchange="loadAuditLog()"></div>
+                </div>
+              </div>
+              <div class="card">
+                <h3><i class="fa-solid fa-list"></i> Activity Log <span id="audit-count" style="font-size:0.75em;color:#6b7280;font-weight:normal"></span></h3>
+                <div style="overflow-x:auto">
+                  <table>
+                    <thead><tr><th>Date &amp; Time</th><th>Action</th><th>Details</th><th>Performed By</th></tr></thead>
+                    <tbody id="audit-table"></tbody>
+                  </table>
+                </div>
               </div>
             </div>
 

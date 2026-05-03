@@ -73,6 +73,8 @@ data:
       document.querySelectorAll('.nav-reports').forEach(el => el.classList.toggle('hidden', !isMO));
       document.querySelectorAll('.nav-aging').forEach(el => el.classList.toggle('hidden', !isMO));
       document.querySelectorAll('.nav-staff').forEach(el => el.classList.toggle('hidden', !isOwner));
+      document.querySelectorAll('.nav-audit').forEach(el => el.classList.toggle('hidden', !isMO));
+      document.querySelectorAll('.nav-audit-staff').forEach(el => el.classList.toggle('hidden', !isOwner));
       loadDashboard();
     }
 
@@ -91,6 +93,7 @@ data:
       if (page==='reports') { loadReports(); loadStatementDropdown(); }
       if (page==='aging') loadAging();
       if (page==='staff') loadStaff();
+      if (page==='audit') loadAuditLog();
     }
 
     function setDashFilter(f) {
@@ -1219,4 +1222,59 @@ data:
       if (!confirm('Deactivate this staff member?')) return;
       await fetch(API+'/staff/'+id,{method:'DELETE',headers:headers()});
       loadStaff();
+    }
+
+    // ── Audit Log ──
+    async function loadAuditLog() {
+      if (currentUser.role === 'owner') {
+        const staffSel = document.getElementById('audit-filter-staff');
+        if (staffSel && staffSel.children.length <= 1) {
+          const staff = await fetch(API+'/staff', {headers:headers()}).then(r=>r.json()).catch(()=>[]);
+          if (Array.isArray(staff) && staff.length) {
+            staffSel.innerHTML = '<option value="">All Staff</option>' + staff.filter(s=>s.active).map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+          }
+        }
+      }
+      const action = document.getElementById('audit-filter-action').value;
+      const staffId = currentUser.role === 'owner' ? document.getElementById('audit-filter-staff').value : '';
+      const from = document.getElementById('audit-filter-from').value;
+      const to = document.getElementById('audit-filter-to').value;
+      const params = new URLSearchParams();
+      if (action) params.append('action', action);
+      if (staffId) params.append('staff_id', staffId);
+      if (from) params.append('date_from', from);
+      if (to) params.append('date_to', to);
+      const logs = await fetch(API+'/audit?'+params.toString(), {headers:headers()}).then(r=>r.json()).catch(()=>[]);
+      renderAuditLog(logs);
+    }
+
+    function renderAuditLog(logs) {
+      const count = document.getElementById('audit-count');
+      if (count) count.textContent = logs.length ? `(${logs.length} records)` : '';
+      const tbody = document.getElementById('audit-table');
+      if (!logs.length) {
+        tbody.innerHTML = '<tr><td colspan="4" style="color:#c4b5fd;text-align:center">No audit records found</td></tr>';
+        return;
+      }
+      const actionMeta = {
+        login:               {label:'Login',                color:'#60a5fa'},
+        debt_added:          {label:'Debt Added',           color:'#34d399'},
+        debt_edited:         {label:'Debt Edited',          color:'#fbbf24'},
+        payment_recorded:    {label:'Payment Recorded',     color:'#34d399'},
+        writeoff_added:      {label:'Write-off Added',      color:'#9ca3af'},
+        writeoff_undone:     {label:'Write-off Undone',     color:'#fb923c'},
+        customer_archived:   {label:'Customer Archived',    color:'#f87171'},
+        customer_restored:   {label:'Customer Restored',    color:'#a78bfa'},
+        credit_limit_changed:{label:'Credit Limit Changed', color:'#fbbf24'}
+      };
+      tbody.innerHTML = logs.map(l => {
+        const meta = actionMeta[l.action] || {label: l.action, color: '#c4b5fd'};
+        const det = l.details ? Object.entries(l.details).filter(([k,v])=>v!==null&&v!==undefined).map(([k,v])=>`${k.replace(/_/g,' ')}: ${typeof v==='number'&&k.includes('amount')?'KES '+fmt(v):v}`).join(' | ') : '-';
+        return `<tr>
+          <td style="font-size:0.82em;white-space:nowrap;color:#9ca3af">${fmtDateTime(l.performed_at)}</td>
+          <td><span class="badge" style="background:rgba(100,100,100,0.2);color:${meta.color};white-space:nowrap">${meta.label}</span></td>
+          <td style="font-size:0.82em;color:#c4b5fd;max-width:280px">${det}</td>
+          <td style="font-size:0.85em">${l.staff_name||'-'}</td>
+        </tr>`;
+      }).join('');
     }
