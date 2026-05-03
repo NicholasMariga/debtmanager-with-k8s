@@ -25,7 +25,7 @@ def hash_password(password):
 def init_db():
     conn = get_db()
     cur = conn.cursor()
-    # Core tables
+    # Core tables — all created before any migrations
     cur.execute('''
         CREATE TABLE IF NOT EXISTS staff (
             id SERIAL PRIMARY KEY,
@@ -62,17 +62,13 @@ def init_db():
             recorded_by INTEGER REFERENCES staff(id),
             paid_at TIMESTAMP DEFAULT NOW()
         );
-    ''')
-    # Migrations: safe to run on every startup
-    cur.execute("ALTER TABLE debts ADD COLUMN IF NOT EXISTS debt_date TIMESTAMP")
-    cur.execute("UPDATE debts SET debt_date = created_at WHERE debt_date IS NULL")
-    cur.execute("ALTER TABLE customers ADD COLUMN IF NOT EXISTS note TEXT")
-    cur.execute("ALTER TABLE customers ADD COLUMN IF NOT EXISTS archived BOOLEAN DEFAULT FALSE")
-    cur.execute("ALTER TABLE customers ADD COLUMN IF NOT EXISTS credit_limit DECIMAL(10,2)")
-    cur.execute("ALTER TABLE debts ADD COLUMN IF NOT EXISTS category VARCHAR(50)")
-    cur.execute("ALTER TABLE debts ADD COLUMN IF NOT EXISTS notes TEXT")
-    cur.execute("ALTER TABLE write_offs ADD COLUMN IF NOT EXISTS amount DECIMAL(10,2)")
-    cur.execute('''
+        CREATE TABLE IF NOT EXISTS write_offs (
+            id SERIAL PRIMARY KEY,
+            debt_id INTEGER REFERENCES debts(id) UNIQUE,
+            reason VARCHAR(255) NOT NULL,
+            written_off_by INTEGER REFERENCES staff(id),
+            written_off_at TIMESTAMP DEFAULT NOW()
+        );
         CREATE TABLE IF NOT EXISTS audit_logs (
             id SERIAL PRIMARY KEY,
             action VARCHAR(50) NOT NULL,
@@ -81,17 +77,17 @@ def init_db():
             details JSONB,
             performed_by INTEGER REFERENCES staff(id),
             performed_at TIMESTAMP DEFAULT NOW()
-        )
+        );
     ''')
-    cur.execute('''
-        CREATE TABLE IF NOT EXISTS write_offs (
-            id SERIAL PRIMARY KEY,
-            debt_id INTEGER REFERENCES debts(id) UNIQUE,
-            reason VARCHAR(255) NOT NULL,
-            written_off_by INTEGER REFERENCES staff(id),
-            written_off_at TIMESTAMP DEFAULT NOW()
-        )
-    ''')
+    # Migrations: safe to run on every startup (tables guaranteed to exist above)
+    cur.execute("ALTER TABLE debts ADD COLUMN IF NOT EXISTS debt_date TIMESTAMP")
+    cur.execute("UPDATE debts SET debt_date = created_at WHERE debt_date IS NULL")
+    cur.execute("ALTER TABLE customers ADD COLUMN IF NOT EXISTS note TEXT")
+    cur.execute("ALTER TABLE customers ADD COLUMN IF NOT EXISTS archived BOOLEAN DEFAULT FALSE")
+    cur.execute("ALTER TABLE customers ADD COLUMN IF NOT EXISTS credit_limit DECIMAL(10,2)")
+    cur.execute("ALTER TABLE debts ADD COLUMN IF NOT EXISTS category VARCHAR(50)")
+    cur.execute("ALTER TABLE debts ADD COLUMN IF NOT EXISTS notes TEXT")
+    cur.execute("ALTER TABLE write_offs ADD COLUMN IF NOT EXISTS amount DECIMAL(10,2)")
     # Default owner account
     cur.execute("SELECT id FROM staff WHERE username = 'owner'")
     if not cur.fetchone():
