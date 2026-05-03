@@ -25,6 +25,8 @@ data:
     let custSortKey = 'name', custSortDir = 1;
     let debtSortKey = 'created_at', debtSortDir = -1;
     let currentEditDebtId = null;
+    function isFullWO(d) { return !!d.writeoff_reason && !d.writeoff_amount; }
+    function isPartialWO(d) { return !!d.writeoff_reason && !!d.writeoff_amount; }
 
     if (token && currentUser) showApp();
 
@@ -311,8 +313,8 @@ data:
           return (!range.from || dt >= range.from) && dt <= range.to;
         }) : debts;
 
-        const activeDebts = fd.filter(d => !d.writeoff_reason);
-        const writtenOffDebts = fd.filter(d => !!d.writeoff_reason);
+        const activeDebts = fd.filter(d => !isFullWO(d));
+        const writtenOffDebts = fd.filter(d => isFullWO(d));
 
         const gTotal = activeDebts.reduce((s,d)=>s+parseFloat(d.total_amount),0);
         const gPaid  = activeDebts.reduce((s,d)=>s+parseFloat(d.amount_paid),0);
@@ -636,29 +638,32 @@ data:
     async function loadDebts() {
       const d = await fetch(API+'/debts',{headers:headers()}).then(r=>r.json());
       allDebtsCache=d;
-      renderDebts(d.filter(x=>!x.writeoff_reason));
+      renderDebts(d.filter(x=>!isFullWO(x)));
     }
 
     function renderDebts(debts) {
       const nowD = new Date(); const in7D = new Date(); in7D.setDate(nowD.getDate()+7);
       const catColors = {'Weekly':'#34d399','After Two Weeks':'#60a5fa','End of Month':'#fbbf24','One-off':'#a78bfa'};
       document.getElementById('debts-table').innerHTML = debts.map(d=>{
-        const isWO = !!d.writeoff_reason;
-        const isDueSoon = !isWO && d.due_date && d.status!=='paid' && new Date(d.due_date)>=nowD && new Date(d.due_date)<=in7D;
+        const fullWO = isFullWO(d);
+        const partialWO = isPartialWO(d);
+        const isDueSoon = !fullWO && !partialWO && d.due_date && d.status!=='paid' && new Date(d.due_date)>=nowD && new Date(d.due_date)<=in7D;
         const catBadge = d.category ? `<span style="background:rgba(0,0,0,0.25);color:${catColors[d.category]||'#9ca3af'};border:1px solid ${catColors[d.category]||'#9ca3af'};border-radius:4px;padding:0px 5px;font-size:0.68em;margin-left:5px;vertical-align:middle">${d.category}</span>` : '';
+        const partialBadge = partialWO ? `<span style="background:rgba(156,163,175,0.15);color:#9ca3af;border:1px solid #9ca3af;border-radius:4px;padding:0px 5px;font-size:0.68em;margin-left:5px;vertical-align:middle"><i class="fa-solid fa-ban"></i> KES ${fmt(d.writeoff_amount)} forgiven</span>` : '';
+        const notesBadge = d.notes ? `<div style="font-size:0.72em;color:#fbbf24;margin-top:3px"><i class="fa-solid fa-note-sticky"></i> ${d.notes}</div>` : '';
         return `
-        <tr class="${isWO?'writeoff-row':isDueSoon?'due-soon-row':''}">
+        <tr class="${fullWO?'writeoff-row':isDueSoon?'due-soon-row':''}">
           <td>${d.customer_name}</td>
-          <td>${d.description}${catBadge}</td>
+          <td>${d.description}${catBadge}${partialBadge}${notesBadge}</td>
           <td>${fmtDateTime(d.created_at)}</td>
           <td>${fmt(d.total_amount)}</td>
           <td style="color:#34d399">${fmt(d.amount_paid)}</td>
           <td style="color:${parseFloat(d.balance)>0?'#f87171':'#34d399'}">${fmt(d.balance)}</td>
           <td>${fmtDate(d.due_date)}</td>
-          <td>${isWO?`<span class="badge badge-writeoff"><i class="fa-solid fa-ban"></i> Written Off</span>`:statusBadge(d)}</td>
+          <td>${fullWO?`<span class="badge badge-writeoff"><i class="fa-solid fa-ban"></i> Written Off</span>`:statusBadge(d)}</td>
           <td>
             <div class="action-btns">
-              ${isWO?`
+              ${fullWO?`
                 <span style="font-size:0.75em;color:#9ca3af">${d.writeoff_reason}</span>
                 <button class="btn btn-sm" onclick="undoWriteOff(${d.id})"><i class="fa-solid fa-rotate-left"></i> Undo</button>`
               :`${d.status!=='paid'?`<button class="btn btn-green btn-sm" onclick="openPayModal(${d.id},'${d.customer_name}',${d.balance})"><i class="fa-solid fa-money-bill-wave"></i> Pay</button>`:''}
@@ -672,7 +677,8 @@ data:
                 <button class="btn btn-sm" style="background:rgba(167,139,250,0.15);color:#a78bfa" onclick='openEditDebtModal(${JSON.stringify(d).replace(/"/g,"&quot;")})'><i class="fa-solid fa-pen"></i> Edit</button>
                 <button class="btn btn-sm" style="background:rgba(96,165,250,0.15);color:#60a5fa" onclick='recordAgain(${JSON.stringify(d).replace(/"/g,"&quot;")})'><i class="fa-solid fa-rotate"></i> Record Again</button>
                 <button class="btn btn-sm" style="background:rgba(167,139,250,0.1);color:#c4b5fd" onclick='openTimelineModal(${JSON.stringify(d).replace(/"/g,"&quot;")})'><i class="fa-solid fa-timeline"></i> History</button>
-                ${d.status!=='paid'?`<button class="btn btn-sm" style="background:rgba(107,114,128,0.3);color:#9ca3af" onclick="openWriteOffModal(${d.id},'${d.description.replace(/'/g,"\\'")}',${d.balance})"><i class="fa-solid fa-ban"></i> Write Off</button>`:''}`}
+                ${d.status!=='paid'?`<button class="btn btn-sm" style="background:rgba(107,114,128,0.3);color:#9ca3af" onclick="openWriteOffModal(${d.id},'${d.description.replace(/'/g,"\\'")}',${d.balance})"><i class="fa-solid fa-ban"></i> Write Off</button>`:''}
+                ${partialWO?`<button class="btn btn-sm" onclick="undoWriteOff(${d.id})"><i class="fa-solid fa-rotate-left"></i> Undo Partial W/O</button>`:''}`}
             </div>
           </td>
         </tr>`;
@@ -684,9 +690,9 @@ data:
       const s = document.getElementById('filter-status').value;
       const cat = document.getElementById('filter-category').value;
       let f = allDebtsCache.filter(d=>d.customer_name.toLowerCase().includes(q)||d.description.toLowerCase().includes(q));
-      if (s==='writeoff') { f=f.filter(d=>!!d.writeoff_reason); }
+      if (s==='writeoff') { f=f.filter(d=>isFullWO(d)); }
       else {
-        f=f.filter(d=>!d.writeoff_reason);
+        f=f.filter(d=>!isFullWO(d));
         if (s==='paid') f=f.filter(d=>d.status==='paid');
         else if (s==='unpaid') f=f.filter(d=>d.status!=='paid'&&parseFloat(d.amount_paid)===0);
         else if (s==='partial') f=f.filter(d=>parseFloat(d.amount_paid)>0&&d.status!=='paid');
@@ -700,13 +706,16 @@ data:
       currentWriteOffDebtId = debtId;
       document.getElementById('writeoff-debt-info').textContent = `${desc} - Balance: KES ${fmt(balance)}`;
       document.getElementById('writeoff-reason').value = '';
+      document.getElementById('writeoff-amount').value = '';
       document.getElementById('writeoff-modal').classList.add('open');
     }
 
     async function confirmWriteOff() {
       const reason = document.getElementById('writeoff-reason').value.trim();
       if (!reason) return;
-      await fetch(API+'/writeoffs', {method:'POST', headers:headers(), body:JSON.stringify({debt_id:currentWriteOffDebtId, reason})});
+      const amountVal = parseFloat(document.getElementById('writeoff-amount').value);
+      const amount = amountVal > 0 ? amountVal : null;
+      await fetch(API+'/writeoffs', {method:'POST', headers:headers(), body:JSON.stringify({debt_id:currentWriteOffDebtId, reason, amount})});
       closeModal('writeoff-modal');
       loadDebts();
     }
@@ -728,6 +737,7 @@ data:
         document.getElementById('edit-debt-date').value = local.toISOString().slice(0,16);
       }
       document.getElementById('edit-debt-due').value = d.due_date ? d.due_date.slice(0,10) : '';
+      document.getElementById('edit-debt-notes').value = d.notes || '';
       document.getElementById('edit-debt-modal').classList.add('open');
     }
 
@@ -737,8 +747,9 @@ data:
       const due = document.getElementById('edit-debt-due').value || null;
       const ddate = document.getElementById('edit-debt-date').value || null;
       const cat = document.getElementById('edit-debt-category').value || null;
+      const notes = document.getElementById('edit-debt-notes').value.trim() || null;
       if (!desc || !amount) return;
-      await fetch(API+'/debts/'+currentEditDebtId, {method:'PUT', headers:headers(), body:JSON.stringify({description:desc, total_amount:parseFloat(amount), due_date:due, debt_date:ddate, category:cat})});
+      await fetch(API+'/debts/'+currentEditDebtId, {method:'PUT', headers:headers(), body:JSON.stringify({description:desc, total_amount:parseFloat(amount), due_date:due, debt_date:ddate, category:cat, notes})});
       closeModal('edit-debt-modal');
       loadDebts();
     }
@@ -756,9 +767,9 @@ data:
           return showAlert('alert-debt', `Cannot add debt - ${cust.name} has KES ${fmt(Math.max(available,0))} credit available (limit KES ${fmt(cust.credit_limit)}). Only the owner can adjust the credit limit.`, 'error');
         }
       }
-      await fetch(API+'/debts',{method:'POST',headers:headers(),body:JSON.stringify({customer_id,description,total_amount,due_date:document.getElementById('debt-due').value||null,debt_date:debt_date||null,category:document.getElementById('debt-category').value||null})});
+      await fetch(API+'/debts',{method:'POST',headers:headers(),body:JSON.stringify({customer_id,description,total_amount,due_date:document.getElementById('debt-due').value||null,debt_date:debt_date||null,category:document.getElementById('debt-category').value||null,notes:document.getElementById('debt-notes').value.trim()||null})});
       showAlert('alert-debt','Debt recorded successfully!','success');
-      ['debt-desc','debt-amount','debt-due'].forEach(id=>document.getElementById(id).value='');
+      ['debt-desc','debt-amount','debt-due','debt-notes'].forEach(id=>document.getElementById(id).value='');
       const now=new Date(); now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
       document.getElementById('debt-date').value=now.toISOString().slice(0,16);
       loadDebts();

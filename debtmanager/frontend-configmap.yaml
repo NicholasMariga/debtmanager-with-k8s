@@ -208,6 +208,7 @@ data:
                   <div class="form-group"><label>Amount (KES) *</label><input type="number" id="debt-amount" placeholder="e.g. 5000"></div>
                   <div class="form-group"><label>Date Taken *</label><input type="datetime-local" id="debt-date"></div>
                   <div class="form-group"><label>Due Date</label><input type="date" id="debt-due"></div>
+                  <div class="form-group" style="flex:1 1 100%"><label>Notes</label><input type="text" id="debt-notes" placeholder="e.g. Customer disputed amount, goods partially returned..."></div>
                 </div>
                 <button class="btn" onclick="addDebt()"><i class="fa-solid fa-plus"></i> Record Debt</button>
               </div>
@@ -462,9 +463,14 @@ data:
             <span class="modal-close" onclick="closeModal('writeoff-modal')"><i class="fa-solid fa-xmark"></i></span>
             <h3><i class="fa-solid fa-ban"></i> Write Off Debt</h3>
             <p style="color:#c4b5fd;font-size:0.83em;margin-bottom:12px" id="writeoff-debt-info"></p>
-            <div class="form-group" style="margin-bottom:15px">
+            <div class="form-group" style="margin-bottom:12px">
               <label>Reason *</label>
               <input type="text" id="writeoff-reason" placeholder="e.g. Bad debt, customer relocated...">
+            </div>
+            <div class="form-group" style="margin-bottom:15px">
+              <label>Amount to Write Off (KES)</label>
+              <input type="number" id="writeoff-amount" placeholder="Leave empty to write off full balance">
+              <small style="color:#6b7280">Leave empty for full write-off</small>
             </div>
             <button class="btn btn-red" onclick="confirmWriteOff()"><i class="fa-solid fa-ban"></i> Write Off</button>
           </div>
@@ -482,6 +488,7 @@ data:
               <div class="form-group"><label>Amount (KES)</label><input type="number" id="edit-debt-amount"></div>
               <div class="form-group"><label>Date Taken</label><input type="datetime-local" id="edit-debt-date"></div>
               <div class="form-group"><label>Due Date</label><input type="date" id="edit-debt-due"></div>
+              <div class="form-group" style="flex:1 1 100%"><label>Notes</label><input type="text" id="edit-debt-notes" placeholder="e.g. Customer disputed amount..."></div>
             </div>
             <button class="btn" onclick="saveDebtEdit()"><i class="fa-solid fa-floppy-disk"></i> Save Changes</button>
           </div>

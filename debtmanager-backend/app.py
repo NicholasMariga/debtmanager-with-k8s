@@ -69,6 +69,8 @@ def init_db():
     cur.execute("ALTER TABLE customers ADD COLUMN IF NOT EXISTS archived BOOLEAN DEFAULT FALSE")
     cur.execute("ALTER TABLE customers ADD COLUMN IF NOT EXISTS credit_limit DECIMAL(10,2)")
     cur.execute("ALTER TABLE debts ADD COLUMN IF NOT EXISTS category VARCHAR(50)")
+    cur.execute("ALTER TABLE debts ADD COLUMN IF NOT EXISTS notes TEXT")
+    cur.execute("ALTER TABLE write_offs ADD COLUMN IF NOT EXISTS amount DECIMAL(10,2)")
     cur.execute('''
         CREATE TABLE IF NOT EXISTS write_offs (
             id SERIAL PRIMARY KEY,
@@ -284,9 +286,10 @@ def get_debts():
         SELECT d.*,
             c.name as customer_name,
             c.phone as customer_phone,
-            (d.total_amount - d.amount_paid) as balance,
+            (d.total_amount - d.amount_paid - COALESCE(wo.amount, 0)) as balance,
             s.name as created_by_name,
             wo.reason as writeoff_reason,
+            wo.amount as writeoff_amount,
             wo.written_off_at
         FROM debts d
         JOIN customers c ON d.customer_id = c.id
@@ -311,13 +314,14 @@ def add_debt():
     due_date = data.get('due_date', None)
     debt_date = data.get('debt_date', None)
     category = data.get('category', None)
+    notes = data.get('notes', None)
     created_by = user['id']
     conn = get_db()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cur.execute(
-        '''INSERT INTO debts (customer_id, description, total_amount, due_date, debt_date, category, created_by)
-           VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING *''',
-        (customer_id, description, total_amount, due_date, debt_date, category, created_by)
+        '''INSERT INTO debts (customer_id, description, total_amount, due_date, debt_date, category, notes, created_by)
+           VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING *''',
+        (customer_id, description, total_amount, due_date, debt_date, category, notes, created_by)
     )
     debt = cur.fetchone()
     conn.commit()
@@ -334,10 +338,10 @@ def update_debt(debt_id):
     conn = get_db()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cur.execute(
-        '''UPDATE debts SET description=%s, total_amount=%s, due_date=%s, debt_date=%s, category=%s
+        '''UPDATE debts SET description=%s, total_amount=%s, due_date=%s, debt_date=%s, category=%s, notes=%s
            WHERE id=%s RETURNING *''',
         (data.get('description'), data.get('total_amount'), data.get('due_date'),
-         data.get('debt_date'), data.get('category'), debt_id)
+         data.get('debt_date'), data.get('category'), data.get('notes'), debt_id)
     )
     debt = cur.fetchone()
     # Re-evaluate paid status
@@ -373,9 +377,10 @@ def add_writeoff():
     conn = get_db()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     try:
+        amount = data.get('amount') or None
         cur.execute(
-            'INSERT INTO write_offs (debt_id, reason, written_off_by) VALUES (%s, %s, %s) RETURNING *',
-            (data['debt_id'], data['reason'], user['id'])
+            'INSERT INTO write_offs (debt_id, reason, amount, written_off_by) VALUES (%s, %s, %s, %s) RETURNING *',
+            (data['debt_id'], data['reason'], amount, user['id'])
         )
         writeoff = cur.fetchone()
         conn.commit()
