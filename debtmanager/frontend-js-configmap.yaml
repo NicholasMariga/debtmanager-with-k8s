@@ -671,6 +671,7 @@ data:
                   </button>`:''}
                 <button class="btn btn-sm" style="background:rgba(167,139,250,0.15);color:#a78bfa" onclick='openEditDebtModal(${JSON.stringify(d).replace(/"/g,"&quot;")})'><i class="fa-solid fa-pen"></i> Edit</button>
                 <button class="btn btn-sm" style="background:rgba(96,165,250,0.15);color:#60a5fa" onclick='recordAgain(${JSON.stringify(d).replace(/"/g,"&quot;")})'><i class="fa-solid fa-rotate"></i> Record Again</button>
+                <button class="btn btn-sm" style="background:rgba(167,139,250,0.1);color:#c4b5fd" onclick='openTimelineModal(${JSON.stringify(d).replace(/"/g,"&quot;")})'><i class="fa-solid fa-timeline"></i> History</button>
                 ${d.status!=='paid'?`<button class="btn btn-sm" style="background:rgba(107,114,128,0.3);color:#9ca3af" onclick="openWriteOffModal(${d.id},'${d.description.replace(/'/g,"\\'")}',${d.balance})"><i class="fa-solid fa-ban"></i> Write Off</button>`:''}`}
             </div>
           </td>
@@ -772,6 +773,54 @@ data:
       document.getElementById('debt-category').value = d.category || '';
       document.getElementById('debt-due').value = '';
       showAlert('alert-debt', `Pre-filled from ${d.customer_name}'s previous debt. Set a new due date and confirm.`, 'success');
+    }
+
+    async function openTimelineModal(d) {
+      document.getElementById('timeline-debt-info').textContent = `${d.customer_name} — ${d.description} — KES ${fmt(d.total_amount)}`;
+      document.getElementById('timeline-content').innerHTML = '<p style="color:#6b7280;text-align:center;padding:16px">Loading...</p>';
+      document.getElementById('timeline-modal').classList.add('open');
+      const payments = await fetch(API+'/payments/'+d.id, {headers:headers()}).then(r=>r.json());
+
+      // Build events list oldest first
+      const events = [];
+      events.push({type:'debt', date: new Date(d.debt_date||d.created_at), label:'Debt Recorded', amount: parseFloat(d.total_amount), detail: d.category||'', color:'#a78bfa', icon:'fa-file-invoice-dollar'});
+      if (d.due_date) events.push({type:'due', date: new Date(d.due_date), label:'Due Date', amount:null, detail:'', color:'#fbbf24', icon:'fa-calendar-days'});
+      payments.slice().reverse().forEach(p => {
+        events.push({type:'payment', date: new Date(p.paid_at), label:`Payment — ${p.note||'Cash'}`, amount: parseFloat(p.amount), detail: p.recorded_by_name ? `by ${p.recorded_by_name}` : '', color:'#34d399', icon:'fa-money-bill-wave'});
+      });
+      if (d.writeoff_reason) events.push({type:'writeoff', date: new Date(d.written_off_at||d.created_at), label:'Written Off', amount:null, detail: d.writeoff_reason, color:'#9ca3af', icon:'fa-ban'});
+      events.sort((a,b)=>a.date-b.date);
+
+      // Compute running balance
+      let running = parseFloat(d.total_amount);
+      const now = new Date();
+
+      document.getElementById('timeline-content').innerHTML = `
+        <div style="position:relative;padding-left:28px">
+          <div style="position:absolute;left:9px;top:0;bottom:0;width:2px;background:rgba(255,255,255,0.07)"></div>
+          ${events.map(e=>{
+            if (e.type==='payment') running -= e.amount;
+            const isPast = e.date <= now;
+            return `
+            <div style="position:relative;margin-bottom:18px">
+              <div style="position:absolute;left:-24px;top:2px;width:12px;height:12px;border-radius:50%;background:${e.color};${!isPast?'opacity:0.4':''}"></div>
+              <div style="font-size:0.82em;color:#6b7280">${fmtDateTime(e.date.toISOString())}</div>
+              <div style="display:flex;align-items:center;gap:8px;margin-top:2px">
+                <i class="fa-solid ${e.icon}" style="color:${e.color};font-size:0.85em"></i>
+                <span style="color:#e2e8f0;font-size:0.9em">${e.label}</span>
+                ${e.amount!==null?`<span style="color:${e.type==='debt'?'#f87171':'#34d399'};font-weight:bold;font-size:0.9em">${e.type==='debt'?'+':'-'} KES ${fmt(e.amount)}</span>`:''}
+              </div>
+              ${e.detail?`<div style="font-size:0.78em;color:#6b7280;margin-top:2px">${e.detail}</div>`:''}
+              ${e.type==='payment'?`<div style="font-size:0.78em;color:#9ca3af;margin-top:2px">Balance after: KES ${fmt(running)}</div>`:''}
+            </div>`;
+          }).join('')}
+        </div>
+        <div style="border-top:1px solid rgba(255,255,255,0.07);margin-top:8px;padding-top:12px;display:flex;justify-content:space-between;font-size:0.85em">
+          <span style="color:#9ca3af">Total Paid</span><span style="color:#34d399;font-weight:bold">KES ${fmt(d.amount_paid)}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:0.85em;margin-top:6px">
+          <span style="color:#9ca3af">Balance Remaining</span><span style="color:${parseFloat(d.balance)>0?'#f87171':'#34d399'};font-weight:bold">KES ${fmt(d.balance)}</span>
+        </div>`;
     }
 
     // ── Payments ──
