@@ -367,7 +367,7 @@ data:
               <div class="card">
                 <h3><i class="fa-solid fa-list"></i> All Staff</h3>
                 <table>
-                  <thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Status</th><th>Joined</th><th>Action</th></tr></thead>
+                  <thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
                   <tbody id="staff-table"></tbody>
                 </table>
               </div>
@@ -463,6 +463,20 @@ data:
             <p style="color:rgba(255,255,255,0.3);font-size:0.75em;margin-top:10px">
               <i class="fa-solid fa-circle-info"></i> WhatsApp/SMS opens with message pre-filled. You press Send.
             </p>
+          </div>
+        </div>
+
+        <!-- Reset Password Modal -->
+        <div class="modal" id="reset-pwd-modal">
+          <div class="modal-box">
+            <span class="modal-close" onclick="closeModal('reset-pwd-modal')"><i class="fa-solid fa-xmark"></i></span>
+            <h3><i class="fa-solid fa-key"></i> Reset Password</h3>
+            <p style="color:#c4b5fd;font-size:0.83em;margin-bottom:12px" id="reset-pwd-name"></p>
+            <div class="form-group" style="margin-bottom:15px">
+              <label>New Password *</label>
+              <input type="password" id="reset-pwd-input" placeholder="Enter new password">
+            </div>
+            <button class="btn" onclick="saveResetPassword()"><i class="fa-solid fa-floppy-disk"></i> Save Password</button>
           </div>
         </div>
 

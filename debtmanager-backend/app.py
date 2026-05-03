@@ -202,14 +202,48 @@ def add_staff():
     conn.close()
     return jsonify(dict(staff)), 201
 
+@app.route('/staff/<int:staff_id>', methods=['PUT'])
+def update_staff(staff_id):
+    user = require_auth(roles=['owner'])
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+    data = request.json
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute("SELECT name FROM staff WHERE id = %s", (staff_id,))
+    s = cur.fetchone()
+    staff_name = s['name'] if s else str(staff_id)
+    if 'password' in data:
+        cur.execute(
+            "UPDATE staff SET password = %s WHERE id = %s RETURNING id, name, username, role, active",
+            (hash_password(data['password']), staff_id)
+        )
+        log_audit(cur, 'staff_password_reset', 'staff', staff_id, {'staff': staff_name}, user['id'])
+    elif 'active' in data:
+        cur.execute(
+            "UPDATE staff SET active = %s WHERE id = %s RETURNING id, name, username, role, active",
+            (data['active'], staff_id)
+        )
+        action = 'staff_activated' if data['active'] else 'staff_deactivated'
+        log_audit(cur, action, 'staff', staff_id, {'staff': staff_name}, user['id'])
+    updated = cur.fetchone()
+    conn.commit()
+    cur.close()
+    conn.close()
+    return jsonify(dict(updated))
+
 @app.route('/staff/<int:staff_id>', methods=['DELETE'])
 def delete_staff(staff_id):
     user = require_auth(roles=['owner'])
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
     conn = get_db()
-    cur = conn.cursor()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute("SELECT name FROM staff WHERE id = %s", (staff_id,))
+    s = cur.fetchone()
+    staff_name = s['name'] if s else str(staff_id)
     cur.execute("UPDATE staff SET active = FALSE WHERE id = %s", (staff_id,))
+    log_audit(cur, 'staff_deactivated', 'staff', staff_id, {'staff': staff_name}, user['id'])
     conn.commit()
     cur.close()
     conn.close()

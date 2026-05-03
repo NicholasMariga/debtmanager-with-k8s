@@ -25,6 +25,7 @@ data:
     let custSortKey = 'name', custSortDir = 1;
     let debtSortKey = 'created_at', debtSortDir = -1;
     let currentEditDebtId = null;
+    let currentResetStaffId = null;
     function isFullWO(d) { return !!d.writeoff_reason && !d.writeoff_amount; }
     function isPartialWO(d) { return !!d.writeoff_reason && !!d.writeoff_amount; }
 
@@ -1198,9 +1199,18 @@ data:
         <tr>
           <td>${s.name}</td><td>${s.username}</td>
           <td><span class="badge" style="background:rgba(167,139,250,0.2);color:#a78bfa">${s.role}</span></td>
-          <td style="color:${s.active?'#34d399':'#f87171'}">${s.active?'Active':'Inactive'}</td>
+          <td><span style="color:${s.active?'#34d399':'#f87171'};font-weight:bold">${s.active?'Active':'Inactive'}</span></td>
           <td>${fmtDate(s.created_at)}</td>
-          <td>${s.username!=='owner'?`<button class="btn btn-red btn-sm" onclick="deleteStaff(${s.id})"><i class="fa-solid fa-trash"></i></button>`:'-'}</td>
+          <td style="white-space:nowrap">
+            ${s.username!=='owner'?`
+              <button class="btn btn-sm ${s.active?'btn-red':'btn-green'}" style="margin-right:4px" onclick="toggleStaffActive(${s.id},${JSON.stringify(s.name)},${s.active})">
+                <i class="fa-solid ${s.active?'fa-lock':'fa-lock-open'}"></i> ${s.active?'Deactivate':'Activate'}
+              </button>
+              <button class="btn btn-sm" onclick="openResetPasswordModal(${s.id},${JSON.stringify(s.name)})">
+                <i class="fa-solid fa-key"></i> Reset PWD
+              </button>
+            `:'-'}
+          </td>
         </tr>`).join('');
     }
 
@@ -1218,10 +1228,26 @@ data:
       loadStaff();
     }
 
-    async function deleteStaff(id) {
-      if (!confirm('Deactivate this staff member?')) return;
-      await fetch(API+'/staff/'+id,{method:'DELETE',headers:headers()});
+    async function toggleStaffActive(id, name, isActive) {
+      const action = isActive ? 'Deactivate' : 'Activate';
+      if (!confirm(`${action} ${name}?\n\n${isActive?'They will immediately lose access to the system.':'They will regain access to the system.'}`)) return;
+      await fetch(API+'/staff/'+id, {method:'PUT', headers:headers(), body:JSON.stringify({active: !isActive})});
       loadStaff();
+    }
+
+    function openResetPasswordModal(id, name) {
+      currentResetStaffId = id;
+      document.getElementById('reset-pwd-name').textContent = `Resetting password for: ${name}`;
+      document.getElementById('reset-pwd-input').value = '';
+      document.getElementById('reset-pwd-modal').classList.add('open');
+    }
+
+    async function saveResetPassword() {
+      const pwd = document.getElementById('reset-pwd-input').value;
+      if (!pwd) return;
+      await fetch(API+'/staff/'+currentResetStaffId, {method:'PUT', headers:headers(), body:JSON.stringify({password: pwd})});
+      closeModal('reset-pwd-modal');
+      showAlert('alert-staff', 'Password reset successfully!', 'success');
     }
 
     // ── Audit Log ──
@@ -1265,7 +1291,10 @@ data:
         writeoff_undone:     {label:'Write-off Undone',     color:'#fb923c'},
         customer_archived:   {label:'Customer Archived',    color:'#f87171'},
         customer_restored:   {label:'Customer Restored',    color:'#a78bfa'},
-        credit_limit_changed:{label:'Credit Limit Changed', color:'#fbbf24'}
+        credit_limit_changed:{label:'Credit Limit Changed', color:'#fbbf24'},
+        staff_deactivated:   {label:'Staff Deactivated',   color:'#f87171'},
+        staff_activated:     {label:'Staff Activated',     color:'#34d399'},
+        staff_password_reset:{label:'Password Reset',      color:'#60a5fa'}
       };
       tbody.innerHTML = logs.map(l => {
         const meta = actionMeta[l.action] || {label: l.action, color: '#c4b5fd'};
