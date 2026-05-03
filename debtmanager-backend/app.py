@@ -350,7 +350,10 @@ def add_debt():
         (customer_id, description, total_amount, due_date, debt_date, category, notes, created_by)
     )
     debt = cur.fetchone()
-    log_audit(cur, 'debt_added', 'debt', debt['id'], {'customer_id': customer_id, 'description': description, 'amount': float(total_amount)}, created_by)
+    cur.execute('SELECT name FROM customers WHERE id = %s', (customer_id,))
+    cust_row = cur.fetchone()
+    customer_name = cust_row['name'] if cust_row else str(customer_id)
+    log_audit(cur, 'debt_added', 'debt', debt['id'], {'description': description, 'customer': customer_name, 'amount': float(total_amount)}, created_by)
     conn.commit()
     cur.close()
     conn.close()
@@ -378,10 +381,12 @@ def update_debt(debt_id):
         cur.execute("UPDATE debts SET status='paid' WHERE id=%s", (debt_id,))
     elif debt['status'] == 'paid':
         cur.execute("UPDATE debts SET status='unpaid' WHERE id=%s", (debt_id,))
-    log_audit(cur, 'debt_edited', 'debt', debt_id, {
-        'old_description': old['description'], 'old_amount': float(old['total_amount']),
-        'new_description': data.get('description'), 'new_amount': float(data.get('total_amount', 0))
-    }, user['id'])
+    changed = {}
+    if old['description'] != data.get('description'):
+        changed['description'] = f"{old['description']} -> {data.get('description')}"
+    if float(old['total_amount']) != float(data.get('total_amount', 0)):
+        changed['amount'] = f"{float(old['total_amount']):.2f} -> {float(data.get('total_amount', 0)):.2f}"
+    log_audit(cur, 'debt_edited', 'debt', debt_id, changed or {'description': data.get('description')}, user['id'])
     conn.commit()
     cur.close()
     conn.close()
