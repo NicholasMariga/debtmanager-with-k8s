@@ -466,6 +466,23 @@ data:
           </div>
         </div>
 
+        <!-- Change Role Modal -->
+        <div class="modal" id="change-role-modal">
+          <div class="modal-box">
+            <span class="modal-close" onclick="closeModal('change-role-modal')"><i class="fa-solid fa-xmark"></i></span>
+            <h3><i class="fa-solid fa-user-shield"></i> Change Role</h3>
+            <p style="color:#c4b5fd;font-size:0.83em;margin-bottom:12px" id="change-role-name"></p>
+            <div class="form-group" style="margin-bottom:15px">
+              <label>New Role *</label>
+              <select id="change-role-select">
+                <option value="cashier">Cashier</option>
+                <option value="manager">Manager</option>
+              </select>
+            </div>
+            <button class="btn" onclick="saveRoleChange()"><i class="fa-solid fa-floppy-disk"></i> Save Role</button>
+          </div>
+        </div>
+
         <!-- Reset Password Modal -->
         <div class="modal" id="reset-pwd-modal">
           <div class="modal-box">

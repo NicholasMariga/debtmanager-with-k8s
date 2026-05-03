@@ -27,6 +27,7 @@ data:
     let debtSortKey = 'created_at', debtSortDir = -1;
     let currentEditDebtId = null;
     let currentResetStaffId = null;
+    let currentChangeRoleStaffId = null;
     function isFullWO(d) { return !!d.writeoff_reason && !d.writeoff_amount; }
     function isPartialWO(d) { return !!d.writeoff_reason && !!d.writeoff_amount; }
 
@@ -1210,6 +1211,9 @@ data:
               <button class="btn btn-sm" onclick="openResetPasswordModal(${s.id})">
                 <i class="fa-solid fa-key"></i> Reset PWD
               </button>
+              <button class="btn btn-sm" style="margin-top:4px" onclick="openChangeRoleModal(${s.id})">
+                <i class="fa-solid fa-user-shield"></i> Role
+              </button>
             `:'-'}
           </td>
         </tr>`).join('');
@@ -1252,6 +1256,22 @@ data:
       await fetch(API+'/staff/'+currentResetStaffId, {method:'PUT', headers:headers(), body:JSON.stringify({password: pwd})});
       closeModal('reset-pwd-modal');
       showAlert('alert-staff', 'Password reset successfully!', 'success');
+    }
+
+    function openChangeRoleModal(id) {
+      const s = allStaffCache.find(x => x.id === id);
+      currentChangeRoleStaffId = id;
+      document.getElementById('change-role-name').textContent = s ? `${s.name} — current role: ${s.role}` : 'Staff member';
+      document.getElementById('change-role-select').value = s ? s.role : 'cashier';
+      document.getElementById('change-role-modal').classList.add('open');
+    }
+
+    async function saveRoleChange() {
+      const role = document.getElementById('change-role-select').value;
+      await fetch(API+'/staff/'+currentChangeRoleStaffId, {method:'PUT', headers:headers(), body:JSON.stringify({role})});
+      closeModal('change-role-modal');
+      showAlert('alert-staff', 'Role updated successfully!', 'success');
+      loadStaff();
     }
 
     // ── Audit Log ──
@@ -1298,7 +1318,8 @@ data:
         credit_limit_changed:{label:'Credit Limit Changed', color:'#fbbf24'},
         staff_deactivated:   {label:'Staff Deactivated',   color:'#f87171'},
         staff_activated:     {label:'Staff Activated',     color:'#34d399'},
-        staff_password_reset:{label:'Password Reset',      color:'#60a5fa'}
+        staff_password_reset:{label:'Password Reset',      color:'#60a5fa'},
+        staff_role_changed:  {label:'Role Changed',        color:'#a78bfa'}
       };
       tbody.innerHTML = logs.map(l => {
         const meta = actionMeta[l.action] || {label: l.action, color: '#c4b5fd'};
