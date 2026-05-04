@@ -1549,12 +1549,12 @@ data:
       const tbody = document.getElementById('creditors-table');
       tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#6b7280">Loading...</td></tr>';
       try {
-        const creditors = await fetch(API+'/creditors',{headers:headers()}).then(r=>r.json());
-        if (!creditors.length) {
+        allCreditors = await fetch(API+'/creditors',{headers:headers()}).then(r=>r.json());
+        if (!allCreditors.length) {
           tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#6b7280">No creditors yet. Add your first creditor.</td></tr>';
           return;
         }
-        tbody.innerHTML = creditors.map(c => {
+        tbody.innerHTML = allCreditors.map(c => {
           const tb = CREDITOR_TYPE_BADGE[c.type] || {label:c.type, color:'#c4b5fd'};
           const hasBalance = parseFloat(c.balance) > 0;
           return `<tr>
@@ -1565,7 +1565,7 @@ data:
             <td style="color:#34d399">KES ${fmt(c.total_paid)}</td>
             <td style="color:${hasBalance?'#f87171':'#34d399'};font-weight:bold">KES ${fmt(c.balance)}</td>
             <td class="action-btns">
-              <button class="btn btn-sm" onclick="openCreditorModal(${JSON.stringify(c)})"><i class="fa-solid fa-pen"></i> Edit</button>
+              <button class="btn btn-sm" onclick="openCreditorModal(allCreditors.find(x=>x.id===${c.id}))"><i class="fa-solid fa-pen"></i> Edit</button>
               ${!hasBalance ? `<button class="btn btn-sm btn-red" onclick="deleteCreditor(${c.id},'${c.name}')"><i class="fa-solid fa-trash"></i></button>` : ''}
             </td>
           </tr>`;
@@ -1616,6 +1616,7 @@ data:
     }
 
     // ── Payables ──
+    let allCreditors = [];
     let allPayables = [];
     let payablesFilter = 'all';
 
@@ -1666,8 +1667,8 @@ data:
           <td><span class="badge" style="background:${sb.bg};color:${sb.color}">${sb.label}</span></td>
           <td style="font-size:0.82em;color:#9ca3af">${p.created_by_name||'-'}</td>
           <td class="action-btns">
-            ${p.status!=='paid'?`<button class="btn btn-sm btn-green" onclick="openPayablePaymentModal(${JSON.stringify(p)})"><i class="fa-solid fa-money-bill-wave"></i> Pay</button>`:''}
-            ${p.status!=='paid'?`<button class="btn btn-sm" onclick="openPayableModal(${JSON.stringify(p)})"><i class="fa-solid fa-pen"></i></button>`:''}
+            ${p.status!=='paid'?`<button class="btn btn-sm btn-green" onclick="openPayablePaymentModal(allPayables.find(x=>x.id===${p.id}))"><i class="fa-solid fa-money-bill-wave"></i> Pay</button>`:''}
+            ${p.status!=='paid'?`<button class="btn btn-sm" onclick="openPayableModal(allPayables.find(x=>x.id===${p.id}))"><i class="fa-solid fa-pen"></i></button>`:''}
             <button class="btn btn-sm" style="background:rgba(255,255,255,0.06)" onclick="viewPaymentHistory(${p.id},'${p.description.replace(/'/g,"\\'")}')"><i class="fa-solid fa-clock-rotate-left"></i></button>
           </td>
         </tr>`;
