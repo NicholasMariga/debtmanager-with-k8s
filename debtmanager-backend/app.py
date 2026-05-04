@@ -724,6 +724,145 @@ def export_all():
         if conn:
             conn.close()
 
+# ── Import from Backup ──
+@app.route('/import', methods=['POST'])
+def import_backup():
+    user = require_auth(roles=['owner'])
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+
+    conn = None
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        summary = {'staff': 0, 'customers': 0, 'debts': 0, 'payments': 0, 'writeoffs': 0}
+
+        def sp_exec(sql, params):
+            cur.execute("SAVEPOINT sp")
+            try:
+                cur.execute(sql, params)
+                n = cur.rowcount
+                cur.execute("RELEASE SAVEPOINT sp")
+                return n
+            except Exception:
+                cur.execute("ROLLBACK TO SAVEPOINT sp")
+                return 0
+
+        # 1. Staff — password reset to username
+        for s in data.get('staff', []):
+            sid = s.get('ID')
+            if not sid or sid == 'No Data':
+                continue
+            summary['staff'] += sp_exec('''
+                INSERT INTO staff (id, name, username, password, role, active, created_at)
+                VALUES (%s,%s,%s,%s,%s,%s,%s) ON CONFLICT DO NOTHING
+            ''', (int(sid), s.get('Name',''), s.get('Username',''),
+                  hash_password(str(s.get('Username','changeme'))),
+                  s.get('Role','cashier'), str(s.get('Active','')).lower()=='yes',
+                  s.get('Joined') or datetime.now().isoformat()))
+        cur.execute("SELECT setval('staff_id_seq', COALESCE((SELECT MAX(id) FROM staff),1))")
+
+        # 2. Customers
+        for c in data.get('customers', []):
+            cid = c.get('ID')
+            if not cid or cid == 'No Data':
+                continue
+            cl = c.get('Credit Limit (KES)')
+            summary['customers'] += sp_exec('''
+                INSERT INTO customers (id, name, phone, email, note, archived, credit_limit, created_at)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s) ON CONFLICT DO NOTHING
+            ''', (int(cid), c.get('Name',''), c.get('Phone') or None,
+                  c.get('Email') or None, c.get('Note') or None,
+                  str(c.get('Archived','')).lower()=='yes',
+                  float(cl) if cl not in (None,'','No Data') else None,
+                  c.get('Created At') or datetime.now().isoformat()))
+        cur.execute("SELECT setval('customers_id_seq', COALESCE((SELECT MAX(id) FROM customers),1))")
+
+        # name → id map for customer lookups
+        cur.execute("SELECT id, name FROM customers")
+        cust_map = {name: cid for cid, name in cur.fetchall()}
+
+        # 3. Debts
+        for d in data.get('debts', []):
+            did = d.get('ID')
+            if not did or did == 'No Data':
+                continue
+            cust_id = cust_map.get(d.get('Customer'))
+            if not cust_id:
+                continue
+            summary['debts'] += sp_exec('''
+                INSERT INTO debts (id, customer_id, description, category, total_amount,
+                                   amount_paid, status, debt_date, due_date, notes, created_at)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) ON CONFLICT DO NOTHING
+            ''', (int(did), cust_id, d.get('Description',''),
+                  d.get('Category') or None,
+                  float(d.get('Total (KES)') or 0),
+                  float(d.get('Paid (KES)') or 0),
+                  d.get('Status','unpaid'),
+                  d.get('Date Taken') or None,
+                  d.get('Due Date') or None,
+                  d.get('Notes') or None,
+                  d.get('Created At') or datetime.now().isoformat()))
+        cur.execute("SELECT setval('debts_id_seq', COALESCE((SELECT MAX(id) FROM debts),1))")
+
+        # (customer_name, debt_description) → debt_id map
+        cur.execute('''
+            SELECT d.id, c.name, d.description FROM debts d
+            JOIN customers c ON d.customer_id = c.id
+        ''')
+        debt_map = {(cn, dd): did for did, cn, dd in cur.fetchall()}
+
+        # 4. Payments
+        for p in data.get('payments', []):
+            pid = p.get('ID')
+            if not pid or pid == 'No Data':
+                continue
+            debt_id = debt_map.get((p.get('Customer'), p.get('Debt Description')))
+            if not debt_id:
+                continue
+            summary['payments'] += sp_exec('''
+                INSERT INTO payments (id, debt_id, amount, note, paid_at)
+                VALUES (%s,%s,%s,%s,%s) ON CONFLICT DO NOTHING
+            ''', (int(pid), debt_id,
+                  float(p.get('Amount (KES)') or 0),
+                  p.get('Method') or None,
+                  p.get('Paid At') or datetime.now().isoformat()))
+        cur.execute("SELECT setval('payments_id_seq', COALESCE((SELECT MAX(id) FROM payments),1))")
+
+        # 5. Write-offs
+        for w in data.get('writeoffs', []):
+            wid = w.get('ID')
+            if not wid or wid == 'No Data':
+                continue
+            debt_id = debt_map.get((w.get('Customer'), w.get('Debt Description')))
+            if not debt_id:
+                continue
+            raw_amt = w.get('Amount Written Off (KES)')
+            amt = float(raw_amt) if raw_amt not in (None,'','Full','No Data') else None
+            summary['writeoffs'] += sp_exec('''
+                INSERT INTO write_offs (id, debt_id, reason, amount, written_off_at)
+                VALUES (%s,%s,%s,%s,%s) ON CONFLICT DO NOTHING
+            ''', (int(wid), debt_id, w.get('Reason',''), amt,
+                  w.get('Written Off At') or datetime.now().isoformat()))
+        cur.execute("SELECT setval('write_offs_id_seq', COALESCE((SELECT MAX(id) FROM write_offs),1))")
+
+        conn.commit()
+        cur.close()
+        return jsonify({
+            "imported": summary,
+            "warning": "Staff passwords have been reset to their username."
+        })
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if conn:
+            conn.close()
+
 if __name__ == '__main__':
     init_db()
     app.run(host='0.0.0.0', port=5000, debug=True)

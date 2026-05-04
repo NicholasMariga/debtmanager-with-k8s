@@ -1083,6 +1083,57 @@ data:
       btn.innerHTML = '<i class="fa-solid fa-download"></i> Download Backup (.xlsx)';
     }
 
+    // ── Import from Backup ──
+    async function importFromBackup() {
+      const fileInput = document.getElementById('import-file');
+      const status = document.getElementById('import-status');
+      const btn = document.getElementById('import-btn');
+      if (!fileInput.files[0]) {
+        status.style.color = '#f87171';
+        status.textContent = 'Choose an Excel backup file first.';
+        return;
+      }
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Importing...';
+      status.style.color = '#6b7280';
+      status.textContent = 'Reading file...';
+      try {
+        const ab = await fileInput.files[0].arrayBuffer();
+        const wb = XLSX.read(new Uint8Array(ab), {type: 'array'});
+        const toRows = (name) => {
+          const ws = wb.Sheets[name];
+          if (!ws) return [];
+          return XLSX.utils.sheet_to_json(ws, {defval: ''}).filter(r => r['ID'] !== '' && r['ID'] !== undefined && r['ID'] !== 'No Data');
+        };
+        const payload = {
+          customers: toRows('Customers'),
+          debts:     toRows('Debts'),
+          payments:  toRows('Payments'),
+          writeoffs: toRows('Write-offs'),
+          staff:     toRows('Staff')
+        };
+        status.textContent = 'Uploading to server...';
+        const resp = await fetch(API + '/import', {
+          method: 'POST',
+          headers: headers(),
+          body: JSON.stringify(payload)
+        });
+        if (!resp.ok) throw new Error('Server error ' + resp.status);
+        const result = await resp.json();
+        if (result.error) throw new Error(result.error);
+        const s = result.imported;
+        status.style.color = '#34d399';
+        status.textContent = 'Imported - customers:' + s.customers + ', debts:' + s.debts +
+          ', payments:' + s.payments + ', writeoffs:' + s.writeoffs + ', staff:' + s.staff +
+          (result.warning ? '  Note: ' + result.warning : '');
+      } catch(e) {
+        status.style.color = '#f87171';
+        status.textContent = 'Import failed: ' + e.message;
+      }
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-file-import"></i> Import';
+    }
+
     // ── Reports ──
     async function loadReports() {
       const [rep, debts] = await Promise.all([

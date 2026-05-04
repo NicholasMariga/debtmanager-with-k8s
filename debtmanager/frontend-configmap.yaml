@@ -318,6 +318,20 @@ data:
                   </button>
                   <span id="backup-status" style="font-size:0.82em;color:#6b7280"></span>
                 </div>
+                <hr style="border:none;border-top:1px solid rgba(255,255,255,0.08);margin:14px 0">
+                <div style="font-size:0.83em;color:#c4b5fd;margin-bottom:8px"><i class="fa-solid fa-upload"></i> Restore from Excel backup</div>
+                <p style="font-size:0.78em;color:#6b7280;margin-bottom:10px">Upload a previously downloaded backup file to restore data into a fresh database. Existing records are skipped. Staff passwords will be reset to their username.</p>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                  <input type="file" id="import-file" accept=".xlsx" style="display:none" onchange="document.getElementById('import-file-label').textContent=this.files[0]?this.files[0].name:'No file chosen'">
+                  <button class="btn btn-sm" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15)" onclick="document.getElementById('import-file').click()">
+                    <i class="fa-solid fa-folder-open"></i> Choose file
+                  </button>
+                  <span id="import-file-label" style="font-size:0.8em;color:#6b7280">No file chosen</span>
+                  <button class="btn btn-sm btn-orange" onclick="importFromBackup()" id="import-btn">
+                    <i class="fa-solid fa-file-import"></i> Import
+                  </button>
+                </div>
+                <span id="import-status" style="font-size:0.82em;display:block;margin-top:8px"></span>
               </div>
               <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
                 <button class="btn btn-yellow" onclick="exportReportExcel()"><i class="fa-solid fa-file-excel"></i> Export Full Report</button>
