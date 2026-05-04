@@ -300,13 +300,21 @@ data:
             <div class="page" id="page-reports">
               <div class="page-title"><i class="fa-solid fa-chart-bar"></i> Reports</div>
               <div class="card" style="border-color:rgba(52,211,153,0.4);background:rgba(52,211,153,0.05);margin-bottom:20px">
-                <h3 style="color:#34d399"><i class="fa-solid fa-database"></i> Full Data Backup</h3>
-                <p style="font-size:0.85em;color:#c4b5fd;margin-bottom:15px">
-                  Exports <strong style="color:white">all data</strong> — customers, debts, payments, write-offs, staff, and audit logs — into a single Excel file. Save this regularly as your local backup.
+                <h3 style="color:#34d399"><i class="fa-solid fa-database"></i> Data Backup</h3>
+                <p style="font-size:0.85em;color:#c4b5fd;margin-bottom:12px">
+                  Select the data to include, then download as a single Excel file. Save this regularly as your local backup.
                 </p>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:14px">
+                  <label class="backup-check"><input type="checkbox" id="bk-customers" checked> <i class="fa-solid fa-users"></i> Customers</label>
+                  <label class="backup-check"><input type="checkbox" id="bk-debts" checked> <i class="fa-solid fa-file-invoice-dollar"></i> Debts</label>
+                  <label class="backup-check"><input type="checkbox" id="bk-payments" checked> <i class="fa-solid fa-money-bill-wave"></i> Payments</label>
+                  <label class="backup-check"><input type="checkbox" id="bk-writeoffs" checked> <i class="fa-solid fa-ban"></i> Write-offs</label>
+                  <label class="backup-check"><input type="checkbox" id="bk-staff" checked> <i class="fa-solid fa-user-gear"></i> Staff</label>
+                  <label class="backup-check"><input type="checkbox" id="bk-audit" checked> <i class="fa-solid fa-clipboard-list"></i> Audit Log</label>
+                </div>
                 <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
                   <button class="btn btn-green" onclick="exportFullBackup()" id="backup-btn">
-                    <i class="fa-solid fa-download"></i> Download Full Backup (.xlsx)
+                    <i class="fa-solid fa-download"></i> Download Backup (.xlsx)
                   </button>
                   <span id="backup-status" style="font-size:0.82em;color:#6b7280"></span>
                 </div>

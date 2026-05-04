@@ -633,8 +633,6 @@ def export_all():
     user = require_auth(roles=['owner', 'manager'])
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
-    conn = get_db()
-    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     def serialize_row(row):
         out = {}
@@ -643,71 +641,88 @@ def export_all():
                 out[k] = float(v)
             elif hasattr(v, 'isoformat'):
                 out[k] = v.isoformat()
+            elif isinstance(v, dict) or isinstance(v, list):
+                out[k] = v
             else:
                 out[k] = v
         return out
 
-    cur.execute("SELECT * FROM customers ORDER BY name")
-    customers = [serialize_row(r) for r in cur.fetchall()]
+    conn = None
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
-    cur.execute('''
-        SELECT d.*, c.name as customer_name, c.phone as customer_phone,
-               s.name as created_by_name,
-               wo.reason as writeoff_reason, wo.amount as writeoff_amount,
-               wo.written_off_at,
-               (d.total_amount - d.amount_paid - COALESCE(wo.amount, 0)) as balance
-        FROM debts d
-        JOIN customers c ON d.customer_id = c.id
-        LEFT JOIN staff s ON d.created_by = s.id
-        LEFT JOIN write_offs wo ON d.id = wo.debt_id
-        ORDER BY d.created_at DESC
-    ''')
-    debts = [serialize_row(r) for r in cur.fetchall()]
+        cur.execute("SELECT * FROM customers ORDER BY name")
+        customers = [serialize_row(r) for r in cur.fetchall()]
 
-    cur.execute('''
-        SELECT p.*, s.name as recorded_by_name,
-               d.description as debt_description, c.name as customer_name
-        FROM payments p
-        JOIN debts d ON p.debt_id = d.id
-        JOIN customers c ON d.customer_id = c.id
-        LEFT JOIN staff s ON p.recorded_by = s.id
-        ORDER BY p.paid_at DESC
-    ''')
-    payments = [serialize_row(r) for r in cur.fetchall()]
+        cur.execute('''
+            SELECT d.id, d.customer_id, d.description, d.category, d.total_amount,
+                   d.amount_paid, d.status, d.debt_date, d.due_date, d.notes,
+                   d.created_at, c.name as customer_name, c.phone as customer_phone,
+                   s.name as created_by_name,
+                   wo.reason as writeoff_reason, wo.amount as writeoff_amount,
+                   wo.written_off_at,
+                   (d.total_amount - d.amount_paid - COALESCE(wo.amount, 0)) as balance
+            FROM debts d
+            JOIN customers c ON d.customer_id = c.id
+            LEFT JOIN staff s ON d.created_by = s.id
+            LEFT JOIN write_offs wo ON d.id = wo.debt_id
+            ORDER BY d.created_at DESC
+        ''')
+        debts = [serialize_row(r) for r in cur.fetchall()]
 
-    cur.execute('''
-        SELECT wo.*, s.name as written_off_by_name,
-               d.description as debt_description, c.name as customer_name
-        FROM write_offs wo
-        JOIN debts d ON wo.debt_id = d.id
-        JOIN customers c ON d.customer_id = c.id
-        LEFT JOIN staff s ON wo.written_off_by = s.id
-        ORDER BY wo.written_off_at DESC
-    ''')
-    writeoffs = [serialize_row(r) for r in cur.fetchall()]
+        cur.execute('''
+            SELECT p.id, p.debt_id, p.amount, p.note, p.paid_at,
+                   s.name as recorded_by_name,
+                   d.description as debt_description, c.name as customer_name
+            FROM payments p
+            JOIN debts d ON p.debt_id = d.id
+            JOIN customers c ON d.customer_id = c.id
+            LEFT JOIN staff s ON p.recorded_by = s.id
+            ORDER BY p.paid_at DESC
+        ''')
+        payments = [serialize_row(r) for r in cur.fetchall()]
 
-    cur.execute("SELECT id, name, username, role, active, created_at FROM staff ORDER BY created_at")
-    staff = [serialize_row(r) for r in cur.fetchall()]
+        cur.execute('''
+            SELECT wo.id, wo.debt_id, wo.reason, wo.amount, wo.written_off_at,
+                   s.name as written_off_by_name,
+                   d.description as debt_description, c.name as customer_name
+            FROM write_offs wo
+            JOIN debts d ON wo.debt_id = d.id
+            JOIN customers c ON d.customer_id = c.id
+            LEFT JOIN staff s ON wo.written_off_by = s.id
+            ORDER BY wo.written_off_at DESC
+        ''')
+        writeoffs = [serialize_row(r) for r in cur.fetchall()]
 
-    cur.execute('''
-        SELECT al.*, s.name as staff_name
-        FROM audit_logs al
-        LEFT JOIN staff s ON al.performed_by = s.id
-        ORDER BY al.performed_at DESC
-    ''')
-    audit = [serialize_row(r) for r in cur.fetchall()]
+        cur.execute("SELECT id, name, username, role, active, created_at FROM staff ORDER BY created_at")
+        staff = [serialize_row(r) for r in cur.fetchall()]
 
-    cur.close()
-    conn.close()
-    return jsonify({
-        "exported_at": datetime.now().isoformat(),
-        "customers": customers,
-        "debts": debts,
-        "payments": payments,
-        "writeoffs": writeoffs,
-        "staff": staff,
-        "audit_logs": audit
-    })
+        cur.execute('''
+            SELECT al.id, al.action, al.entity_type, al.entity_id, al.details,
+                   al.performed_at, s.name as staff_name
+            FROM audit_logs al
+            LEFT JOIN staff s ON al.performed_by = s.id
+            ORDER BY al.performed_at DESC
+            LIMIT 2000
+        ''')
+        audit = [serialize_row(r) for r in cur.fetchall()]
+
+        cur.close()
+        return jsonify({
+            "exported_at": datetime.now().isoformat(),
+            "customers": customers,
+            "debts": debts,
+            "payments": payments,
+            "writeoffs": writeoffs,
+            "staff": staff,
+            "audit_logs": audit
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if conn:
+            conn.close()
 
 if __name__ == '__main__':
     init_db()
