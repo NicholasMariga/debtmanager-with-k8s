@@ -299,6 +299,18 @@ data:
             <!-- REPORTS -->
             <div class="page" id="page-reports">
               <div class="page-title"><i class="fa-solid fa-chart-bar"></i> Reports</div>
+              <div class="card" style="border-color:rgba(52,211,153,0.4);background:rgba(52,211,153,0.05);margin-bottom:20px">
+                <h3 style="color:#34d399"><i class="fa-solid fa-database"></i> Full Data Backup</h3>
+                <p style="font-size:0.85em;color:#c4b5fd;margin-bottom:15px">
+                  Exports <strong style="color:white">all data</strong> — customers, debts, payments, write-offs, staff, and audit logs — into a single Excel file. Save this regularly as your local backup.
+                </p>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+                  <button class="btn btn-green" onclick="exportFullBackup()" id="backup-btn">
+                    <i class="fa-solid fa-download"></i> Download Full Backup (.xlsx)
+                  </button>
+                  <span id="backup-status" style="font-size:0.82em;color:#6b7280"></span>
+                </div>
+              </div>
               <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
                 <button class="btn btn-yellow" onclick="exportReportExcel()"><i class="fa-solid fa-file-excel"></i> Export Full Report</button>
               </div>

@@ -1004,6 +1004,41 @@ data:
       } catch(e) { console.error('Reminders error:',e); }
     }
 
+    // ── Full Backup ──
+    async function exportFullBackup() {
+      const btn = document.getElementById('backup-btn');
+      const status = document.getElementById('backup-status');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Exporting...';
+      status.textContent = '';
+      try {
+        const data = await fetch(API + '/export', { headers: headers() }).then(r => r.json());
+        if (data.error) throw new Error(data.error);
+        const wb = XLSX.utils.book_new();
+        const custRows = data.customers.map(c => ({'ID':c.id,'Name':c.name,'Phone':c.phone||'','Email':c.email||'','Credit Limit (KES)':c.credit_limit||'','Archived':c.archived?'Yes':'No','Note':c.note||'','Created At':c.created_at}));
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(custRows), 'Customers');
+        const debtRows = data.debts.map(d => ({'ID':d.id,'Customer':d.customer_name,'Phone':d.customer_phone||'','Description':d.description,'Category':d.category||'','Total (KES)':d.total_amount,'Paid (KES)':d.amount_paid,'Balance (KES)':d.balance,'Status':d.status,'Date Taken':d.debt_date||d.created_at,'Due Date':d.due_date||'','Notes':d.notes||'','Write-off Reason':d.writeoff_reason||'','Write-off Amount':d.writeoff_amount||'','Recorded By':d.created_by_name||'','Created At':d.created_at}));
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(debtRows), 'Debts');
+        const payRows = data.payments.map(p => ({'ID':p.id,'Customer':p.customer_name,'Debt Description':p.debt_description,'Amount (KES)':p.amount,'Method':p.note||'','Recorded By':p.recorded_by_name||'','Paid At':p.paid_at}));
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(payRows.length?payRows:[{'No Data':''}]), 'Payments');
+        const woRows = data.writeoffs.map(w => ({'ID':w.id,'Customer':w.customer_name,'Debt Description':w.debt_description,'Reason':w.reason,'Amount Written Off (KES)':w.amount||'Full','Written Off By':w.written_off_by_name||'','Written Off At':w.written_off_at}));
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(woRows.length?woRows:[{'No Data':''}]), 'Write-offs');
+        const staffRows = data.staff.map(s => ({'ID':s.id,'Name':s.name,'Username':s.username,'Role':s.role,'Active':s.active?'Yes':'No','Joined':s.created_at}));
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(staffRows), 'Staff');
+        const auditRows = data.audit_logs.map(l => ({'ID':l.id,'Action':l.action,'Entity Type':l.entity_type||'','Details':l.details?JSON.stringify(l.details):'','Performed By':l.staff_name||'','Performed At':l.performed_at}));
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(auditRows.length?auditRows:[{'No Data':''}]), 'Audit Log');
+        const ts = new Date().toISOString().slice(0,10);
+        XLSX.writeFile(wb, 'happywise-backup-'+ts+'.xlsx');
+        status.style.color = '#34d399';
+        status.textContent = '✓ Saved — '+data.customers.length+' customers · '+data.debts.length+' debts · '+data.payments.length+' payments';
+      } catch(e) {
+        status.style.color = '#f87171';
+        status.textContent = 'Export failed: ' + e.message;
+      }
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-download"></i> Download Full Backup (.xlsx)';
+    }
+
     // ── Reports ──
     async function loadReports() {
       const [rep, debts] = await Promise.all([
