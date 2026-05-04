@@ -89,6 +89,41 @@ def init_db():
     cur.execute("ALTER TABLE debts ADD COLUMN IF NOT EXISTS category VARCHAR(50)")
     cur.execute("ALTER TABLE debts ADD COLUMN IF NOT EXISTS notes TEXT")
     cur.execute("ALTER TABLE write_offs ADD COLUMN IF NOT EXISTS amount DECIMAL(10,2)")
+    # Payables tables
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS creditors (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(100) NOT NULL,
+            type VARCHAR(20) DEFAULT 'supplier',
+            phone VARCHAR(20),
+            email VARCHAR(100),
+            notes TEXT,
+            created_at TIMESTAMP DEFAULT NOW()
+        )
+    ''')
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS payables (
+            id SERIAL PRIMARY KEY,
+            creditor_id INTEGER REFERENCES creditors(id),
+            description VARCHAR(255) NOT NULL,
+            total_amount DECIMAL(10,2) NOT NULL,
+            amount_paid DECIMAL(10,2) DEFAULT 0,
+            status VARCHAR(20) DEFAULT 'unpaid',
+            due_date DATE,
+            created_by INTEGER REFERENCES staff(id),
+            created_at TIMESTAMP DEFAULT NOW()
+        )
+    ''')
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS payable_payments (
+            id SERIAL PRIMARY KEY,
+            payable_id INTEGER REFERENCES payables(id),
+            amount DECIMAL(10,2) NOT NULL,
+            note VARCHAR(255),
+            paid_by INTEGER REFERENCES staff(id),
+            paid_at TIMESTAMP DEFAULT NOW()
+        )
+    ''')
     # Default owner account
     cur.execute("SELECT id FROM staff WHERE username = 'owner'")
     if not cur.fetchone():
@@ -862,6 +897,207 @@ def import_backup():
     finally:
         if conn:
             conn.close()
+
+# ════════════════════════════════════════
+# ── PAYABLES MODULE ──
+# ════════════════════════════════════════
+
+@app.route('/creditors', methods=['GET'])
+def get_creditors():
+    user = require_auth()
+    if not user: return jsonify({"error": "Unauthorized"}), 401
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute('''
+        SELECT c.*,
+            COALESCE(SUM(p.total_amount), 0) as total_owed,
+            COALESCE(SUM(p.amount_paid), 0) as total_paid,
+            COALESCE(SUM(p.total_amount - p.amount_paid), 0) as balance
+        FROM creditors c
+        LEFT JOIN payables p ON c.id = p.creditor_id
+        GROUP BY c.id ORDER BY c.name
+    ''')
+    rows = cur.fetchall()
+    cur.close(); conn.close()
+    return jsonify([dict(r) for r in rows])
+
+@app.route('/creditors', methods=['POST'])
+def add_creditor():
+    user = require_auth(roles=['owner', 'manager'])
+    if not user: return jsonify({"error": "Unauthorized"}), 401
+    d = request.get_json()
+    conn = get_db(); cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute(
+        'INSERT INTO creditors (name, type, phone, email, notes) VALUES (%s,%s,%s,%s,%s) RETURNING *',
+        (d['name'], d.get('type','supplier'), d.get('phone'), d.get('email'), d.get('notes'))
+    )
+    row = cur.fetchone(); conn.commit(); cur.close(); conn.close()
+    return jsonify(dict(row)), 201
+
+@app.route('/creditors/<int:cid>', methods=['PATCH'])
+def update_creditor(cid):
+    user = require_auth(roles=['owner', 'manager'])
+    if not user: return jsonify({"error": "Unauthorized"}), 401
+    d = request.get_json()
+    conn = get_db(); cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute(
+        'UPDATE creditors SET name=%s, type=%s, phone=%s, email=%s, notes=%s WHERE id=%s RETURNING *',
+        (d['name'], d.get('type','supplier'), d.get('phone'), d.get('email'), d.get('notes'), cid)
+    )
+    row = cur.fetchone(); conn.commit(); cur.close(); conn.close()
+    return jsonify(dict(row))
+
+@app.route('/creditors/<int:cid>', methods=['DELETE'])
+def delete_creditor(cid):
+    user = require_auth(roles=['owner'])
+    if not user: return jsonify({"error": "Unauthorized"}), 401
+    conn = get_db(); cur = conn.cursor()
+    cur.execute('SELECT COUNT(*) FROM payables WHERE creditor_id=%s', (cid,))
+    if cur.fetchone()[0] > 0:
+        cur.close(); conn.close()
+        return jsonify({"error": "Cannot delete creditor with existing payables"}), 400
+    cur.execute('DELETE FROM creditors WHERE id=%s', (cid,))
+    conn.commit(); cur.close(); conn.close()
+    return jsonify({"ok": True})
+
+@app.route('/payables', methods=['GET'])
+def get_payables():
+    user = require_auth()
+    if not user: return jsonify({"error": "Unauthorized"}), 401
+    conn = get_db(); cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute('''
+        SELECT p.*, c.name as creditor_name, c.type as creditor_type,
+               s.name as created_by_name,
+               (p.total_amount - p.amount_paid) as balance
+        FROM payables p
+        JOIN creditors c ON p.creditor_id = c.id
+        LEFT JOIN staff s ON p.created_by = s.id
+        ORDER BY p.created_at DESC
+    ''')
+    rows = cur.fetchall()
+    cur.close(); conn.close()
+
+    def ser(row):
+        out = {}
+        for k, v in row.items():
+            if isinstance(v, Decimal): out[k] = float(v)
+            elif hasattr(v, 'isoformat'): out[k] = v.isoformat()
+            else: out[k] = v
+        return out
+    return jsonify([ser(r) for r in rows])
+
+@app.route('/payables', methods=['POST'])
+def add_payable():
+    user = require_auth(roles=['owner', 'manager'])
+    if not user: return jsonify({"error": "Unauthorized"}), 401
+    d = request.get_json()
+    conn = get_db(); cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute('''
+        INSERT INTO payables (creditor_id, description, total_amount, due_date, created_by)
+        VALUES (%s,%s,%s,%s,%s) RETURNING *
+    ''', (d['creditor_id'], d['description'], d['total_amount'], d.get('due_date'), user['id']))
+    row = cur.fetchone()
+    log_audit(cur, 'payable_added', 'payable', row['id'],
+              {'creditor_id': d['creditor_id'], 'amount': float(d['total_amount'])}, user['id'])
+    conn.commit(); cur.close(); conn.close()
+    return jsonify(dict(row)), 201
+
+@app.route('/payables/<int:pid>', methods=['PATCH'])
+def update_payable(pid):
+    user = require_auth(roles=['owner', 'manager'])
+    if not user: return jsonify({"error": "Unauthorized"}), 401
+    d = request.get_json()
+    conn = get_db(); cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute('''
+        UPDATE payables SET description=%s, total_amount=%s, due_date=%s
+        WHERE id=%s RETURNING *
+    ''', (d['description'], d['total_amount'], d.get('due_date'), pid))
+    row = cur.fetchone(); conn.commit(); cur.close(); conn.close()
+    return jsonify(dict(row))
+
+@app.route('/payable-payments', methods=['POST'])
+def add_payable_payment():
+    user = require_auth(roles=['owner', 'manager'])
+    if not user: return jsonify({"error": "Unauthorized"}), 401
+    d = request.get_json()
+    amount = float(d['amount'])
+    conn = get_db(); cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute('SELECT * FROM payables WHERE id=%s', (d['payable_id'],))
+    payable = cur.fetchone()
+    if not payable:
+        cur.close(); conn.close()
+        return jsonify({"error": "Payable not found"}), 404
+    cur.execute(
+        'INSERT INTO payable_payments (payable_id, amount, note, paid_by) VALUES (%s,%s,%s,%s) RETURNING *',
+        (d['payable_id'], amount, d.get('note'), user['id'])
+    )
+    payment = cur.fetchone()
+    new_paid = float(payable['amount_paid']) + amount
+    new_total = float(payable['total_amount'])
+    new_status = 'paid' if new_paid >= new_total else 'partial'
+    cur.execute('UPDATE payables SET amount_paid=%s, status=%s WHERE id=%s',
+                (new_paid, new_status, d['payable_id']))
+    log_audit(cur, 'payable_payment', 'payable', d['payable_id'],
+              {'amount': amount, 'note': d.get('note')}, user['id'])
+    conn.commit(); cur.close(); conn.close()
+    return jsonify(dict(payment)), 201
+
+@app.route('/payable-payments/<int:pid>', methods=['GET'])
+def get_payable_payments(pid):
+    user = require_auth()
+    if not user: return jsonify({"error": "Unauthorized"}), 401
+    conn = get_db(); cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute('''
+        SELECT pp.*, s.name as paid_by_name
+        FROM payable_payments pp
+        LEFT JOIN staff s ON pp.paid_by = s.id
+        WHERE pp.payable_id=%s ORDER BY pp.paid_at DESC
+    ''', (pid,))
+    rows = cur.fetchall()
+    cur.close(); conn.close()
+
+    def ser(row):
+        out = {}
+        for k, v in row.items():
+            if isinstance(v, Decimal): out[k] = float(v)
+            elif hasattr(v, 'isoformat'): out[k] = v.isoformat()
+            else: out[k] = v
+        return out
+    return jsonify([ser(r) for r in rows])
+
+@app.route('/payables/summary', methods=['GET'])
+def payables_summary():
+    user = require_auth()
+    if not user: return jsonify({"error": "Unauthorized"}), 401
+    conn = get_db(); cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute('''
+        SELECT c.type,
+               COUNT(p.id) as count,
+               COALESCE(SUM(p.total_amount), 0) as total_owed,
+               COALESCE(SUM(p.amount_paid), 0) as total_paid,
+               COALESCE(SUM(p.total_amount - p.amount_paid), 0) as balance,
+               COUNT(CASE WHEN p.due_date < NOW() AND p.status != 'paid' THEN 1 END) as overdue
+        FROM creditors c
+        LEFT JOIN payables p ON c.id = p.creditor_id
+        GROUP BY c.type
+    ''')
+    rows = cur.fetchall()
+    cur.execute('''
+        SELECT COALESCE(SUM(total_amount - amount_paid), 0) as total_balance,
+               COUNT(CASE WHEN due_date < NOW() AND status != 'paid' THEN 1 END) as total_overdue
+        FROM payables
+    ''')
+    totals = cur.fetchone()
+    cur.close(); conn.close()
+
+    def ser(row):
+        out = {}
+        for k, v in row.items():
+            if isinstance(v, Decimal): out[k] = float(v)
+            elif hasattr(v, 'isoformat'): out[k] = v.isoformat()
+            else: out[k] = v
+        return out
+    return jsonify({"by_type": [ser(r) for r in rows], "totals": ser(totals)})
 
 if __name__ == '__main__':
     init_db()
