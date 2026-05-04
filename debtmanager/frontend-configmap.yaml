@@ -104,7 +104,7 @@ data:
             <div class="nav-item nav-audit" onclick="showPage('audit', event)">
               <i class="fa-solid fa-clipboard-list"></i> Audit Log
             </div>
-            <div class="nav-section">Payables</div>
+            <div class="nav-section nav-payables-section">Payables</div>
             <div class="nav-item nav-creditors" onclick="showPage('creditors', event)">
               <i class="fa-solid fa-truck-ramp-box"></i> Creditors
             </div>
@@ -144,7 +144,7 @@ data:
                 <div class="stat-card" style="cursor:pointer" onclick="showPage('customers',event)"><i class="fa-solid fa-credit-card" style="color:#f87171"></i><div class="stat-value" id="stat-overlimit" style="color:#f87171">-</div><div class="stat-label">Credit Limit Reached</div></div>
               </div>
               <!-- Payables Summary -->
-              <div class="card" style="border-color:rgba(251,146,60,0.3);background:rgba(251,146,60,0.04);margin-bottom:20px">
+              <div class="card dashboard-payables-card" style="border-color:rgba(251,146,60,0.3);background:rgba(251,146,60,0.04);margin-bottom:20px">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
                   <h3 style="margin:0;color:#fb923c"><i class="fa-solid fa-file-invoice"></i> What We Owe</h3>
                   <button class="btn btn-sm btn-orange" onclick="showPage('payables',event)"><i class="fa-solid fa-arrow-right"></i> View Payables</button>

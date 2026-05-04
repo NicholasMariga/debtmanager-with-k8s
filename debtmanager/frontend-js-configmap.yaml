@@ -78,6 +78,10 @@ data:
       document.querySelectorAll('.nav-staff').forEach(el => el.classList.toggle('hidden', !isOwner));
       document.querySelectorAll('.nav-audit').forEach(el => el.classList.toggle('hidden', !isMO));
       document.querySelectorAll('.nav-audit-staff').forEach(el => el.classList.toggle('hidden', !isOwner));
+      document.querySelectorAll('.nav-payables-section').forEach(el => el.classList.toggle('hidden', !isMO));
+      document.querySelectorAll('.nav-creditors').forEach(el => el.classList.toggle('hidden', !isMO));
+      document.querySelectorAll('.nav-payables').forEach(el => el.classList.toggle('hidden', !isMO));
+      document.querySelectorAll('.dashboard-payables-card').forEach(el => el.classList.toggle('hidden', !isMO));
       loadDashboard();
     }
 
@@ -97,8 +101,9 @@ data:
       if (page==='aging') loadAging();
       if (page==='staff') loadStaff();
       if (page==='audit') loadAuditLog();
-      if (page==='creditors') loadCreditors();
-      if (page==='payables') loadPayables();
+      const isMO = currentUser && ['owner','manager'].includes(currentUser.role);
+      if (page==='creditors') { if (isMO) loadCreditors(); else showPage('dashboard'); }
+      if (page==='payables')  { if (isMO) loadPayables();  else showPage('dashboard'); }
     }
 
     function setDashFilter(f) {
@@ -308,11 +313,12 @@ data:
     // ── Dashboard ──
     async function loadDashboard() {
       try {
+        const isMO = currentUser && ['owner','manager'].includes(currentUser.role);
         const [rep, debts, customers, paySum] = await Promise.all([
           fetch(API+'/reports',{headers:headers()}).then(r=>r.json()),
           fetch(API+'/debts',{headers:headers()}).then(r=>r.json()),
           fetch(API+'/customers',{headers:headers()}).then(r=>r.json()),
-          fetch(API+'/payables/summary',{headers:headers()}).then(r=>r.json()).catch(()=>null)
+          isMO ? fetch(API+'/payables/summary',{headers:headers()}).then(r=>r.json()).catch(()=>null) : Promise.resolve(null)
         ]);
         if (paySum && paySum.totals) {
           const t = paySum.totals;
