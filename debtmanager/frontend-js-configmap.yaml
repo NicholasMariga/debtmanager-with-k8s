@@ -1068,9 +1068,13 @@ data:
           counts.push('audit:'+arr.length);
         }
         const ts = new Date().toISOString().slice(0,10);
-        XLSX.writeFile(wb, 'happywise-backup-'+ts+'.xlsx');
+        const selectedNames = Object.entries(sel).filter(([,v])=>v).map(([k])=>k);
+        const filePart = selectedNames.length === 6 ? 'full'
+                       : selectedNames.length <= 3 ? selectedNames.join('-')
+                       : selectedNames.slice(0,2).join('-')+'-more';
+        XLSX.writeFile(wb, 'happywise-backup-'+filePart+'-'+ts+'.xlsx');
         status.style.color = '#34d399';
-        status.textContent = '✓ Saved — ' + counts.join(' · ');
+        status.textContent = 'Saved: ' + counts.join(', ');
       } catch(e) {
         status.style.color = '#f87171';
         status.textContent = 'Export failed: ' + e.message;
