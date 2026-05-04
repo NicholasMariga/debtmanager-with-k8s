@@ -98,6 +98,7 @@ data:
       if (page==='staff') loadStaff();
       if (page==='audit') loadAuditLog();
       if (page==='creditors') loadCreditors();
+      if (page==='payables') loadPayables();
     }
 
     function setDashFilter(f) {
@@ -1539,5 +1540,99 @@ data:
         const data = await resp.json();
         if (data.error) throw new Error(data.error);
         loadCreditors();
+      } catch(e) { alert('Error: ' + e.message); }
+    }
+
+    // ── Payables ──
+    let allPayables = [];
+    let payablesFilter = 'all';
+
+    const STATUS_BADGE = {
+      unpaid:  {label:'Unpaid',  color:'#f87171', bg:'rgba(248,113,113,0.15)'},
+      partial: {label:'Partial', color:'#fbbf24', bg:'rgba(251,191,36,0.15)'},
+      paid:    {label:'Paid',    color:'#34d399', bg:'rgba(52,211,153,0.15)'}
+    };
+
+    async function loadPayables() {
+      const tbody = document.getElementById('payables-table');
+      tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#6b7280">Loading...</td></tr>';
+      try {
+        allPayables = await fetch(API+'/payables',{headers:headers()}).then(r=>r.json());
+        renderPayables();
+      } catch(e) { tbody.innerHTML = `<tr><td colspan="10" style="color:#f87171">${e.message}</td></tr>`; }
+    }
+
+    function filterPayables(status) {
+      payablesFilter = status;
+      ['all','unpaid','partial','paid'].forEach(s => {
+        document.getElementById('pf-'+s).classList.toggle('active', s===status);
+      });
+      renderPayables();
+    }
+
+    function renderPayables() {
+      const tbody = document.getElementById('payables-table');
+      const rows = payablesFilter === 'all' ? allPayables : allPayables.filter(p => p.status === payablesFilter);
+      if (!rows.length) {
+        tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:#6b7280">No payables${payablesFilter!=='all'?' with status: '+payablesFilter:''}.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = rows.map(p => {
+        const tb  = CREDITOR_TYPE_BADGE[p.creditor_type] || {label:p.creditor_type, color:'#c4b5fd'};
+        const sb  = STATUS_BADGE[p.status] || {label:p.status, color:'#c4b5fd', bg:'rgba(100,100,100,0.2)'};
+        const bal = parseFloat(p.balance||0);
+        const due = p.due_date ? p.due_date.slice(0,10) : '-';
+        const overdue = p.due_date && new Date(p.due_date) < new Date() && p.status !== 'paid';
+        return `<tr${p.status==='paid' ? ' style="opacity:0.6"' : ''}>
+          <td><strong>${p.creditor_name}</strong></td>
+          <td><span class="badge" style="background:rgba(100,100,100,0.2);color:${tb.color}">${tb.label}</span></td>
+          <td>${p.description}</td>
+          <td style="color:#c4b5fd">KES ${fmt(p.total_amount)}</td>
+          <td style="color:#34d399">KES ${fmt(p.amount_paid)}</td>
+          <td style="color:${bal>0?'#f87171':'#34d399'};font-weight:bold">KES ${fmt(bal)}</td>
+          <td style="color:${overdue?'#f87171':'#9ca3af'}">${due}${overdue?' <i class="fa-solid fa-circle-exclamation"></i>':''}</td>
+          <td><span class="badge" style="background:${sb.bg};color:${sb.color}">${sb.label}</span></td>
+          <td style="font-size:0.82em;color:#9ca3af">${p.created_by_name||'-'}</td>
+          <td class="action-btns">
+            ${p.status!=='paid'?`<button class="btn btn-sm" onclick="openPayableModal(${JSON.stringify(p)})"><i class="fa-solid fa-pen"></i></button>`:''}
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    async function loadCreditorDropdown() {
+      const sel = document.getElementById('payable-creditor');
+      const creditors = await fetch(API+'/creditors',{headers:headers()}).then(r=>r.json());
+      sel.innerHTML = creditors.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+    }
+
+    async function openPayableModal(p) {
+      await loadCreditorDropdown();
+      document.getElementById('payable-id').value = p ? p.id : '';
+      document.getElementById('payable-modal-title').textContent = p ? 'Edit Payable' : 'Add Payable';
+      document.getElementById('payable-creditor').value = p ? p.creditor_id : '';
+      document.getElementById('payable-desc').value = p ? p.description : '';
+      document.getElementById('payable-amount').value = p ? p.total_amount : '';
+      document.getElementById('payable-due').value = p && p.due_date ? p.due_date.slice(0,10) : '';
+      openModal('payable-modal');
+    }
+
+    async function savePayable() {
+      const id = document.getElementById('payable-id').value;
+      const payload = {
+        creditor_id:  parseInt(document.getElementById('payable-creditor').value),
+        description:  document.getElementById('payable-desc').value.trim(),
+        total_amount: parseFloat(document.getElementById('payable-amount').value),
+        due_date:     document.getElementById('payable-due').value || null
+      };
+      if (!payload.description || !payload.total_amount) { alert('Description and amount are required'); return; }
+      const url    = id ? `${API}/payables/${id}` : `${API}/payables`;
+      const method = id ? 'PATCH' : 'POST';
+      try {
+        const resp = await fetch(url, {method, headers:headers(), body:JSON.stringify(payload)});
+        const data = await resp.json();
+        if (data.error) throw new Error(data.error);
+        closeModal('payable-modal');
+        loadPayables();
       } catch(e) { alert('Error: ' + e.message); }
     }

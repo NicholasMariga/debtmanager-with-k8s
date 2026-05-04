@@ -108,6 +108,9 @@ data:
             <div class="nav-item nav-creditors" onclick="showPage('creditors', event)">
               <i class="fa-solid fa-truck-ramp-box"></i> Creditors
             </div>
+            <div class="nav-item nav-payables" onclick="showPage('payables', event)">
+              <i class="fa-solid fa-file-invoice"></i> Payables
+            </div>
           </div>
 
           <div class="main">
@@ -451,6 +454,53 @@ data:
               </div>
             </div>
 
+          </div>
+        </div>
+
+            <!-- PAYABLES -->
+            <div class="page" id="page-payables">
+              <div class="page-title"><i class="fa-solid fa-file-invoice"></i> Payables</div>
+              <div class="card">
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+                  <h3 style="margin:0"><i class="fa-solid fa-money-bill-transfer"></i> What We Owe</h3>
+                  <button class="btn btn-green" onclick="openPayableModal()"><i class="fa-solid fa-plus"></i> Add Payable</button>
+                </div>
+                <div class="search-bar" style="margin-bottom:14px">
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                    <span style="font-size:0.82em;color:#c4b5fd"><i class="fa-solid fa-filter"></i> Status:</span>
+                    <button class="btn btn-sm active" id="pf-all"      onclick="filterPayables('all')">All</button>
+                    <button class="btn btn-sm"        id="pf-unpaid"   onclick="filterPayables('unpaid')">Unpaid</button>
+                    <button class="btn btn-sm"        id="pf-partial"  onclick="filterPayables('partial')">Partial</button>
+                    <button class="btn btn-sm"        id="pf-paid"     onclick="filterPayables('paid')">Paid</button>
+                  </div>
+                </div>
+                <div style="overflow-x:auto">
+                  <table>
+                    <thead><tr><th>Creditor</th><th>Type</th><th>Description</th><th>Total (KES)</th><th>Paid (KES)</th><th>Balance (KES)</th><th>Due Date</th><th>Status</th><th>Recorded By</th><th>Actions</th></tr></thead>
+                    <tbody id="payables-table"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+        <!-- Creditor Modal -->
+        <!-- Payable Modal -->
+        <div class="modal" id="payable-modal">
+          <div class="modal-box">
+            <span class="modal-close" onclick="closeModal('payable-modal')"><i class="fa-solid fa-xmark"></i></span>
+            <h3 id="payable-modal-title">Add Payable</h3>
+            <input type="hidden" id="payable-id">
+            <div class="form-row">
+              <div class="form-group"><label>Creditor *</label>
+                <select id="payable-creditor"></select>
+              </div>
+              <div class="form-group"><label>Description *</label><input type="text" id="payable-desc" placeholder="e.g. Maize flour — May batch"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Total Amount (KES) *</label><input type="number" id="payable-amount" min="0" step="0.01"></div>
+              <div class="form-group"><label>Due Date</label><input type="date" id="payable-due"></div>
+            </div>
+            <button class="btn btn-green" onclick="savePayable()" style="width:100%;margin-top:8px"><i class="fa-solid fa-save"></i> Save</button>
           </div>
         </div>
 
