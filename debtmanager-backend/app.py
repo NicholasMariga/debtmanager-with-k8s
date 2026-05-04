@@ -743,6 +743,33 @@ def export_all():
         ''')
         audit = [serialize_row(r) for r in cur.fetchall()]
 
+        cur.execute("SELECT * FROM creditors ORDER BY name")
+        creditors = [serialize_row(r) for r in cur.fetchall()]
+
+        cur.execute('''
+            SELECT p.id, p.creditor_id, p.description, p.total_amount, p.amount_paid,
+                   p.status, p.due_date, p.created_at,
+                   c.name as creditor_name, s.name as created_by_name,
+                   (p.total_amount - p.amount_paid) as balance
+            FROM payables p
+            JOIN creditors c ON p.creditor_id = c.id
+            LEFT JOIN staff s ON p.created_by = s.id
+            ORDER BY p.created_at DESC
+        ''')
+        payables_exp = [serialize_row(r) for r in cur.fetchall()]
+
+        cur.execute('''
+            SELECT pp.id, pp.payable_id, pp.amount, pp.note, pp.paid_at,
+                   p.description as payable_description,
+                   c.name as creditor_name, s.name as paid_by_name
+            FROM payable_payments pp
+            JOIN payables p ON pp.payable_id = p.id
+            JOIN creditors c ON p.creditor_id = c.id
+            LEFT JOIN staff s ON pp.paid_by = s.id
+            ORDER BY pp.paid_at DESC
+        ''')
+        payable_payments_exp = [serialize_row(r) for r in cur.fetchall()]
+
         cur.close()
         return jsonify({
             "exported_at": datetime.now().isoformat(),
@@ -751,7 +778,10 @@ def export_all():
             "payments": payments,
             "writeoffs": writeoffs,
             "staff": staff,
-            "audit_logs": audit
+            "audit_logs": audit,
+            "creditors": creditors,
+            "payables": payables_exp,
+            "payable_payments": payable_payments_exp
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -773,7 +803,8 @@ def import_backup():
     try:
         conn = get_db()
         cur = conn.cursor()
-        summary = {'staff': 0, 'customers': 0, 'debts': 0, 'payments': 0, 'writeoffs': 0}
+        summary = {'staff': 0, 'customers': 0, 'debts': 0, 'payments': 0, 'writeoffs': 0,
+                   'creditors': 0, 'payables': 0, 'payable_payments': 0}
 
         def sp_exec(sql, params):
             cur.execute("SAVEPOINT sp")
@@ -883,6 +914,68 @@ def import_backup():
             ''', (int(wid), debt_id, w.get('Reason',''), amt,
                   w.get('Written Off At') or datetime.now().isoformat()))
         cur.execute("SELECT setval('write_offs_id_seq', COALESCE((SELECT MAX(id) FROM write_offs),1))")
+
+        # 6. Creditors
+        for c in data.get('creditors', []):
+            crid = c.get('ID')
+            if not crid or crid == 'No Data':
+                continue
+            summary['creditors'] += sp_exec('''
+                INSERT INTO creditors (id, name, type, phone, email, notes, created_at)
+                VALUES (%s,%s,%s,%s,%s,%s,%s) ON CONFLICT DO NOTHING
+            ''', (int(crid), c.get('Name', ''), c.get('Type', 'supplier'),
+                  c.get('Phone') or None, c.get('Email') or None,
+                  c.get('Notes') or None,
+                  c.get('Created At') or datetime.now().isoformat()))
+        cur.execute("SELECT setval('creditors_id_seq', COALESCE((SELECT MAX(id) FROM creditors),1))")
+
+        # creditor name → id map
+        cur.execute("SELECT id, name FROM creditors")
+        cred_map = {name: cid for cid, name in cur.fetchall()}
+
+        # 7. Payables
+        for p in data.get('payables', []):
+            pvid = p.get('ID')
+            if not pvid or pvid == 'No Data':
+                continue
+            cred_id = cred_map.get(p.get('Creditor'))
+            if not cred_id:
+                continue
+            summary['payables'] += sp_exec('''
+                INSERT INTO payables (id, creditor_id, description, total_amount, amount_paid,
+                                      status, due_date, created_at)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s) ON CONFLICT DO NOTHING
+            ''', (int(pvid), cred_id, p.get('Description', ''),
+                  float(p.get('Total (KES)') or 0),
+                  float(p.get('Paid (KES)') or 0),
+                  p.get('Status', 'unpaid'),
+                  p.get('Due Date') or None,
+                  p.get('Created At') or datetime.now().isoformat()))
+        cur.execute("SELECT setval('payables_id_seq', COALESCE((SELECT MAX(id) FROM payables),1))")
+
+        # (creditor_name, description) → payable_id map
+        cur.execute('''
+            SELECT p.id, c.name, p.description FROM payables p
+            JOIN creditors c ON p.creditor_id = c.id
+        ''')
+        pay_map = {(cn, desc): pid for pid, cn, desc in cur.fetchall()}
+
+        # 8. Payable payments
+        for pp in data.get('payable_payments', []):
+            ppid = pp.get('ID')
+            if not ppid or ppid == 'No Data':
+                continue
+            pay_id = pay_map.get((pp.get('Creditor'), pp.get('Payable Description')))
+            if not pay_id:
+                continue
+            summary['payable_payments'] += sp_exec('''
+                INSERT INTO payable_payments (id, payable_id, amount, note, paid_at)
+                VALUES (%s,%s,%s,%s,%s) ON CONFLICT DO NOTHING
+            ''', (int(ppid), pay_id,
+                  float(pp.get('Amount (KES)') or 0),
+                  pp.get('Note') or None,
+                  pp.get('Paid At') or datetime.now().isoformat()))
+        cur.execute("SELECT setval('payable_payments_id_seq', COALESCE((SELECT MAX(id) FROM payable_payments),1))")
 
         conn.commit()
         cur.close()

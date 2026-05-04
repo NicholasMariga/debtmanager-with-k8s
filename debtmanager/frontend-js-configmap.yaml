@@ -1081,6 +1081,25 @@ data:
           XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(auditRows.length?auditRows:[{'No Data':''}]), 'Audit Log');
           counts.push('audit:'+arr.length);
         }
+        // Payables module — always appended when data exists
+        const crArr = Array.isArray(data.creditors) ? data.creditors : [];
+        if (crArr.length) {
+          const crRows = crArr.map(c => ({'ID':c.id,'Name':c.name,'Type':c.type||'supplier','Phone':c.phone||'','Email':c.email||'','Notes':c.notes||'','Created At':c.created_at}));
+          XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(crRows), 'Creditors');
+          counts.push('creditors:'+crArr.length);
+        }
+        const pvArr = Array.isArray(data.payables) ? data.payables : [];
+        if (pvArr.length) {
+          const pvRows = pvArr.map(p => ({'ID':p.id,'Creditor':p.creditor_name,'Description':p.description,'Total (KES)':p.total_amount,'Paid (KES)':p.amount_paid,'Balance (KES)':p.balance,'Status':p.status,'Due Date':p.due_date||'','Created By':p.created_by_name||'','Created At':p.created_at}));
+          XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(pvRows), 'Payables');
+          counts.push('payables:'+pvArr.length);
+        }
+        const ppArr = Array.isArray(data.payable_payments) ? data.payable_payments : [];
+        if (ppArr.length) {
+          const ppRows = ppArr.map(p => ({'ID':p.id,'Creditor':p.creditor_name,'Payable Description':p.payable_description,'Amount (KES)':p.amount,'Note':p.note||'','Paid By':p.paid_by_name||'','Paid At':p.paid_at}));
+          XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(ppRows), 'Payable Payments');
+          counts.push('payable-pmts:'+ppArr.length);
+        }
         const ts = new Date().toISOString().slice(0,10);
         const selectedNames = Object.entries(sel).filter(([,v])=>v).map(([k])=>k);
         const filePart = selectedNames.length === 6 ? 'full'
@@ -1120,11 +1139,14 @@ data:
           return XLSX.utils.sheet_to_json(ws, {defval: ''}).filter(r => r['ID'] !== '' && r['ID'] !== undefined && r['ID'] !== 'No Data');
         };
         const payload = {
-          customers: toRows('Customers'),
-          debts:     toRows('Debts'),
-          payments:  toRows('Payments'),
-          writeoffs: toRows('Write-offs'),
-          staff:     toRows('Staff')
+          customers:        toRows('Customers'),
+          debts:            toRows('Debts'),
+          payments:         toRows('Payments'),
+          writeoffs:        toRows('Write-offs'),
+          staff:            toRows('Staff'),
+          creditors:        toRows('Creditors'),
+          payables:         toRows('Payables'),
+          payable_payments: toRows('Payable Payments')
         };
         status.textContent = 'Uploading to server...';
         const resp = await fetch(API + '/import', {
@@ -1139,6 +1161,8 @@ data:
         status.style.color = '#34d399';
         status.textContent = 'Imported - customers:' + s.customers + ', debts:' + s.debts +
           ', payments:' + s.payments + ', writeoffs:' + s.writeoffs + ', staff:' + s.staff +
+          ', creditors:' + (s.creditors||0) + ', payables:' + (s.payables||0) +
+          ', payable-pmts:' + (s.payable_payments||0) +
           (result.warning ? '  Note: ' + result.warning : '');
       } catch(e) {
         status.style.color = '#f87171';
