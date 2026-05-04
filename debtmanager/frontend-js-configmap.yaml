@@ -307,11 +307,23 @@ data:
     // ── Dashboard ──
     async function loadDashboard() {
       try {
-        const [rep, debts, customers] = await Promise.all([
+        const [rep, debts, customers, paySum] = await Promise.all([
           fetch(API+'/reports',{headers:headers()}).then(r=>r.json()),
           fetch(API+'/debts',{headers:headers()}).then(r=>r.json()),
-          fetch(API+'/customers',{headers:headers()}).then(r=>r.json())
+          fetch(API+'/customers',{headers:headers()}).then(r=>r.json()),
+          fetch(API+'/payables/summary',{headers:headers()}).then(r=>r.json()).catch(()=>null)
         ]);
+        if (paySum && paySum.totals) {
+          const t = paySum.totals;
+          document.getElementById('pay-stat-total').textContent   = fmt(t.total_balance||0);
+          document.getElementById('pay-stat-overdue').textContent = t.total_overdue||0;
+          const byType = {};
+          (paySum.by_type||[]).forEach(r => { byType[r.type] = r; });
+          document.getElementById('pay-stat-supplier').textContent   = fmt((byType.supplier||{}).balance||0);
+          document.getElementById('pay-stat-wholesaler').textContent = fmt((byType.wholesaler||{}).balance||0);
+          document.getElementById('pay-stat-delivery').textContent   = fmt((byType.delivery||{}).balance||0);
+          document.getElementById('pay-stat-internal').textContent   = fmt((byType.internal||{}).balance||0);
+        }
         allDebtsCache = debts;
         allCustomersCache = customers;
 

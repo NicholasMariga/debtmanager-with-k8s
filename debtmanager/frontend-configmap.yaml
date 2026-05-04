@@ -143,6 +143,46 @@ data:
                 <div class="stat-card"><i class="fa-solid fa-percent" style="color:#34d399"></i><div class="stat-value" id="stat-collrate" style="color:#34d399">-</div><div class="stat-label">Collection Rate</div></div>
                 <div class="stat-card" style="cursor:pointer" onclick="showPage('customers',event)"><i class="fa-solid fa-credit-card" style="color:#f87171"></i><div class="stat-value" id="stat-overlimit" style="color:#f87171">-</div><div class="stat-label">Credit Limit Reached</div></div>
               </div>
+              <!-- Payables Summary -->
+              <div class="card" style="border-color:rgba(251,146,60,0.3);background:rgba(251,146,60,0.04);margin-bottom:20px">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+                  <h3 style="margin:0;color:#fb923c"><i class="fa-solid fa-file-invoice"></i> What We Owe</h3>
+                  <button class="btn btn-sm btn-orange" onclick="showPage('payables',event)"><i class="fa-solid fa-arrow-right"></i> View Payables</button>
+                </div>
+                <div class="stats" style="margin-bottom:0">
+                  <div class="stat-card" style="border-color:rgba(251,146,60,0.2)">
+                    <i class="fa-solid fa-money-bill-transfer" style="color:#fb923c"></i>
+                    <div class="stat-value" id="pay-stat-total" style="color:#fb923c">-</div>
+                    <div class="stat-label">Total Owed (KES)</div>
+                  </div>
+                  <div class="stat-card" style="border-color:rgba(248,113,113,0.2)">
+                    <i class="fa-solid fa-circle-exclamation" style="color:#f87171"></i>
+                    <div class="stat-value" id="pay-stat-overdue" style="color:#f87171">-</div>
+                    <div class="stat-label">Overdue Payables</div>
+                  </div>
+                  <div class="stat-card" style="border-color:rgba(96,165,250,0.2)">
+                    <i class="fa-solid fa-boxes-stacked" style="color:#60a5fa"></i>
+                    <div class="stat-value" id="pay-stat-supplier" style="color:#60a5fa">-</div>
+                    <div class="stat-label">Suppliers (KES)</div>
+                  </div>
+                  <div class="stat-card" style="border-color:rgba(167,139,250,0.2)">
+                    <i class="fa-solid fa-warehouse" style="color:#a78bfa"></i>
+                    <div class="stat-value" id="pay-stat-wholesaler" style="color:#a78bfa">-</div>
+                    <div class="stat-label">Wholesalers (KES)</div>
+                  </div>
+                  <div class="stat-card" style="border-color:rgba(251,191,36,0.2)">
+                    <i class="fa-solid fa-truck" style="color:#fbbf24"></i>
+                    <div class="stat-value" id="pay-stat-delivery" style="color:#fbbf24">-</div>
+                    <div class="stat-label">Delivery (KES)</div>
+                  </div>
+                  <div class="stat-card" style="border-color:rgba(52,211,153,0.2)">
+                    <i class="fa-solid fa-user-tie" style="color:#34d399"></i>
+                    <div class="stat-value" id="pay-stat-internal" style="color:#34d399">-</div>
+                    <div class="stat-label">Internal (KES)</div>
+                  </div>
+                </div>
+              </div>
+
               <div class="charts-row">
                 <div class="chart-card">
                   <h4><i class="fa-solid fa-chart-bar"></i> Collected vs Outstanding (KES)</h4>
