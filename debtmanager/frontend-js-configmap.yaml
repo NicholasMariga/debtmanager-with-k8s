@@ -1150,9 +1150,11 @@ data:
 
     // ── Reports ──
     async function loadReports() {
-      const [rep, debts] = await Promise.all([
+      const [rep, debts, paySum, payables] = await Promise.all([
         fetch(API+'/reports',{headers:headers()}).then(r=>r.json()),
-        fetch(API+'/debts',{headers:headers()}).then(r=>r.json())
+        fetch(API+'/debts',{headers:headers()}).then(r=>r.json()),
+        fetch(API+'/payables/summary',{headers:headers()}).then(r=>r.json()).catch(()=>({by_type:[],totals:{total_balance:0,total_overdue:0}})),
+        fetch(API+'/payables',{headers:headers()}).then(r=>r.json()).catch(()=>[])
       ]);
       const woDebts = debts.filter(d => !!d.writeoff_reason);
       const woBalance = woDebts.reduce((s,d)=>s+parseFloat(d.balance),0);
@@ -1170,6 +1172,39 @@ data:
       document.getElementById('rep-overdue').textContent=rep.overdue_debts;
       document.getElementById('rep-writeoff').textContent=fmt(woBalance);
       document.getElementById('rep-collrate').textContent=collRate+'%';
+
+      // Net Position
+      const netPayable = parseFloat(paySum.totals?.total_balance||0);
+      const netReceivable = adjOutstanding;
+      const netResult = netReceivable - netPayable;
+      document.getElementById('net-receivable').textContent='KES '+fmt(netReceivable);
+      document.getElementById('net-payable').textContent='KES '+fmt(netPayable);
+      const netEl=document.getElementById('net-result');
+      const netCard=document.getElementById('net-result-card');
+      netEl.textContent='KES '+fmt(Math.abs(netResult));
+      if (netResult>=0) { netEl.style.color='#34d399'; if(netCard){netCard.style.background='rgba(52,211,153,0.08)';netCard.style.borderColor='rgba(52,211,153,0.2)';} }
+      else { netEl.style.color='#f87171'; if(netCard){netCard.style.background='rgba(248,113,113,0.08)';netCard.style.borderColor='rgba(248,113,113,0.2)';} }
+
+      // Overdue Payables
+      const today=new Date(); today.setHours(0,0,0,0);
+      const overdue=Array.isArray(payables)?payables.filter(p=>p.status!=='paid'&&p.due_date&&new Date(p.due_date)<today):[];
+      overdue.sort((a,b)=>new Date(a.due_date)-new Date(b.due_date));
+      const overdueCountEl=document.getElementById('overdue-payables-count');
+      const overdueListEl=document.getElementById('overdue-payables-list');
+      if(overdueCountEl) overdueCountEl.textContent=overdue.length?'('+overdue.length+')':'';
+      if(overdueListEl){
+        if(!overdue.length){overdueListEl.innerHTML='<p style="color:#94a3b8;text-align:center;padding:16px">No overdue payables - all clear!</p>';}
+        else{
+          overdueListEl.innerHTML='<table class="data-table"><thead><tr><th>Creditor</th><th>Description</th><th>Balance (KES)</th><th>Due Date</th><th>Days Overdue</th></tr></thead><tbody>'+
+            overdue.map(p=>{
+              const due=new Date(p.due_date);
+              const days=Math.floor((today-due)/(1000*60*60*24));
+              const bal=parseFloat(p.total_amount)-parseFloat(p.amount_paid);
+              return '<tr><td>'+(p.creditor_name||'-')+'</td><td>'+p.description+'</td><td style="color:#f87171">'+fmt(bal)+'</td><td>'+fmtDate(p.due_date)+'</td><td style="color:#f87171;font-weight:bold">'+days+'d</td></tr>';
+            }).join('')+
+          '</tbody></table>';
+        }
+      }
 
       // Monthly trend chart — last 6 months
       const months = [];
