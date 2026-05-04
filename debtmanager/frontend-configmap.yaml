@@ -529,6 +529,37 @@ data:
           </div>
         </div>
 
+        <!-- Payable Pay Modal -->
+        <div class="modal" id="payable-pay-modal">
+          <div class="modal-box">
+            <span class="modal-close" onclick="closeModal('payable-pay-modal')"><i class="fa-solid fa-xmark"></i></span>
+            <h3><i class="fa-solid fa-money-bill-transfer"></i> Record Payment Out</h3>
+            <input type="hidden" id="pay-payable-id">
+            <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:0.85em">
+              <div id="pay-payable-info" style="color:#c4b5fd"></div>
+              <div style="margin-top:6px;display:flex;gap:16px">
+                <span>Total: <strong id="pay-total" style="color:white"></strong></span>
+                <span>Paid: <strong id="pay-paid" style="color:#34d399"></strong></span>
+                <span>Balance: <strong id="pay-balance" style="color:#f87171"></strong></span>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Amount (KES) *</label><input type="number" id="pay-amount" min="0.01" step="0.01" placeholder="0.00"></div>
+              <div class="form-group"><label>Method / Note</label><input type="text" id="pay-note" placeholder="e.g. M-Pesa, Cash, Bank transfer"></div>
+            </div>
+            <button class="btn btn-green" onclick="savePayablePayment()" style="width:100%;margin-top:8px"><i class="fa-solid fa-circle-check"></i> Confirm Payment</button>
+          </div>
+        </div>
+
+        <!-- Payable History Modal -->
+        <div class="modal" id="payable-history-modal">
+          <div class="modal-box" style="max-width:600px">
+            <span class="modal-close" onclick="closeModal('payable-history-modal')"><i class="fa-solid fa-xmark"></i></span>
+            <h3 id="history-modal-title"><i class="fa-solid fa-clock-rotate-left"></i> Payment History</h3>
+            <div id="payable-history-list"></div>
+          </div>
+        </div>
+
         <!-- Payment Modal -->
         <div class="modal" id="payment-modal">
           <div class="modal-box">
