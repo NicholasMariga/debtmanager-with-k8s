@@ -1714,21 +1714,21 @@ data:
 
     // ── Payable Payments ──
     function openPayablePaymentModal(p) {
-      document.getElementById('pay-payable-id').value = p.id;
-      document.getElementById('pay-payable-info').textContent = p.creditor_name + ' - ' + p.description;
-      document.getElementById('pay-total').textContent   = 'KES ' + fmt(p.total_amount);
-      document.getElementById('pay-paid').textContent    = 'KES ' + fmt(p.amount_paid);
-      document.getElementById('pay-balance').textContent = 'KES ' + fmt(p.balance);
-      document.getElementById('pay-amount').value = '';
-      document.getElementById('pay-amount').max   = parseFloat(p.balance);
-      document.getElementById('pay-note').value   = '';
+      document.getElementById('ppay-payable-id').value = p.id;
+      document.getElementById('ppay-payable-info').textContent = p.creditor_name + ' - ' + p.description;
+      document.getElementById('ppay-total').textContent   = 'KES ' + fmt(p.total_amount);
+      document.getElementById('ppay-paid').textContent    = 'KES ' + fmt(p.amount_paid);
+      document.getElementById('ppay-balance').textContent = 'KES ' + fmt(p.balance);
+      document.getElementById('ppay-amount').value = '';
+      document.getElementById('ppay-amount').max   = parseFloat(p.balance);
+      document.getElementById('ppay-note').value   = '';
       openModal('payable-pay-modal');
     }
 
     async function savePayablePayment() {
-      const pid    = document.getElementById('pay-payable-id').value;
-      const amount = parseFloat(document.getElementById('pay-amount').value);
-      const note   = document.getElementById('pay-note').value.trim();
+      const pid    = document.getElementById('ppay-payable-id').value;
+      const amount = parseFloat(document.getElementById('ppay-amount').value);
+      const note   = document.getElementById('ppay-note').value.trim();
       if (!amount || amount <= 0) { alert('Enter a valid amount'); return; }
       try {
         const resp = await fetch(API+'/payable-payments', {
