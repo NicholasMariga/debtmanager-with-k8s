@@ -162,6 +162,7 @@ data:
       setTimeout(()=>el.style.display='none', 3000);
     }
 
+    function openModal(id)  { document.getElementById(id).classList.add('open'); }
     function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
     // ── Build WhatsApp Message (full detail, \n for WhatsApp) ──
