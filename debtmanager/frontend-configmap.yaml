@@ -104,6 +104,10 @@ data:
             <div class="nav-item nav-audit" onclick="showPage('audit', event)">
               <i class="fa-solid fa-clipboard-list"></i> Audit Log
             </div>
+            <div class="nav-section">Payables</div>
+            <div class="nav-item nav-creditors" onclick="showPage('creditors', event)">
+              <i class="fa-solid fa-truck-ramp-box"></i> Creditors
+            </div>
           </div>
 
           <div class="main">
@@ -430,6 +434,49 @@ data:
               </div>
             </div>
 
+            <!-- CREDITORS -->
+            <div class="page" id="page-creditors">
+              <div class="page-title"><i class="fa-solid fa-truck-ramp-box"></i> Creditors</div>
+              <div class="card">
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+                  <h3 style="margin:0"><i class="fa-solid fa-building"></i> Who We Owe</h3>
+                  <button class="btn btn-green" onclick="openCreditorModal()"><i class="fa-solid fa-plus"></i> Add Creditor</button>
+                </div>
+                <div style="overflow-x:auto">
+                  <table>
+                    <thead><tr><th>Name</th><th>Type</th><th>Phone</th><th>Total Owed</th><th>Total Paid</th><th>Balance</th><th>Actions</th></tr></thead>
+                    <tbody id="creditors-table"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Creditor Modal -->
+        <div class="modal" id="creditor-modal">
+          <div class="modal-box">
+            <span class="modal-close" onclick="closeModal('creditor-modal')"><i class="fa-solid fa-xmark"></i></span>
+            <h3 id="creditor-modal-title">Add Creditor</h3>
+            <input type="hidden" id="creditor-id">
+            <div class="form-row">
+              <div class="form-group"><label>Name *</label><input type="text" id="creditor-name" placeholder="e.g. Unga Suppliers Ltd"></div>
+              <div class="form-group"><label>Type *</label>
+                <select id="creditor-type">
+                  <option value="supplier">Supplier</option>
+                  <option value="wholesaler">Wholesaler</option>
+                  <option value="delivery">Delivery</option>
+                  <option value="internal">Internal (Owner/Manager)</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Phone</label><input type="text" id="creditor-phone" placeholder="Optional"></div>
+              <div class="form-group"><label>Email</label><input type="text" id="creditor-email" placeholder="Optional"></div>
+            </div>
+            <div class="form-group"><label>Notes</label><input type="text" id="creditor-notes" placeholder="Optional notes"></div>
+            <button class="btn btn-green" onclick="saveCreditor()" style="width:100%;margin-top:8px"><i class="fa-solid fa-save"></i> Save Creditor</button>
           </div>
         </div>
 

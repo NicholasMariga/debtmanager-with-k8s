@@ -97,6 +97,7 @@ data:
       if (page==='aging') loadAging();
       if (page==='staff') loadStaff();
       if (page==='audit') loadAuditLog();
+      if (page==='creditors') loadCreditors();
     }
 
     function setDashFilter(f) {
@@ -1461,4 +1462,82 @@ data:
           <td style="font-size:0.85em">${l.staff_name||'-'}</td>
         </tr>`;
       }).join('');
+    }
+
+    // ── Creditors ──
+    const CREDITOR_TYPE_BADGE = {
+      supplier:  {label:'Supplier',   color:'#60a5fa'},
+      wholesaler:{label:'Wholesaler', color:'#a78bfa'},
+      delivery:  {label:'Delivery',   color:'#fb923c'},
+      internal:  {label:'Internal',   color:'#34d399'}
+    };
+
+    async function loadCreditors() {
+      const tbody = document.getElementById('creditors-table');
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#6b7280">Loading...</td></tr>';
+      try {
+        const creditors = await fetch(API+'/creditors',{headers:headers()}).then(r=>r.json());
+        if (!creditors.length) {
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#6b7280">No creditors yet. Add your first creditor.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = creditors.map(c => {
+          const tb = CREDITOR_TYPE_BADGE[c.type] || {label:c.type, color:'#c4b5fd'};
+          const hasBalance = parseFloat(c.balance) > 0;
+          return `<tr>
+            <td><strong>${c.name}</strong></td>
+            <td><span class="badge" style="background:rgba(100,100,100,0.2);color:${tb.color}">${tb.label}</span></td>
+            <td style="color:#9ca3af">${c.phone||'-'}</td>
+            <td style="color:#c4b5fd">KES ${fmt(c.total_owed)}</td>
+            <td style="color:#34d399">KES ${fmt(c.total_paid)}</td>
+            <td style="color:${hasBalance?'#f87171':'#34d399'};font-weight:bold">KES ${fmt(c.balance)}</td>
+            <td class="action-btns">
+              <button class="btn btn-sm" onclick="openCreditorModal(${JSON.stringify(c)})"><i class="fa-solid fa-pen"></i> Edit</button>
+              ${!hasBalance ? `<button class="btn btn-sm btn-red" onclick="deleteCreditor(${c.id},'${c.name}')"><i class="fa-solid fa-trash"></i></button>` : ''}
+            </td>
+          </tr>`;
+        }).join('');
+      } catch(e) { tbody.innerHTML = `<tr><td colspan="7" style="color:#f87171">${e.message}</td></tr>`; }
+    }
+
+    function openCreditorModal(c) {
+      document.getElementById('creditor-id').value = c ? c.id : '';
+      document.getElementById('creditor-modal-title').textContent = c ? 'Edit Creditor' : 'Add Creditor';
+      document.getElementById('creditor-name').value = c ? c.name : '';
+      document.getElementById('creditor-type').value = c ? c.type : 'supplier';
+      document.getElementById('creditor-phone').value = c ? (c.phone||'') : '';
+      document.getElementById('creditor-email').value = c ? (c.email||'') : '';
+      document.getElementById('creditor-notes').value = c ? (c.notes||'') : '';
+      openModal('creditor-modal');
+    }
+
+    async function saveCreditor() {
+      const id = document.getElementById('creditor-id').value;
+      const payload = {
+        name:  document.getElementById('creditor-name').value.trim(),
+        type:  document.getElementById('creditor-type').value,
+        phone: document.getElementById('creditor-phone').value.trim() || null,
+        email: document.getElementById('creditor-email').value.trim() || null,
+        notes: document.getElementById('creditor-notes').value.trim() || null
+      };
+      if (!payload.name) { alert('Name is required'); return; }
+      const url  = id ? `${API}/creditors/${id}` : `${API}/creditors`;
+      const method = id ? 'PATCH' : 'POST';
+      try {
+        const resp = await fetch(url, {method, headers: headers(), body: JSON.stringify(payload)});
+        const data = await resp.json();
+        if (data.error) throw new Error(data.error);
+        closeModal('creditor-modal');
+        loadCreditors();
+      } catch(e) { alert('Error: ' + e.message); }
+    }
+
+    async function deleteCreditor(id, name) {
+      if (!confirm(`Delete creditor "${name}"?`)) return;
+      try {
+        const resp = await fetch(`${API}/creditors/${id}`, {method:'DELETE', headers:headers()});
+        const data = await resp.json();
+        if (data.error) throw new Error(data.error);
+        loadCreditors();
+      } catch(e) { alert('Error: ' + e.message); }
     }
