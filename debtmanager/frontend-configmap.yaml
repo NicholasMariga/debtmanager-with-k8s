@@ -454,9 +454,6 @@ data:
               </div>
             </div>
 
-          </div>
-        </div>
-
             <!-- PAYABLES -->
             <div class="page" id="page-payables">
               <div class="page-title"><i class="fa-solid fa-file-invoice"></i> Payables</div>
@@ -483,7 +480,9 @@ data:
               </div>
             </div>
 
-        <!-- Creditor Modal -->
+          </div>
+        </div>
+
         <!-- Payable Modal -->
         <div class="modal" id="payable-modal">
           <div class="modal-box">
