@@ -9,6 +9,7 @@ data:
     <html>
       <head>
         <title>Happywise Ent - Debt Manager</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -58,6 +59,7 @@ data:
 
           <div class="topbar">
             <div class="topbar-left">
+              <button class="hamburger" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
               <div class="topbar-logo"><i class="fa-solid fa-store"></i></div>
               <div class="topbar-title">Happywise <span>Ent</span></div>
             </div>
@@ -68,11 +70,12 @@ data:
                 <span class="user-role" id="topbar-role">-</span>
               </div>
               <button class="logout-btn" onclick="doLogout()">
-                <i class="fa-solid fa-right-from-bracket"></i> Logout
+                <i class="fa-solid fa-right-from-bracket"></i> <span class="logout-text">Logout</span>
               </button>
             </div>
           </div>
 
+          <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
           <div class="sidebar">
             <div class="nav-section">Main</div>
             <div class="nav-item active" onclick="showPage('dashboard', event)">
@@ -778,6 +781,22 @@ data:
           </div>
         </div>
 
+        <script>
+          function toggleSidebar() {
+            var s = document.querySelector('.sidebar'), o = document.getElementById('sidebar-overlay');
+            var isOpen = s.classList.toggle('open');
+            o.classList.toggle('open');
+            document.body.style.overflow = isOpen ? 'hidden' : '';
+          }
+          function closeSidebar() {
+            document.querySelector('.sidebar').classList.remove('open');
+            document.getElementById('sidebar-overlay').classList.remove('open');
+            document.body.style.overflow = '';
+          }
+          document.addEventListener('click', function(e) {
+            if (e.target.closest && e.target.closest('.nav-item') && window.innerWidth <= 768) closeSidebar();
+          });
+        </script>
         <script src="/app.js"></script>
       </body>
     </html>
