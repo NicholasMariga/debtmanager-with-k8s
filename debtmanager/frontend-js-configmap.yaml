@@ -6,7 +6,10 @@ metadata:
 data:
   app.js: |
     const API = '/api';
-    const SHOP_NAME = "Lilian's Shop";
+    let SHOP_NAME = "Lilian's Shop";
+    let appSettings = {};
+    let CURRENCY = localStorage.getItem('pref_currency') || 'KES';
+    let DUE_SOON_DAYS = parseInt(localStorage.getItem('pref_due_soon') || '7');
     let token = localStorage.getItem('hw_token');
     let currentUser = JSON.parse(localStorage.getItem('hw_user') || 'null');
     let selectedDebtId = null;
@@ -82,6 +85,7 @@ data:
       document.querySelectorAll('.nav-creditors').forEach(el => el.classList.toggle('hidden', !isMO));
       document.querySelectorAll('.nav-payables').forEach(el => el.classList.toggle('hidden', !isMO));
       document.querySelectorAll('.dashboard-payables-card').forEach(el => el.classList.toggle('hidden', !isMO));
+      loadSettings();
       loadDashboard();
     }
 
@@ -119,6 +123,7 @@ data:
       const isMO = currentUser && ['owner','manager'].includes(currentUser.role);
       if (page==='creditors') { if (isMO) loadCreditors(); else showPage('dashboard'); }
       if (page==='payables')  { if (isMO) loadPayables();  else showPage('dashboard'); }
+      if (page==='settings') populateSettingsForm();
     }
 
     function setDashFilter(f) {
@@ -197,21 +202,22 @@ data:
         gPaid += parseFloat(d.amount_paid);
         lines += `${i+1}. ${d.description}\n`;
         lines += `   Date Taken : ${fmtDate(d.created_at)}\n`;
-        lines += `   Total      : KES ${fmt(d.total_amount)}\n`;
+        lines += `   Total      : ${CURRENCY} ${fmt(d.total_amount)}\n`;
         lines += `   Due Date   : ${fmtDate(d.due_date)}\n`;
         if (parseFloat(d.amount_paid)>0) {
           try {
             const pmts = await fetch(API+'/payments/'+d.id,{headers:headers()}).then(r=>r.json());
-            pmts.forEach(p => { lines += `   Paid       : KES ${fmt(p.amount)} via ${p.note||'N/A'} on ${fmtDateTime(p.paid_at)}\n`; });
-          } catch(e) { lines += `   Paid       : KES ${fmt(d.amount_paid)}\n`; }
-          lines += `   Balance    : KES ${fmt(d.balance)}\n`;
+            pmts.forEach(p => { lines += `   Paid       : ${CURRENCY} ${fmt(p.amount)} via ${p.note||'N/A'} on ${fmtDateTime(p.paid_at)}\n`; });
+          } catch(e) { lines += `   Paid       : ${CURRENCY} ${fmt(d.amount_paid)}\n`; }
+          lines += `   Balance    : ${CURRENCY} ${fmt(d.balance)}\n`;
         } else {
-          lines += `   Balance    : KES ${fmt(d.total_amount)} (not yet paid)\n`;
+          lines += `   Balance    : ${CURRENCY} ${fmt(d.total_amount)} (not yet paid)\n`;
         }
         lines += '\n';
       }
       const bal = gTotal - gPaid;
-      return `Happywise Ent - Debt Reminder - (${SHOP_NAME})\n\nDear ${debt.customer_name},\n\nThis is a friendly reminder about your outstanding debt(s) with us:\n\n${lines}---------------------\nTOTAL BALANCE DUE: KES ${fmt(bal)}\n---------------------\n\nKindly make your payment at your earliest convenience.\nYou can reach us for any queries.\n\nThank you for your business!\nHappywise Ent - (${SHOP_NAME})`;
+      const BIZ = appSettings.business_name || 'Happywise Ent';
+      return `${BIZ} - Debt Reminder - (${SHOP_NAME})\n\nDear ${debt.customer_name},\n\nThis is a friendly reminder about your outstanding debt(s) with us:\n\n${lines}---------------------\nTOTAL BALANCE DUE: ${CURRENCY} ${fmt(bal)}\n---------------------\n\nKindly make your payment at your earliest convenience.\nYou can reach us for any queries.\n\nThank you for your business!\n${BIZ} - (${SHOP_NAME})`;
     }
 
     // ── Build SMS Message (single customer summary: total debt, payments, balance) ──
@@ -226,14 +232,15 @@ data:
             const pmts = await fetch(API+'/payments/'+d.id,{headers:headers()}).then(r=>r.json());
             pmts.forEach(p => {
               gPaid += parseFloat(p.amount);
-              paidLines += `Paid      : KES ${fmt(p.amount)} via ${p.note||'N/A'} on ${fmtDateTimeSms(p.paid_at)}\n`;
+              paidLines += `Paid      : ${CURRENCY} ${fmt(p.amount)} via ${p.note||'N/A'} on ${fmtDateTimeSms(p.paid_at)}\n`;
             });
-          } catch(e) { gPaid += parseFloat(d.amount_paid); paidLines += `Paid      : KES ${fmt(d.amount_paid)}\n`; }
+          } catch(e) { gPaid += parseFloat(d.amount_paid); paidLines += `Paid      : ${CURRENCY} ${fmt(d.amount_paid)}\n`; }
         }
       }
       const bal = gTotal - gPaid;
-      const body = `Total Debt: KES ${fmt(gTotal)}\n${paidLines||'Paid      : KES 0.00\n'}Balance   : KES ${fmt(bal)}`;
-      return `Happywise Ent - Debt Reminder - (${SHOP_NAME})\n\nDear ${debt.customer_name},\n\n${body}\n\nPlease pay at your earliest convenience.\nThank you!\nHappywise Ent - (${SHOP_NAME})`;
+      const BIZ = appSettings.business_name || 'Happywise Ent';
+      const body = `Total Debt: ${CURRENCY} ${fmt(gTotal)}\n${paidLines||`Paid      : ${CURRENCY} 0.00\n`}Balance   : ${CURRENCY} ${fmt(bal)}`;
+      return `${BIZ} - Debt Reminder - (${SHOP_NAME})\n\nDear ${debt.customer_name},\n\n${body}\n\nPlease pay at your earliest convenience.\nThank you!\n${BIZ} - (${SHOP_NAME})`;
     }
 
     // ── Open Reminder Modal ──
@@ -362,7 +369,7 @@ data:
         const gPaid  = activeDebts.reduce((s,d)=>s+parseFloat(d.amount_paid),0);
         const gBal   = activeDebts.reduce((s,d)=>s+parseFloat(d.balance),0);
         const now = new Date();
-        const in7 = new Date(); in7.setDate(now.getDate()+7);
+        const in7 = new Date(); in7.setDate(now.getDate()+DUE_SOON_DAYS);
         const overdueC = activeDebts.filter(d=>d.due_date&&new Date(d.due_date)<now&&d.status!=='paid').length;
         const dueSoonC = activeDebts.filter(d=>d.due_date&&d.status!=='paid'&&new Date(d.due_date)>=now&&new Date(d.due_date)<=in7).length;
         const woTotal = writtenOffDebts.reduce((s,d)=>s+parseFloat(d.balance),0);
@@ -684,7 +691,7 @@ data:
     }
 
     function renderDebts(debts) {
-      const nowD = new Date(); const in7D = new Date(); in7D.setDate(nowD.getDate()+7);
+      const nowD = new Date(); const in7D = new Date(); in7D.setDate(nowD.getDate()+DUE_SOON_DAYS);
       const catColors = {'Weekly':'#34d399','After Two Weeks':'#60a5fa','End of Month':'#fbbf24','One-off':'#a78bfa'};
       document.getElementById('debts-table').innerHTML = debts.map(d=>{
         const fullWO = isFullWO(d);
@@ -1786,4 +1793,100 @@ data:
           </tr>`).join('') +
           '</tbody></table>';
       } catch(e) { el.innerHTML = `<p style="color:#f87171">${e.message}</p>`; }
+    }
+
+    // ── Settings ──
+    async function loadSettings() {
+      try {
+        const data = await fetch(API+'/settings', {headers:headers()}).then(r=>r.json());
+        appSettings = data;
+        if (data.shop_name) SHOP_NAME = data.shop_name;
+        if (data.business_name) applyBusinessName(data.business_name);
+      } catch(e) {}
+    }
+
+    function applyBusinessName(name) {
+      if (!name) return;
+      const parts = name.trim().split(/\s+/);
+      const first = parts[0];
+      const rest = parts.slice(1).join(' ');
+      const el = document.getElementById('topbar-biz-name');
+      if (el) el.innerHTML = rest ? `${first} <span>${rest}</span>` : first;
+      document.title = name + ' - Debt Manager';
+    }
+
+    function populateSettingsForm() {
+      document.getElementById('set-name').value = currentUser.name || '';
+      document.getElementById('set-cur-pwd').value = '';
+      document.getElementById('set-new-pwd').value = '';
+      document.getElementById('set-confirm-pwd').value = '';
+      const isMO = currentUser && ['owner','manager'].includes(currentUser.role);
+      document.querySelectorAll('.settings-business-card').forEach(el => el.style.display = isMO ? '' : 'none');
+      if (isMO) {
+        document.getElementById('set-biz-name').value = appSettings.business_name || 'Happywise Ent';
+        document.getElementById('set-shop-name').value = appSettings.shop_name || "Lilian's Shop";
+        document.getElementById('set-biz-phone').value = appSettings.business_phone || '';
+        document.getElementById('set-biz-tagline').value = appSettings.business_tagline || 'Debt Management System';
+      }
+      document.getElementById('set-currency').value = CURRENCY;
+      document.getElementById('set-due-soon').value = DUE_SOON_DAYS;
+    }
+
+    async function saveMyAccount() {
+      const name = document.getElementById('set-name').value.trim();
+      const curPwd = document.getElementById('set-cur-pwd').value;
+      const newPwd = document.getElementById('set-new-pwd').value;
+      const cfmPwd = document.getElementById('set-confirm-pwd').value;
+      if (!name) return showAlert('alert-settings-account', 'Display name is required', 'error');
+      const payload = {name};
+      if (curPwd || newPwd || cfmPwd) {
+        if (!curPwd) return showAlert('alert-settings-account', 'Enter your current password', 'error');
+        if (!newPwd) return showAlert('alert-settings-account', 'Enter a new password', 'error');
+        if (newPwd !== cfmPwd) return showAlert('alert-settings-account', 'New passwords do not match', 'error');
+        payload.current_password = curPwd;
+        payload.new_password = newPwd;
+      }
+      try {
+        const res = await fetch(API+'/me', {method:'PUT', headers:headers(), body:JSON.stringify(payload)});
+        const data = await res.json();
+        if (!res.ok) return showAlert('alert-settings-account', data.error || 'Failed to update', 'error');
+        currentUser.name = data.name;
+        localStorage.setItem('hw_user', JSON.stringify(currentUser));
+        document.getElementById('topbar-name').textContent = data.name;
+        if (payload.new_password) {
+          showAlert('alert-settings-account', 'Password changed — please log in again.', 'success');
+          setTimeout(doLogout, 2000);
+        } else {
+          showAlert('alert-settings-account', 'Account updated!', 'success');
+        }
+      } catch(e) { showAlert('alert-settings-account', 'Error: '+e.message, 'error'); }
+    }
+
+    async function saveBusinessProfile() {
+      const payload = {
+        business_name: document.getElementById('set-biz-name').value.trim(),
+        shop_name: document.getElementById('set-shop-name').value.trim(),
+        business_phone: document.getElementById('set-biz-phone').value.trim(),
+        business_tagline: document.getElementById('set-biz-tagline').value.trim()
+      };
+      if (!payload.business_name) return showAlert('alert-settings-business', 'Business name is required', 'error');
+      try {
+        const res = await fetch(API+'/settings', {method:'PUT', headers:headers(), body:JSON.stringify(payload)});
+        const data = await res.json();
+        if (!res.ok) return showAlert('alert-settings-business', data.error || 'Failed to save', 'error');
+        Object.assign(appSettings, payload);
+        if (payload.shop_name) SHOP_NAME = payload.shop_name;
+        applyBusinessName(payload.business_name);
+        showAlert('alert-settings-business', 'Business profile saved!', 'success');
+      } catch(e) { showAlert('alert-settings-business', 'Error: '+e.message, 'error'); }
+    }
+
+    function savePreferences() {
+      const currency = document.getElementById('set-currency').value.trim() || 'KES';
+      const dueSoon = parseInt(document.getElementById('set-due-soon').value) || 7;
+      CURRENCY = currency;
+      DUE_SOON_DAYS = dueSoon;
+      localStorage.setItem('pref_currency', currency);
+      localStorage.setItem('pref_due_soon', String(dueSoon));
+      showAlert('alert-settings-prefs', 'Preferences saved!', 'success');
     }

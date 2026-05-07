@@ -124,6 +124,16 @@ def init_db():
             paid_at TIMESTAMP DEFAULT NOW()
         )
     ''')
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS settings (
+            key VARCHAR(100) PRIMARY KEY,
+            value TEXT,
+            updated_at TIMESTAMP DEFAULT NOW()
+        )
+    ''')
+    for k, v in [('business_name','Happywise Ent'),('shop_name',"Lilian's Shop"),
+                 ('business_phone',''),('business_tagline','Debt Management System'),('currency','KES')]:
+        cur.execute("INSERT INTO settings (key,value) VALUES (%s,%s) ON CONFLICT (key) DO NOTHING", (k, v))
     # Default owner account
     cur.execute("SELECT id FROM staff WHERE username = 'owner'")
     if not cur.fetchone():
@@ -1191,6 +1201,49 @@ def payables_summary():
             else: out[k] = v
         return out
     return jsonify({"by_type": [ser(r) for r in rows], "totals": ser(totals)})
+
+# ── Settings ──
+@app.route('/settings', methods=['GET'])
+def get_settings():
+    user = require_auth()
+    if not user: return jsonify({"error": "Unauthorized"}), 401
+    conn = get_db(); cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute("SELECT key, value FROM settings")
+    rows = cur.fetchall(); cur.close(); conn.close()
+    return jsonify({r['key']: r['value'] for r in rows})
+
+@app.route('/settings', methods=['PUT'])
+def update_settings():
+    user = require_auth(roles=['owner', 'manager'])
+    if not user: return jsonify({"error": "Unauthorized"}), 401
+    data = request.json
+    conn = get_db(); cur = conn.cursor()
+    for key, value in data.items():
+        cur.execute(
+            "INSERT INTO settings (key,value,updated_at) VALUES (%s,%s,NOW()) ON CONFLICT (key) DO UPDATE SET value=EXCLUDED.value, updated_at=NOW()",
+            (key, str(value))
+        )
+    conn.commit(); cur.close(); conn.close()
+    return jsonify({"success": True})
+
+@app.route('/me', methods=['PUT'])
+def update_me():
+    user = require_auth()
+    if not user: return jsonify({"error": "Unauthorized"}), 401
+    data = request.json
+    conn = get_db(); cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    if 'current_password' in data:
+        if hash_password(data['current_password']) != user['password']:
+            cur.close(); conn.close()
+            return jsonify({"error": "Current password is incorrect"}), 400
+        if 'new_password' in data and data['new_password']:
+            cur.execute("UPDATE staff SET password=%s WHERE id=%s", (hash_password(data['new_password']), user['id']))
+    if 'name' in data and data['name']:
+        cur.execute("UPDATE staff SET name=%s WHERE id=%s", (data['name'], user['id']))
+    conn.commit()
+    cur.execute("SELECT id, name, username, role FROM staff WHERE id=%s", (user['id'],))
+    updated = cur.fetchone(); cur.close(); conn.close()
+    return jsonify(dict(updated))
 
 if __name__ == '__main__':
     init_db()
