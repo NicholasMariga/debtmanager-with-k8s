@@ -781,22 +781,6 @@ data:
           </div>
         </div>
 
-        <script>
-          function toggleSidebar() {
-            var s = document.querySelector('.sidebar'), o = document.getElementById('sidebar-overlay');
-            var isOpen = s.classList.toggle('open');
-            o.classList.toggle('open');
-            document.body.style.overflow = isOpen ? 'hidden' : '';
-          }
-          function closeSidebar() {
-            document.querySelector('.sidebar').classList.remove('open');
-            document.getElementById('sidebar-overlay').classList.remove('open');
-            document.body.style.overflow = '';
-          }
-          document.addEventListener('click', function(e) {
-            if (e.target.closest && e.target.closest('.nav-item') && window.innerWidth <= 768) closeSidebar();
-          });
-        </script>
         <script src="/app.js"></script>
       </body>
     </html>

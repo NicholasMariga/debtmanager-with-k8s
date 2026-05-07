@@ -87,11 +87,26 @@ data:
 
     function headers() { return {'Content-Type':'application/json','Authorization':'Bearer '+token}; }
 
+    function toggleSidebar() {
+      var s = document.querySelector('.sidebar'), o = document.getElementById('sidebar-overlay');
+      if (!s) return;
+      var isOpen = s.classList.toggle('open');
+      if (o) o.classList.toggle('open');
+      document.body.style.overflow = isOpen ? 'hidden' : '';
+    }
+    function closeSidebar() {
+      var s = document.querySelector('.sidebar'), o = document.getElementById('sidebar-overlay');
+      if (s) s.classList.remove('open');
+      if (o) o.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
     function showPage(page, event) {
       document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
       document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
       document.getElementById('page-'+page).classList.add('active');
       if (event) event.currentTarget.classList.add('active');
+      if (window.innerWidth <= 768) closeSidebar();
       if (page==='dashboard') loadDashboard();
       if (page==='customers') { loadCustomers(); loadArchivedCustomers(); }
       if (page==='debts') { loadDebts(); loadCustomerDropdown(); }
