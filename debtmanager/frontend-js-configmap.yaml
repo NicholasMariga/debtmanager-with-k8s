@@ -10,6 +10,7 @@ data:
     let appSettings = {};
     let CURRENCY = localStorage.getItem('pref_currency') || 'KES';
     let DUE_SOON_DAYS = parseInt(localStorage.getItem('pref_due_soon') || '7');
+    let THEME = localStorage.getItem('pref_theme') || 'dark';
     const DEFAULT_WA_HEADER = '{business} - Debt Reminder - ({shop})\n\nDear {name},\n\nThis is a friendly reminder about your outstanding debt(s) with us:';
     const DEFAULT_WA_FOOTER = '---------------------\nTOTAL BALANCE DUE: {currency} {balance}\n---------------------\n\nKindly make your payment at your earliest convenience.\nYou can reach us for any queries.\n\nThank you for your business!\n{business} - ({shop})';
     const DEFAULT_SMS_TPL   = '{business} - Debt Reminder - ({shop})\n\nDear {name},\n\n{body}\n\nPlease pay at your earliest convenience.\nThank you!\n{business} - ({shop})';
@@ -38,6 +39,7 @@ data:
     function isPartialWO(d) { return !!d.writeoff_reason && !!d.writeoff_amount; }
 
     if (token && currentUser) showApp();
+    applyTheme(THEME);
 
     async function doLogin() {
       const username = document.getElementById('login-username').value.trim();
@@ -1846,6 +1848,7 @@ data:
       }
       document.getElementById('set-currency').value = CURRENCY;
       document.getElementById('set-due-soon').value = DUE_SOON_DAYS;
+      applyTheme(THEME);
     }
 
     async function saveMyAccount() {
@@ -1905,6 +1908,20 @@ data:
       localStorage.setItem('pref_currency', currency);
       localStorage.setItem('pref_due_soon', String(dueSoon));
       showAlert('alert-settings-prefs', 'Preferences saved!', 'success');
+    }
+
+    function applyTheme(theme) {
+      THEME = theme;
+      document.body.classList.toggle('light-mode', theme === 'light');
+      const darkBtn = document.getElementById('theme-btn-dark');
+      const lightBtn = document.getElementById('theme-btn-light');
+      if (darkBtn) darkBtn.classList.toggle('active', theme === 'dark');
+      if (lightBtn) lightBtn.classList.toggle('active', theme === 'light');
+    }
+
+    function setTheme(theme) {
+      localStorage.setItem('pref_theme', theme);
+      applyTheme(theme);
     }
 
     async function saveMessageTemplates() {

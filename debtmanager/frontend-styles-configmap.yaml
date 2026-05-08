@@ -218,3 +218,50 @@ data:
       .btn { font-size: 0.82em; }
       .topbar-title { font-size: 0.85em; }
     }
+
+    .theme-toggle-wrap { display: flex; gap: 8px; margin-top: 2px; }
+    .theme-btn { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.15); color: #c4b5fd; padding: 8px 18px; border-radius: 8px; cursor: pointer; font-size: 0.85em; transition: all 0.2s; display: inline-flex; align-items: center; gap: 7px; }
+    .theme-btn.active { background: linear-gradient(135deg, #a78bfa, #7c3aed); color: white; border-color: transparent; box-shadow: 0 3px 10px rgba(167,139,250,0.4); }
+
+    body.light-mode { background: #f0eeff; color: #1a1a2e; }
+    body.light-mode .topbar { background: rgba(255,255,255,0.96); border-bottom-color: rgba(0,0,0,0.1); }
+    body.light-mode .topbar-title { color: #1a1a2e; }
+    body.light-mode .topbar-title span { color: #7c3aed; }
+    body.light-mode .user-name { color: #1a1a2e; }
+    body.light-mode .user-info i { color: #7c3aed; }
+    body.light-mode .sidebar { background: #ffffff; border-right-color: rgba(0,0,0,0.08); }
+    body.light-mode .nav-section { color: rgba(0,0,0,0.35); }
+    body.light-mode .nav-item { color: #4a4a6a; }
+    body.light-mode .nav-item:hover, body.light-mode .nav-item.active { background: rgba(167,139,250,0.15); color: #1a1a2e; }
+    body.light-mode .card { background: #ffffff; border-color: rgba(0,0,0,0.08); }
+    body.light-mode .stat-card { background: #ffffff; border-color: rgba(0,0,0,0.08); }
+    body.light-mode .chart-card { background: #ffffff; border-color: rgba(0,0,0,0.08); }
+    body.light-mode .stat-label { color: #5a5a8a; }
+    body.light-mode label { color: #5a5a8a; }
+    body.light-mode input, body.light-mode select { background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.12); color: #1a1a2e; }
+    body.light-mode select option { background: #f0eeff; color: #1a1a2e; }
+    body.light-mode textarea { background: rgba(0,0,0,0.04) !important; border-color: rgba(0,0,0,0.12) !important; color: #1a1a2e !important; }
+    body.light-mode th { background: rgba(167,139,250,0.1); color: #5a5a8a; }
+    body.light-mode td { border-bottom-color: rgba(0,0,0,0.05); }
+    body.light-mode tr:hover td { background: rgba(0,0,0,0.02); }
+    body.light-mode .modal-box { background: #ffffff; border-color: rgba(0,0,0,0.1); color: #1a1a2e; }
+    body.light-mode .modal-box h3 { color: #7c3aed; }
+    body.light-mode .modal-close { color: #5a5a8a; }
+    body.light-mode .page-title i { color: #7c3aed; }
+    body.light-mode .reminder-card { background: rgba(251,191,36,0.1); border-color: rgba(251,191,36,0.3); }
+    body.light-mode .backup-check { background: rgba(0,0,0,0.03); border-color: rgba(0,0,0,0.08); color: #5a5a8a; }
+    body.light-mode .backup-check:hover { background: rgba(167,139,250,0.1); }
+    body.light-mode .login-page { background: linear-gradient(-45deg, #e8e0ff, #d0c4ff, #e8e0ff, #f0eeff); }
+    body.light-mode .login-box { background: rgba(255,255,255,0.9); border-color: rgba(0,0,0,0.1); box-shadow: 0 25px 50px rgba(0,0,0,0.15); }
+    body.light-mode .login-title { color: #1a1a2e; }
+    body.light-mode .login-subtitle { color: #5a5a8a; }
+    body.light-mode .login-form label { color: #5a5a8a; }
+    body.light-mode .login-form input { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.15); color: #1a1a2e; }
+    body.light-mode .login-form .input-wrap i { color: #7c3aed; }
+    body.light-mode .note-btn { background: rgba(167,139,250,0.1); border-color: rgba(167,139,250,0.2); color: #7c3aed; }
+    body.light-mode .note-btn.has-note { background: rgba(251,191,36,0.12); border-color: rgba(251,191,36,0.3); color: #d97706; }
+    body.light-mode .log-name { color: #1a1a2e; }
+    body.light-mode .log-desc { color: #5a5a8a; }
+    body.light-mode .log-time { color: rgba(0,0,0,0.3); }
+    body.light-mode .theme-btn { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.12); color: #5a5a8a; }
+    body.light-mode .theme-btn.active { background: linear-gradient(135deg, #a78bfa, #7c3aed); color: white; border-color: transparent; }
