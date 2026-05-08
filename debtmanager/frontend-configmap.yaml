@@ -586,6 +586,42 @@ data:
                 </div>
                 <button class="btn" onclick="saveBusinessProfile()"><i class="fa-solid fa-floppy-disk"></i> Save Business Profile</button>
               </div>
+              <div class="card settings-business-card">
+                <h3><i class="fa-solid fa-message"></i> Message Templates</h3>
+                <p style="font-size:0.82em;color:#c4b5fd;margin-bottom:4px">Customise messages sent to customers. Available variables:</p>
+                <p style="font-size:0.78em;color:#6b7280;margin-bottom:12px">
+                  <code style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:4px">{name}</code>
+                  <code style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:4px">{business}</code>
+                  <code style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:4px">{shop}</code>
+                  <code style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:4px">{balance}</code>
+                  <code style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:4px">{currency}</code>
+                  &nbsp;<span style="color:#a78bfa">SMS only:</span>
+                  <code style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:4px">{total}</code>
+                  <code style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:4px">{paid}</code>
+                  <code style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:4px">{body}</code>
+                </p>
+                <div id="alert-settings-templates" class="alert"></div>
+                <div class="form-group" style="margin-bottom:12px">
+                  <label>WhatsApp — Opening (before debt list)</label>
+                  <textarea id="set-wa-header" rows="4" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:10px;color:white;font-size:0.82em;resize:vertical;outline:none;line-height:1.6;font-family:monospace"></textarea>
+                </div>
+                <div class="form-group" style="margin-bottom:12px">
+                  <label>WhatsApp — Closing (after debt list)</label>
+                  <textarea id="set-wa-footer" rows="6" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:10px;color:white;font-size:0.82em;resize:vertical;outline:none;line-height:1.6;font-family:monospace"></textarea>
+                </div>
+                <div class="form-group" style="margin-bottom:14px">
+                  <label>SMS Message Template</label>
+                  <textarea id="set-sms-tmpl" rows="6" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:10px;color:white;font-size:0.82em;resize:vertical;outline:none;line-height:1.6;font-family:monospace"></textarea>
+                </div>
+                <div style="border-top:1px solid rgba(255,255,255,0.08);padding-top:12px;margin-top:4px;margin-bottom:14px">
+                  <div class="form-group">
+                    <label><i class="fa-solid fa-receipt"></i> Receipt Footer Message</label>
+                    <input type="text" id="set-receipt-footer" placeholder="e.g. Thank you! Visit us again at Lilian's Shop">
+                    <small style="color:#6b7280;font-size:0.78em">Shown at the bottom of printed and WhatsApp receipts</small>
+                  </div>
+                </div>
+                <button class="btn" onclick="saveMessageTemplates()"><i class="fa-solid fa-floppy-disk"></i> Save Templates</button>
+              </div>
               <div class="card">
                 <h3><i class="fa-solid fa-sliders"></i> Preferences</h3>
                 <p style="font-size:0.82em;color:#c4b5fd;margin-bottom:12px">Stored on this device only.</p>

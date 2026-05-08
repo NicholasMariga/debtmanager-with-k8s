@@ -10,6 +10,9 @@ data:
     let appSettings = {};
     let CURRENCY = localStorage.getItem('pref_currency') || 'KES';
     let DUE_SOON_DAYS = parseInt(localStorage.getItem('pref_due_soon') || '7');
+    const DEFAULT_WA_HEADER = '{business} - Debt Reminder - ({shop})\n\nDear {name},\n\nThis is a friendly reminder about your outstanding debt(s) with us:';
+    const DEFAULT_WA_FOOTER = '---------------------\nTOTAL BALANCE DUE: {currency} {balance}\n---------------------\n\nKindly make your payment at your earliest convenience.\nYou can reach us for any queries.\n\nThank you for your business!\n{business} - ({shop})';
+    const DEFAULT_SMS_TPL   = '{business} - Debt Reminder - ({shop})\n\nDear {name},\n\n{body}\n\nPlease pay at your earliest convenience.\nThank you!\n{business} - ({shop})';
     let token = localStorage.getItem('hw_token');
     let currentUser = JSON.parse(localStorage.getItem('hw_user') || 'null');
     let selectedDebtId = null;
@@ -217,7 +220,11 @@ data:
       }
       const bal = gTotal - gPaid;
       const BIZ = appSettings.business_name || 'Happywise Ent';
-      return `${BIZ} - Debt Reminder - (${SHOP_NAME})\n\nDear ${debt.customer_name},\n\nThis is a friendly reminder about your outstanding debt(s) with us:\n\n${lines}---------------------\nTOTAL BALANCE DUE: ${CURRENCY} ${fmt(bal)}\n---------------------\n\nKindly make your payment at your earliest convenience.\nYou can reach us for any queries.\n\nThank you for your business!\n${BIZ} - (${SHOP_NAME})`;
+      const tv = {'{business}':BIZ,'{shop}':SHOP_NAME,'{name}':debt.customer_name,'{currency}':CURRENCY,'{balance}':fmt(bal)};
+      const ts = s => s.replace(/\{business\}|\{shop\}|\{name\}|\{currency\}|\{balance\}/g, m => tv[m]||m);
+      const waHeader = ts(appSettings.whatsapp_header || DEFAULT_WA_HEADER);
+      const waFooter = ts(appSettings.whatsapp_footer || DEFAULT_WA_FOOTER);
+      return `${waHeader}\n\n${lines}${waFooter}`;
     }
 
     // ── Build SMS Message (single customer summary: total debt, payments, balance) ──
@@ -240,7 +247,8 @@ data:
       const bal = gTotal - gPaid;
       const BIZ = appSettings.business_name || 'Happywise Ent';
       const body = `Total Debt: ${CURRENCY} ${fmt(gTotal)}\n${paidLines||`Paid      : ${CURRENCY} 0.00\n`}Balance   : ${CURRENCY} ${fmt(bal)}`;
-      return `${BIZ} - Debt Reminder - (${SHOP_NAME})\n\nDear ${debt.customer_name},\n\n${body}\n\nPlease pay at your earliest convenience.\nThank you!\n${BIZ} - (${SHOP_NAME})`;
+      const stv = {'{business}':BIZ,'{shop}':SHOP_NAME,'{name}':debt.customer_name,'{currency}':CURRENCY,'{total}':fmt(gTotal),'{paid}':fmt(gPaid),'{balance}':fmt(bal),'{body}':body};
+      return (appSettings.sms_template || DEFAULT_SMS_TPL).replace(/\{business\}|\{shop\}|\{name\}|\{currency\}|\{total\}|\{paid\}|\{balance\}|\{body\}/g, m => stv[m]||m);
     }
 
     // ── Open Reminder Modal ──
@@ -946,25 +954,27 @@ data:
     }
 
     function generateReceiptHTML(debt, amount, method, balance, now) {
+      const BIZ = appSettings.business_name || 'Happywise Ent';
+      const rcptFooter = appSettings.receipt_footer || 'Thank you for your payment!';
       return `<div class="receipt-box" id="printable-receipt">
-        <h2>HAPPYWISE ENT</h2>
+        <h2>${BIZ.toUpperCase()}</h2>
         <div class="receipt-sub">Payment Receipt</div>
         <div class="receipt-sub">${now.toLocaleString('en-KE')}</div><br>
         <div class="receipt-row"><span>Customer:</span><span>${debt.customer_name}</span></div>
         <div class="receipt-row"><span>Phone:</span><span>${debt.customer_phone||'N/A'}</span></div>
         <div class="receipt-row"><span>Item:</span><span>${debt.description}</span></div>
-        <div class="receipt-row"><span>Total Debt:</span><span>KES ${fmt(debt.total_amount)}</span></div>
-        <div class="receipt-row"><span>Amount Paid:</span><span>KES ${fmt(amount)}</span></div>
+        <div class="receipt-row"><span>Total Debt:</span><span>${CURRENCY} ${fmt(debt.total_amount)}</span></div>
+        <div class="receipt-row"><span>Amount Paid:</span><span>${CURRENCY} ${fmt(amount)}</span></div>
         <div class="receipt-row"><span>Method:</span><span>${method}</span></div>
-        <div class="receipt-total"><span>Balance Due:</span><span>KES ${fmt(balance<0?0:balance)}</span></div>
-        <div class="receipt-footer">Thank you for your payment!<br>Happywise Ent<br>${balance<=0?'*** FULLY PAID ***':''}</div>
+        <div class="receipt-total"><span>Balance Due:</span><span>${CURRENCY} ${fmt(balance<0?0:balance)}</span></div>
+        <div class="receipt-footer">${rcptFooter}<br>${BIZ}${balance<=0?'<br>*** FULLY PAID ***':''}</div>
       </div>`;
     }
 
     function printReceipt() {
       const content=document.getElementById('printable-receipt').outerHTML;
       const win=window.open('','_blank');
-      win.document.write(`<html><head><title>Receipt - Happywise Ent</title>
+      win.document.write(`<html><head><title>Receipt - ${appSettings.business_name||'Happywise Ent'}</title>
         <style>body{font-family:monospace;padding:20px}.receipt-box{max-width:300px;margin:0 auto}h2{text-align:center}.receipt-sub{text-align:center;color:#666;font-size:.85em}.receipt-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed #eee;font-size:.9em}.receipt-total{display:flex;justify-content:space-between;padding:8px 0;font-weight:bold;border-top:2px solid black;margin-top:8px}.receipt-footer{text-align:center;margin-top:15px;color:#666;font-size:.8em}</style>
         </head><body>${content}<script>window.print();<\/script></body></html>`);
       win.document.close();
@@ -973,7 +983,9 @@ data:
     function shareReceiptWhatsApp() {
       if (!lastReceiptData) return;
       const {debt,amount,method,balance,now}=lastReceiptData;
-      const msg=`HAPPYWISE ENT - Payment Receipt\n\nDate: ${now.toLocaleString('en-KE')}\nCustomer: ${debt.customer_name}\nItem: ${debt.description}\nAmount Paid: KES ${fmt(amount)}\nMethod: ${method}\nBalance Due: KES ${fmt(balance<0?0:balance)}\n\nThank you for your payment!\nHappywise Ent`;
+      const BIZ = appSettings.business_name || 'Happywise Ent';
+      const rcptFooter = appSettings.receipt_footer || 'Thank you for your payment!';
+      const msg=`${BIZ} - Payment Receipt\n\nDate: ${now.toLocaleString('en-KE')}\nCustomer: ${debt.customer_name}\nItem: ${debt.description}\nAmount Paid: ${CURRENCY} ${fmt(amount)}\nMethod: ${method}\nBalance Due: ${CURRENCY} ${fmt(balance<0?0:balance)}\n\n${rcptFooter}\n${BIZ}`;
       window.open(`https://wa.me/${fmtPhone(debt.customer_phone)}?text=${encodeURIComponent(msg)}`,'_blank');
     }
 
@@ -1827,6 +1839,10 @@ data:
         document.getElementById('set-shop-name').value = appSettings.shop_name || "Lilian's Shop";
         document.getElementById('set-biz-phone').value = appSettings.business_phone || '';
         document.getElementById('set-biz-tagline').value = appSettings.business_tagline || 'Debt Management System';
+        document.getElementById('set-wa-header').value = appSettings.whatsapp_header || DEFAULT_WA_HEADER;
+        document.getElementById('set-wa-footer').value = appSettings.whatsapp_footer || DEFAULT_WA_FOOTER;
+        document.getElementById('set-sms-tmpl').value = appSettings.sms_template || DEFAULT_SMS_TPL;
+        document.getElementById('set-receipt-footer').value = appSettings.receipt_footer || 'Thank you for your payment!';
       }
       document.getElementById('set-currency').value = CURRENCY;
       document.getElementById('set-due-soon').value = DUE_SOON_DAYS;
@@ -1889,4 +1905,22 @@ data:
       localStorage.setItem('pref_currency', currency);
       localStorage.setItem('pref_due_soon', String(dueSoon));
       showAlert('alert-settings-prefs', 'Preferences saved!', 'success');
+    }
+
+    async function saveMessageTemplates() {
+      const payload = {
+        whatsapp_header:  document.getElementById('set-wa-header').value,
+        whatsapp_footer:  document.getElementById('set-wa-footer').value,
+        sms_template:     document.getElementById('set-sms-tmpl').value,
+        receipt_footer:   document.getElementById('set-receipt-footer').value.trim()
+      };
+      if (!payload.whatsapp_header.trim() || !payload.whatsapp_footer.trim() || !payload.sms_template.trim())
+        return showAlert('alert-settings-templates', 'Templates cannot be empty', 'error');
+      try {
+        const res = await fetch(API+'/settings', {method:'PUT', headers:headers(), body:JSON.stringify(payload)});
+        const data = await res.json();
+        if (!res.ok) return showAlert('alert-settings-templates', data.error || 'Failed to save', 'error');
+        Object.assign(appSettings, payload);
+        showAlert('alert-settings-templates', 'Templates saved!', 'success');
+      } catch(e) { showAlert('alert-settings-templates', 'Error: '+e.message, 'error'); }
     }

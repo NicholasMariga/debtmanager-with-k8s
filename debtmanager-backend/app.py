@@ -131,8 +131,13 @@ def init_db():
             updated_at TIMESTAMP DEFAULT NOW()
         )
     ''')
-    for k, v in [('business_name','Happywise Ent'),('shop_name',"Lilian's Shop"),
-                 ('business_phone',''),('business_tagline','Debt Management System'),('currency','KES')]:
+    for k, v in [
+        ('business_name','Happywise Ent'),('shop_name',"Lilian's Shop"),
+        ('business_phone',''),('business_tagline','Debt Management System'),('currency','KES'),
+        ('whatsapp_header','{business} - Debt Reminder - ({shop})\n\nDear {name},\n\nThis is a friendly reminder about your outstanding debt(s) with us:'),
+        ('whatsapp_footer','---------------------\nTOTAL BALANCE DUE: {currency} {balance}\n---------------------\n\nKindly make your payment at your earliest convenience.\nYou can reach us for any queries.\n\nThank you for your business!\n{business} - ({shop})'),
+        ('sms_template','{business} - Debt Reminder - ({shop})\n\nDear {name},\n\n{body}\n\nPlease pay at your earliest convenience.\nThank you!\n{business} - ({shop})'),
+        ('receipt_footer','Thank you for your payment!')]:
         cur.execute("INSERT INTO settings (key,value) VALUES (%s,%s) ON CONFLICT (key) DO NOTHING", (k, v))
     # Default owner account
     cur.execute("SELECT id FROM staff WHERE username = 'owner'")
